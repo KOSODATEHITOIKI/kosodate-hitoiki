@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/config/flavor.dart';
 import 'core/constants/app_theme.dart';
-import 'presentation/widgets/main_navigation_shell.dart';
+import 'presentation/pages/welcome/welcome_page.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -13,7 +13,7 @@ class App extends StatelessWidget {
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const MainNavigationShell(),
+      home: const WelcomePage(),
     );
   }
 }

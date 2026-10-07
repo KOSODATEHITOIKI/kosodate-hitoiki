@@ -79,6 +79,19 @@ flutter:
     - assets/illustrations/
     - assets/avatars/
     - assets/reactions/
+    - assets/fonts/OFL.txt
+
+  fonts:
+    - family: M PLUS Rounded 1c
+      fonts:
+        - asset: assets/fonts/MPLUSRounded1c-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/MPLUSRounded1c-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/MPLUSRounded1c-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/MPLUSRounded1c-ExtraBold.ttf
+          weight: 800
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
