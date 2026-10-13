@@ -34,7 +34,7 @@ void main() {
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
       2,
     );
-    expect(find.text('投稿作成(未実装)'), findsOneWidget);
+    expect(find.text('投稿の種類'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
