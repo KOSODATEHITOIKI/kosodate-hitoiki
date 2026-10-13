@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
+import '../settings/settings_page.dart';
 
 /// S-07。プロフィール・投稿取得と認証分岐はIssue #12で接続する。
 class MyPagePage extends StatefulWidget {
@@ -40,7 +41,9 @@ class _MyPagePageState extends State<MyPagePage> {
       Align(
         alignment: Alignment.centerRight,
         child: TextButton.icon(
-          onPressed: () => _showNotice('設定は準備中です', '通知やアカウントの設定を確認できるようになります。'),
+          onPressed: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute<void>(builder: (_) => const SettingsPage())),
           icon: const Icon(Icons.settings_outlined),
           label: const Text('設定'),
         ),
