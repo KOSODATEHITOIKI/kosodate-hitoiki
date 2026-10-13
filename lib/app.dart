@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/config/flavor.dart';
 import 'core/constants/app_theme.dart';
 import 'presentation/widgets/main_navigation_shell.dart';
 
@@ -9,7 +10,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ひと息(仮)',
+      title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: const MainNavigationShell(),

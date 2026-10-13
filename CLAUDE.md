@@ -34,7 +34,7 @@ main                  ← リリース済み（本番公開済み）の状態の
 ## Flutterのビルドモードと環境
 
 - Debug／Profile／Releaseの使い分けは[docs/環境とブランチ運用.md](docs/環境とブランチ運用.md)参照。
-- 環境（Flavor: dev/stg/prod）は未導入。ストア公開が具体化した段階で姉妹プロジェクトと同様の`main_dev.dart`等の構成導入を検討する。現状は単一の`main.dart`のみ。
+- 環境（Flavor: dev/prod。姉妹プロジェクトのdev/stg/prod 3種とは異なり2種のみ）は導入済み。エントリーポイントは`lib/main_dev.dart` / `lib/main_prod.dart`（`lib/main.dart`はdevへ委譲）。詳細は[docs/環境とブランチ運用.md](docs/環境とブランチ運用.md)参照。
 - Supabaseの接続先は[lib/core/config/supabase_config.dart](lib/core/config/supabase_config.dart)に直接記載する。anon keyは公開情報のため`.env`での秘匿は不要（理由は同ファイルのコメント参照）。service_role相当の特権キーは絶対にこのリポジトリへ含めない。
 
 ## コミット・PRメッセージ
