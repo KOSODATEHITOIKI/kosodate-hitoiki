@@ -13,12 +13,15 @@ class AppColors {
   /// 紙。画面背景。
   static const background = Color(0xFFFFFCF6);
 
-  /// クリーム。カード等の面。
+  /// クリーム。案内・装飾の背景。
   static const surface = Color(0xFFFFF3D5);
+
+  /// ホワイト。カード・入力欄。
+  static const white = Color(0xFFFFFFFF);
 
   /// ココア。見出し・本文。
   static const textPrimary = Color(0xFF654536);
-  static const textSecondary = Color(0xFF8C7568);
+  static const textSecondary = textPrimary;
 
   /// 葉。安心・成功系のアクセント。
   static const accentLeaf = Color(0xFF95B78B);
@@ -26,5 +29,6 @@ class AppColors {
   /// 淡い桃。共感・ハート系のアクセント。
   static const accentPink = Color(0xFFFAD7CB);
 
-  static const divider = Color(0xFFEFE2C8);
+  /// ココアの薄い線。
+  static const divider = Color(0x29654536);
 }

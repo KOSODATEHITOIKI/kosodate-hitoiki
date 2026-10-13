@@ -1,24 +1,104 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_typography.dart';
 
 class AppTheme {
   AppTheme._();
 
   static ThemeData get light {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      surface: AppColors.surface,
-    );
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          surface: AppColors.white,
+        ).copyWith(
+          primary: AppColors.primary,
+          onPrimary: AppColors.white,
+          secondary: AppColors.secondary,
+          onSecondary: AppColors.textPrimary,
+          onSurface: AppColors.textPrimary,
+        );
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: AppTypography.fontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
+      textTheme: ThemeData.light().textTheme
+          .copyWith(
+            headlineSmall: AppTypography.title,
+            titleLarge: AppTypography.title,
+            titleMedium: AppTypography.section,
+            bodyLarge: AppTypography.body,
+            bodyMedium: AppTypography.body,
+            bodySmall: AppTypography.caption,
+            labelLarge: AppTypography.button,
+          )
+          .apply(
+            fontFamily: AppTypography.fontFamily,
+            bodyColor: AppColors.textPrimary,
+            displayColor: AppColors.textPrimary,
+          ),
+      iconTheme: const IconThemeData(size: 24, color: AppColors.textPrimary),
+      cardTheme: CardThemeData(
+        color: AppColors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: const EdgeInsets.all(16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.divider),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          textStyle: AppTypography.button.copyWith(
+            fontFamily: AppTypography.fontFamily,
+          ),
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: const StadiumBorder(),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+          textStyle: AppTypography.button.copyWith(
+            fontFamily: AppTypography.fontFamily,
+          ),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.white,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: Colors.transparent,
+        elevation: 0,
+        height: 72,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+            color: selected ? AppColors.primary : AppColors.textSecondary,
+          );
+        }),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        titleTextStyle: TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
       ),
       dividerColor: AppColors.divider,
     );
