@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
 import '../settings/settings_page.dart';
+import '../profile/profile_edit_page.dart';
 
 /// S-07。プロフィール・投稿取得と認証分岐はIssue #12で接続する。
 class MyPagePage extends StatefulWidget {
@@ -96,9 +97,10 @@ class _MyPagePageState extends State<MyPagePage> {
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
-              onPressed: () => _showNotice(
-                'プロフィール編集は準備中です',
-                'ログイン後にニックネームや自己紹介を編集できるようになります。',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ProfileEditPage(),
+                ),
               ),
               icon: const Icon(Icons.edit_outlined),
               label: const Text('プロフィールを編集'),
