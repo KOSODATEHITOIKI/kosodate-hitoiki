@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/mypage/mypage_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/settings/settings_page.dart';
+import 'package:kosodate_hitoiki/presentation/pages/profile/profile_edit_page.dart';
 
 void main() {
   testWidgets('保存した投稿に切り替え、登録案内を閉じても選択を保持する', (tester) async {
@@ -83,8 +84,8 @@ void main() {
         expect(find.byType(SettingsPage), findsOneWidget);
         await tester.pageBack();
       } else {
-        expect(find.byType(AlertDialog), findsOneWidget);
-        await tester.tap(find.text('閉じる'));
+        expect(find.byType(ProfileEditPage), findsOneWidget);
+        await tester.pageBack();
       }
       await tester.pumpAndSettle();
     }
