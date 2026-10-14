@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/utils/accessibility.dart';
 
 /// タブ画面共通の装飾とスクロール領域。
 class ComfortPage extends StatelessWidget {
@@ -16,7 +17,6 @@ class ComfortPage extends StatelessWidget {
   final List<Widget> children;
   @override
   Widget build(BuildContext context) => SafeArea(
-    bottom: false,
     child: Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -25,6 +25,7 @@ class ComfortPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
@@ -35,12 +36,13 @@ class ComfortPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SvgPicture.asset(
-                  AppDecorations.sunSmiling,
-                  width: 96,
-                  height: 96,
-                  excludeFromSemantics: true,
-                ),
+                if (fitsDecoration(context))
+                  SvgPicture.asset(
+                    AppDecorations.sunSmiling,
+                    width: 96,
+                    height: 96,
+                    excludeFromSemantics: true,
+                  ),
               ],
             ),
             const SizedBox(height: 8),

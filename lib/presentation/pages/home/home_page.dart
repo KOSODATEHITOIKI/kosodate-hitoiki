@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/utils/accessibility.dart';
 
 /// S-02。投稿取得はIssue #7で接続する。
 class HomePage extends StatefulWidget {
@@ -29,16 +30,20 @@ class _HomePageState extends State<HomePage> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'ひと息',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2,
+                  const Flexible(
+                    child: Text(
+                      'ひと息',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
-                  _illustration(AppDecorations.sunSmiling, 100),
+                  if (fitsDecoration(context))
+                    _illustration(AppDecorations.sunSmiling, 100),
                 ],
               ),
               const SizedBox(height: 8),
