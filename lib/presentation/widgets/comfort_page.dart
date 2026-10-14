@@ -119,10 +119,16 @@ class _ComfortHeader extends StatelessWidget {
             right: -40,
             child: ExcludeSemantics(
               child: IgnorePointer(
-                child: SvgPicture.asset(
-                  AppDecorations.cloudSoft,
-                  width: 150,
-                  height: 150,
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    AppColors.white.withValues(alpha: 0.7),
+                    BlendMode.srcATop,
+                  ),
+                  child: SvgPicture.asset(
+                    AppDecorations.cloudSoft,
+                    width: 150,
+                    height: 150,
+                  ),
                 ),
               ),
             ),
