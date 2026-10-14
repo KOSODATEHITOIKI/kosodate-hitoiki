@@ -42,7 +42,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             children: [
               const _HomeHeader(),
               const SizedBox(height: 24),
-              _ComposeBackdrop(
+              Center(
                 child: FilledButton.icon(
                   onPressed: widget.onCompose,
                   style: FilledButton.styleFrom(
@@ -212,58 +212,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ],
     ),
-  );
-}
-
-/// ボタンの背後に草と雲を配置し、操作・読み上げを遮らない。
-class _ComposeBackdrop extends StatelessWidget {
-  const _ComposeBackdrop({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final showDecoration = fitsDecoration(context);
-      final cloudSize = (constraints.maxWidth * 0.52).clamp(140.0, 230.0);
-      return Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          if (showDecoration)
-            Positioned.fill(
-              child: ExcludeSemantics(
-                child: IgnorePointer(
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: -cloudSize * 0.35,
-                        bottom: -cloudSize * 0.4,
-                        child: SvgPicture.asset(
-                          AppDecorations.cloudSoft,
-                          width: cloudSize,
-                          height: cloudSize,
-                        ),
-                      ),
-                      Positioned(
-                        right: -cloudSize * 0.25,
-                        bottom: -cloudSize * 0.35,
-                        child: SvgPicture.asset(
-                          AppDecorations.cloudSoft,
-                          width: cloudSize,
-                          height: cloudSize,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Center(child: child),
-          ),
-        ],
-      );
-    },
   );
 }
 

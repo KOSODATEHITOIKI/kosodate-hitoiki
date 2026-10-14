@@ -82,6 +82,7 @@ class PostCard extends StatelessWidget {
                   _FooterChip(
                     icon: AppIcons.heart,
                     label: post.isMine ? 'わかる ${post.empathyCount}' : 'わかる',
+                    background: AppColors.accentPink,
                   ),
                   if (post.responseMode == ResponseMode.advice)
                     _FooterChip(
@@ -89,9 +90,14 @@ class PostCard extends StatelessWidget {
                       label: post.commentCount > 0
                           ? 'コメント ${post.commentCount}'
                           : 'コメントする',
+                      background: AppColors.accentLeaf.withValues(alpha: 0.3),
                     )
                   else
-                    _FooterChip(icon: AppIcons.send, label: '定型文を送る'),
+                    _FooterChip(
+                      icon: AppIcons.send,
+                      label: '定型文を送る',
+                      background: AppColors.secondary.withValues(alpha: 0.45),
+                    ),
                 ],
               ),
             ),
@@ -146,15 +152,20 @@ class _Tag extends StatelessWidget {
 }
 
 class _FooterChip extends StatelessWidget {
-  const _FooterChip({required this.icon, required this.label});
+  const _FooterChip({
+    required this.icon,
+    required this.label,
+    this.background = AppColors.surface,
+  });
   final String icon;
   final String label;
+  final Color background;
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     decoration: BoxDecoration(
-      color: AppColors.surface,
+      color: background,
       borderRadius: BorderRadius.circular(999),
     ),
     child: Row(
