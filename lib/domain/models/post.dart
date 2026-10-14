@@ -48,14 +48,14 @@ class Post {
   final bool isMine;
   final bool isSaved;
 
-  Post copyWith({bool? isSaved}) => Post(
+  Post copyWith({bool? isSaved, ResponseMode? responseMode}) => Post(
     id: id,
     authorId: authorId,
     authorName: authorName,
     authorAvatarAsset: authorAvatarAsset,
     createdAt: createdAt,
     type: type,
-    responseMode: responseMode,
+    responseMode: responseMode ?? this.responseMode,
     body: body,
     empathyCount: empathyCount,
     commentCount: commentCount,

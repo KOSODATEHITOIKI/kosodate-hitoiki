@@ -3,11 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../domain/models/post.dart';
 import '../../widgets/comfort_page.dart';
 
 /// S-04。投稿API・送信前チェックとの接続はIssue #9で行う。
 class ComposePage extends StatefulWidget {
-  const ComposePage({super.key});
+  const ComposePage({super.key, this.initialPost});
+  final Post? initialPost;
   @override
   State<ComposePage> createState() => _ComposePageState();
 }
@@ -18,6 +20,19 @@ class _ComposePageState extends State<ComposePage> {
   final _body = TextEditingController();
   String _postType = 'ぐち';
   _ResponseMode _mode = _ResponseMode.listening;
+
+  @override
+  void initState() {
+    super.initState();
+    final post = widget.initialPost;
+    if (post != null) {
+      _body.text = post.body;
+      _postType = post.type.label;
+      _mode = post.responseMode == ResponseMode.advice
+          ? _ResponseMode.advice
+          : _ResponseMode.listening;
+    }
+  }
 
   @override
   void dispose() {
@@ -148,7 +163,7 @@ class _ComposePageState extends State<ComposePage> {
             BlendMode.srcIn,
           ),
         ),
-        label: const Text('投稿する'),
+        label: Text(widget.initialPost == null ? '投稿する' : '変更を確認する'),
       ),
       const SizedBox(height: 12),
       const Text(
