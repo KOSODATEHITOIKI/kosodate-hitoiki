@@ -176,7 +176,7 @@ class _ComfortHeader extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               message,
               style: TextStyle(fontSize: messageFontSize, height: 1.7),
