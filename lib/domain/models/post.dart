@@ -22,6 +22,7 @@ enum ResponseMode {
 class Post {
   const Post({
     required this.id,
+    required this.authorId,
     required this.authorName,
     required this.authorAvatarAsset,
     required this.createdAt,
@@ -35,6 +36,7 @@ class Post {
   });
 
   final String id;
+  final String authorId;
   final String authorName;
   final String authorAvatarAsset;
   final DateTime createdAt;
@@ -48,6 +50,7 @@ class Post {
 
   Post copyWith({bool? isSaved}) => Post(
     id: id,
+    authorId: authorId,
     authorName: authorName,
     authorAvatarAsset: authorAvatarAsset,
     createdAt: createdAt,

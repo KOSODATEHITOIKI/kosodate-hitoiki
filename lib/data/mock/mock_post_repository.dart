@@ -14,6 +14,7 @@ class MockPostRepository implements PostRepository {
   static final List<Post> _seed = [
     Post(
       id: 'p1',
+      authorId: 'sample-komorebi',
       authorName: 'こもれび',
       authorAvatarAsset: AppAvatars.defaultSprout,
       createdAt: _now.subtract(const Duration(minutes: 5)),
@@ -26,6 +27,7 @@ class MockPostRepository implements PostRepository {
     ),
     Post(
       id: 'p2',
+      authorId: 'sample-hana',
       authorName: 'はな',
       authorAvatarAsset: AppAvatars.defaultTulip,
       createdAt: _now.subtract(const Duration(minutes: 20)),
@@ -38,6 +40,7 @@ class MockPostRepository implements PostRepository {
     ),
     Post(
       id: 'p3',
+      authorId: 'sample-mimi',
       authorName: 'みみ',
       authorAvatarAsset: AppAvatars.defaultLittleBird,
       createdAt: _now.subtract(const Duration(minutes: 10)),
@@ -54,6 +57,7 @@ class MockPostRepository implements PostRepository {
     ),
     Post(
       id: 'p4',
+      authorId: 'sample-haru',
       authorName: 'はるママ',
       authorAvatarAsset: AppAvatars.defaultSun,
       createdAt: _now.subtract(const Duration(hours: 1)),
@@ -68,6 +72,7 @@ class MockPostRepository implements PostRepository {
     ),
     Post(
       id: 'p5',
+      authorId: 'sample-komorebi',
       authorName: 'こもれび',
       authorAvatarAsset: AppAvatars.defaultSprout,
       createdAt: _now.subtract(const Duration(days: 1)),
