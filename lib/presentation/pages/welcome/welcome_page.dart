@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
@@ -254,40 +255,50 @@ class _WelcomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Flexible(
-                    child: Text(
-                      'ひと息',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                      ),
-                    ),
+              if (showDecoration)
+                Semantics(
+                  header: true,
+                  label: 'ひと息',
+                  image: true,
+                  child: Image.asset(
+                    AppBrand.logo,
+                    height: 44,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.centerLeft,
+                    excludeFromSemantics: true,
                   ),
-                  if (showDecoration)
-                    SvgPicture.asset(
-                      AppDecorations.leavesSprout,
-                      width: 38,
-                      height: 38,
-                      excludeFromSemantics: true,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.secondary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                '言いづらいことも、\nここでひと息。',
-                style: TextStyle(
-                  fontSize: 24,
-                  height: 1.4,
-                  fontWeight: FontWeight.w700,
+                )
+              else
+                const Text(
+                  'ひと息',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                  ),
                 ),
-              ),
+              const SizedBox(height: 24),
+              if (showDecoration)
+                Semantics(
+                  label: '言いづらいことも、ここでひと息。',
+                  image: true,
+                  child: Image.asset(
+                    AppBrand.tagline,
+                    height: 100,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.centerLeft,
+                    excludeFromSemantics: true,
+                  ),
+                )
+              else
+                const Text(
+                  '言いづらいことも、\nここでひと息。',
+                  style: TextStyle(
+                    fontSize: 24,
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               const SizedBox(height: 16),
               const Text(
                 '子育ての気持ちを、\n安心して書ける場所です。',

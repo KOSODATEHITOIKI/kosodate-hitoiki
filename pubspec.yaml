@@ -79,6 +79,7 @@ flutter:
     - assets/illustrations/
     - assets/avatars/
     - assets/reactions/
+    - assets/brand/
     - assets/fonts/OFL.txt
 
   fonts:
