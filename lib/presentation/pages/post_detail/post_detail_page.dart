@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/post_card.dart';
 import '../auth/auth_page.dart';
+import '../report/report_page.dart';
 
 /// S-03。本文と認証導線のUI。コメント・共感のAPIは未接続。
 class PostDetailPage extends ConsumerWidget {
@@ -21,7 +22,23 @@ class PostDetailPage extends ConsumerWidget {
     final current =
         items?.where((item) => item.id == post.id).firstOrNull ?? post;
     return Scaffold(
-      appBar: AppBar(title: const Text('投稿の詳細')),
+      appBar: AppBar(
+        title: const Text('投稿の詳細'),
+        actions: [
+          IconButton(
+            tooltip: '投稿を通報',
+            icon: const Icon(Icons.flag_outlined),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => ReportPage(
+                  targetId: post.id,
+                  targetType: ReportTargetType.post,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
