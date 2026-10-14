@@ -24,7 +24,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: 'ひと息',
-    message: '子育ての毎日に、ひと息つける場所を。',
+    message: '子育ての毎日に、\nひと息つける場所を。',
     useBrandLogo: true,
     headerIllustration: AppIllustrations.welcome,
     horizontalPadding: 12,
