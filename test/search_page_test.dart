@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/search/search_page.dart';
@@ -10,15 +11,17 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(2)),
-          child: child!,
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const Scaffold(body: SearchPage()),
         ),
-        home: const Scaffold(body: SearchPage()),
       ),
     );
     await tester.pumpAndSettle();
@@ -28,9 +31,9 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('コツ・体験談'));
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'コツ・体験談'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('コツ・体験談'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'コツ・体験談'));
     await tester.pumpAndSettle();
     expect(
       tester

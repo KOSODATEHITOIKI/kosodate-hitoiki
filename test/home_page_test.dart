@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_colors.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
@@ -14,15 +15,17 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
         var composeCount = 0;
         await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light,
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(scale)),
-              child: child!,
+          ProviderScope(
+            child: MaterialApp(
+              theme: AppTheme.light,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!,
+              ),
+              home: Scaffold(body: HomePage(onCompose: () => composeCount++)),
             ),
-            home: Scaffold(body: HomePage(onCompose: () => composeCount++)),
           ),
         );
         await tester.pumpAndSettle();
