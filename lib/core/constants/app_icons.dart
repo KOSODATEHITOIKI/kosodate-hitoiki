@@ -44,6 +44,7 @@ class AppIcons {
   static const accountEye = '$_base/icon-account-eye.svg';
   static const accountEyeOff = '$_base/icon-account-eye-off.svg';
   static const accountLogout = '$_base/icon-account-logout.svg';
+  static const accountDocument = '$_base/icon-account-document.svg';
 
   // 安全・安心
   static const safetyReport = '$_base/icon-safety-report.svg';
@@ -55,10 +56,16 @@ class AppIcons {
   // ステータス・設定
   static const statusInfo = '$_base/icon-status-info.svg';
   static const statusWarning = '$_base/icon-status-warning.svg';
+  static const statusLightbulb = '$_base/icon-status-lightbulb.svg';
   static const settingsNotificationsOff =
       '$_base/icon-settings-notifications-off.svg';
   static const settingsSliders = '$_base/icon-settings-sliders.svg';
   static const settingsGear = '$_base/icon-settings-gear.svg';
+  static const settingsDevice = '$_base/icon-settings-device.svg';
+
+  // ガイド・お知らせ
+  static const guideBook = '$_base/icon-guide-book.svg';
+  static const noticeMegaphone = '$_base/icon-notice-megaphone.svg';
 }
 
 /// 装飾モチーフ(240×240)。
@@ -75,8 +82,13 @@ class AppDecorations {
   static const sparkles = '$_base/decoration-sparkles.svg';
   static const tulip = '$_base/decoration-tulip.svg';
   static const cornerLeavesLeft = '$_base/decoration-corner-leaves-left.svg';
+  static const cornerLeavesRight = '$_base/decoration-corner-leaves-right.svg';
   static const cloudsBottom = '$_base/decoration-clouds-bottom.svg';
+  static const cloudsLeft = '$_base/decoration-clouds-left.svg';
+  static const cloudsRight = '$_base/decoration-clouds-right.svg';
+  static const leavesTall = '$_base/decoration-leaves-tall.svg';
   static const logoGoldenLeaves = '$_base/decoration-logo-golden-leaves.svg';
+  static const watercolorWash = '$_base/decoration-watercolor-wash.svg';
 }
 
 /// 画面ごとのイラスト(240×240)。
@@ -118,6 +130,8 @@ class AppAvatars {
   static const defaultSprout = '$_base/avatar-default-sprout.svg';
   static const defaultLittleBird = '$_base/avatar-little-bird.svg';
   static const defaultYellowFlower = '$_base/avatar-yellow-flower.svg';
+  static const defaultTulip = '$_base/avatar-tulip.svg';
+  static const defaultBlueFlowers = '$_base/avatar-blue-flowers.svg';
 }
 
 /// 共感リアクションの定型文アイコン(240×240)。
@@ -130,4 +144,5 @@ class AppReactions {
   static const takeABreak = '$_base/reaction-take-a-break.svg';
   static const listening = '$_base/reaction-listening.svg';
   static const gentleCheer = '$_base/reaction-gentle-cheer.svg';
+  static const applause = '$_base/reaction-applause.svg';
 }

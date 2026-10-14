@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/utils/accessibility.dart';
 
 /// S-02。投稿取得はIssue #7で接続する。
 class HomePage extends StatefulWidget {
@@ -27,30 +28,7 @@ class _HomePageState extends State<HomePage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'ひと息',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  _illustration(AppDecorations.sunSmiling, 100),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '今日も、おつかれさま。',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'がんばるあなたの気持ちに、\nここでひと息つけますように。',
-                style: TextStyle(fontSize: 16, height: 1.7),
-              ),
+              const _HomeHeader(),
               const SizedBox(height: 24),
               Center(
                 child: FilledButton.icon(
@@ -176,4 +154,77 @@ class _HomePageState extends State<HomePage> {
     height: size,
     excludeFromSemantics: true,
   );
+}
+
+/// docs/design S-02と同じ、大きな太陽+葉のアクセントを使う見出し。
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final showDecoration = fitsDecoration(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (showDecoration)
+          Positioned(
+            top: -36,
+            right: -50,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.sunSmiling,
+                width: 190,
+                height: 190,
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(right: 90),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'ひと息',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                  if (showDecoration) ...[
+                    const SizedBox(width: 4),
+                    SvgPicture.asset(
+                      AppDecorations.leavesSprout,
+                      width: 28,
+                      height: 28,
+                      excludeFromSemantics: true,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.secondary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '今日も、おつかれさま。',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'がんばるあなたの気持ちに、\nここでひと息つけますように。',
+                style: TextStyle(fontSize: 16, height: 1.7),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }

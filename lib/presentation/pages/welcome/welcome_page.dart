@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/utils/accessibility.dart';
 import '../../widgets/main_navigation_shell.dart';
 
 /// S-01 はじめての案内。未登録でもホームの閲覧に進める。
@@ -220,7 +221,7 @@ class _WelcomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showDecoration = MediaQuery.textScalerOf(context).scale(1) <= 1.3;
+    final showDecoration = fitsDecoration(context);
     return Stack(
       clipBehavior: Clip.none,
       children: [
