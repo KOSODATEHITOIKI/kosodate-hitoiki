@@ -6,6 +6,7 @@ import '../../../domain/models/post.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/post_card.dart';
+import '../../widgets/comment_thread.dart';
 import '../auth/auth_page.dart';
 import '../report/report_page.dart';
 
@@ -133,7 +134,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                           loggedIn
                               ? (post.responseMode == ResponseMode.listening
                                     ? 'この投稿にはコメントを送れません。定型文で気持ちを届ける機能は準備中です。'
-                                    : 'コメントと返信を読む・送る機能は準備中です。')
+                                    : 'あなたの経験を、やさしく。')
                               : 'コメント欄の閲覧や気持ちを届けるには、登録・ログインが必要です。',
                           style: const TextStyle(fontSize: 14, height: 1.7),
                         ),
@@ -157,6 +158,11 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                               color: AppColors.textSecondary,
                             ),
                           ),
+                        ],
+                        if (loggedIn &&
+                            post.responseMode == ResponseMode.advice) ...[
+                          const SizedBox(height: 12),
+                          CommentThread(postId: post.id),
                         ],
                       ],
                     ),
