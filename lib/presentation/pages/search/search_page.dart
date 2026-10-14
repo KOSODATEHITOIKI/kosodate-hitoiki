@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
@@ -23,7 +24,10 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: 'ひと息',
-    message: '子育ての毎日に、\nひと息つける場所を。',
+    message: '子育ての毎日に、ひと息つける場所を。',
+    useBrandLogo: true,
+    headerIllustration: AppIllustrations.welcome,
+    horizontalPadding: 12,
     children: [
       TextField(
         controller: _controller,
@@ -48,12 +52,14 @@ class _SearchPageState extends State<SearchPage> {
       ),
       const SizedBox(height: 16),
       Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: 6,
+        runSpacing: 6,
         children: [
           for (final type in ['すべて', 'ぐち', '相談', 'コツ・体験談'])
             ChoiceChip(
-              label: Text(type),
+              label: Text(type, maxLines: 1, softWrap: false),
+              labelStyle: const TextStyle(fontSize: 12),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
               selected: _postType == type,
               onSelected: (_) => setState(() => _postType = type),
               showCheckmark: false,
@@ -65,24 +71,29 @@ class _SearchPageState extends State<SearchPage> {
                     ? Colors.transparent
                     : AppColors.divider,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             ),
         ],
       ),
       const SizedBox(height: 16),
       Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.divider),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.eco_outlined),
-            SizedBox(width: 12),
-            Expanded(child: Text('話題を選ぶ')),
-            Text('準備中', style: TextStyle(fontSize: 11)),
+            SvgPicture.asset(
+              AppDecorations.leavesSprout,
+              width: 36,
+              height: 36,
+              excludeFromSemantics: true,
+            ),
+            const SizedBox(width: 8),
+            const Expanded(child: Text('話題を選ぶ')),
+            const Text('準備中', style: TextStyle(fontSize: 11)),
           ],
         ),
       ),
