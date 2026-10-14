@@ -133,14 +133,14 @@ class _ComfortHeader extends StatelessWidget {
             ),
           ),
         ],
-        Padding(
-          padding: EdgeInsets.only(
-            right: useBrandLogo ? (showDecoration ? 72 : 0) : 90,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(
+                right: useBrandLogo ? (showDecoration ? 72 : 0) : 90,
+              ),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (useBrandLogo && showDecoration)
@@ -183,23 +183,23 @@ class _ComfortHeader extends StatelessWidget {
                   ],
                 ],
               ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  subtitle!,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            ),
+            if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
-                message,
-                style: TextStyle(fontSize: messageFontSize, height: 1.7),
+                subtitle!,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
-          ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(fontSize: messageFontSize, height: 1.7),
+            ),
+          ],
         ),
       ],
     );

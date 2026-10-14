@@ -263,12 +263,12 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
         ],
-        Padding(
-          padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (showDecoration)
@@ -299,18 +299,18 @@ class _HomeHeader extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
-              const Text(
-                '今日も、おつかれさま。',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'がんばるあなたの気持ちに、ここでひと息つけますように。',
-                style: TextStyle(fontSize: 13.5, height: 1.7),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '今日も、おつかれさま。',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'がんばるあなたの気持ちに、ここでひと息つけますように。',
+              style: TextStyle(fontSize: 13.5, height: 1.7),
+            ),
+          ],
         ),
       ],
     );
