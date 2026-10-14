@@ -4,6 +4,40 @@ import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_page.dart';
 
 void main() {
+  testWidgets('広い画面では反応の希望を横並びで選択できる', (tester) async {
+    tester.view.physicalSize = const Size(768, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: const Scaffold(body: ComposePage()),
+      ),
+    );
+    await tester.scrollUntilVisible(
+      find.text('話を聞きたい'),
+      150,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('話を聞きたい'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.text('話を聞きたい')).dy,
+      tester.getTopLeft(find.text('ただ聞いてほしい')).dy,
+    );
+    await tester.tap(find.text('話を聞きたい'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<Semantics>(find.byKey(const ValueKey('response-advice')))
+          .properties
+          .selected,
+      isTrue,
+    );
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('空白だけでは投稿不可、入力後も準備中の案内で本文を保持する', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
