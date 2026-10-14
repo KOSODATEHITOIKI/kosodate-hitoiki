@@ -45,7 +45,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       title: '検索',
       titleImage: AppBrand.titleSearch,
       message: '子育ての毎日に、\nひと息つける場所を。',
-      horizontalPadding: 12,
       children: [
         TextField(
           controller: _controller,

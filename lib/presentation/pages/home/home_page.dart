@@ -38,7 +38,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(12, 24, 12, 24),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
               const _HomeHeader(),
               const SizedBox(height: 24),
@@ -225,7 +225,6 @@ class _ComposeBackdrop extends StatelessWidget {
     builder: (context, constraints) {
       final showDecoration = fitsDecoration(context);
       final cloudSize = (constraints.maxWidth * 0.52).clamp(140.0, 230.0);
-      final leafSize = (constraints.maxWidth * 0.28).clamp(80.0, 120.0);
       return Stack(
         clipBehavior: Clip.hardEdge,
         children: [
@@ -251,15 +250,6 @@ class _ComposeBackdrop extends StatelessWidget {
                           AppDecorations.cloudSoft,
                           width: cloudSize,
                           height: cloudSize,
-                        ),
-                      ),
-                      Positioned(
-                        left: -8,
-                        bottom: -8,
-                        child: SvgPicture.asset(
-                          AppDecorations.leavesSprout,
-                          width: leafSize,
-                          height: leafSize,
                         ),
                       ),
                     ],
@@ -288,7 +278,20 @@ class _HomeHeader extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         if (showDecoration) const SizedBox(height: 154),
-        if (showDecoration)
+        if (showDecoration) ...[
+          Positioned(
+            top: 30,
+            right: -40,
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: SvgPicture.asset(
+                  AppDecorations.cloudSoft,
+                  width: 150,
+                  height: 150,
+                ),
+              ),
+            ),
+          ),
           Positioned(
             top: -36,
             right: -50,
@@ -300,6 +303,7 @@ class _HomeHeader extends StatelessWidget {
               ),
             ),
           ),
+        ],
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -113,7 +113,20 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
-        if (showDecoration && illustration == null)
+        if (showDecoration && illustration == null) ...[
+          Positioned(
+            top: 30,
+            right: -40,
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: SvgPicture.asset(
+                  AppDecorations.cloudSoft,
+                  width: 150,
+                  height: 150,
+                ),
+              ),
+            ),
+          ),
           Positioned(
             top: -36,
             right: -50,
@@ -125,6 +138,7 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
+        ],
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
