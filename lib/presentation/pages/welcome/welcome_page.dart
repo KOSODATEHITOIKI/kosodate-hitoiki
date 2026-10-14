@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/main_navigation_shell.dart';
+import '../auth/auth_page.dart';
 
 /// S-01 はじめての案内。未登録でもホームの閲覧に進める。
 class WelcomePage extends StatelessWidget {
@@ -15,26 +16,12 @@ class WelcomePage extends StatelessWidget {
     );
   }
 
-  // S-10の実装時に認証画面への遷移に差し替える。
-  void _showAuthNotice(BuildContext context, String title) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('$titleは準備中です'),
-        content: const Text('登録せずに投稿を読むことができます。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('閉じる'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              _browse(context);
-            },
-            child: const Text('登録せずに読む'),
-          ),
-        ],
+  void _openAuth(BuildContext context, String title) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AuthPage(
+          initialMode: title == '会員登録' ? AuthMode.register : AuthMode.login,
+        ),
       ),
     );
   }
@@ -127,7 +114,7 @@ class WelcomePage extends StatelessWidget {
                                         shape: const StadiumBorder(),
                                       ),
                                       onPressed: () =>
-                                          _showAuthNotice(context, '会員登録'),
+                                          _openAuth(context, '会員登録'),
                                       child: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
@@ -183,7 +170,7 @@ class WelcomePage extends StatelessWidget {
                                   Center(
                                     child: TextButton(
                                       onPressed: () =>
-                                          _showAuthNotice(context, 'ログイン'),
+                                          _openAuth(context, 'ログイン'),
                                       style: TextButton.styleFrom(
                                         foregroundColor: AppColors.textPrimary,
                                       ),
