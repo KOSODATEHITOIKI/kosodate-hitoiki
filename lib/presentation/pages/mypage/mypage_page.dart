@@ -7,6 +7,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
 import '../settings/settings_page.dart';
 import '../profile/profile_edit_page.dart';
+import '../auth/auth_page.dart';
 
 /// S-07。プロフィール・投稿取得と認証分岐はIssue #12で接続する。
 class MyPagePage extends StatefulWidget {
@@ -18,22 +19,6 @@ class MyPagePage extends StatefulWidget {
 
 class _MyPagePageState extends State<MyPagePage> {
   bool _savedPosts = false;
-
-  void _showNotice(String title, String message) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('閉じる'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) => ComfortPage(
@@ -113,8 +98,9 @@ class _MyPagePageState extends State<MyPagePage> {
             ),
             const SizedBox(height: 8),
             FilledButton(
-              onPressed: () =>
-                  _showNotice('登録・ログインは準備中です', '現在は登録せずに画面をご覧いただけます。'),
+              onPressed: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage())),
               child: const Text('登録・ログイン'),
             ),
           ],
