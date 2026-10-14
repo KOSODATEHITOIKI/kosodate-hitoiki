@@ -48,7 +48,7 @@ class _ComposePageState extends State<ComposePage> {
     title: 'ひと息',
     useBrandLogo: true,
     subtitle: '気持ちを書く',
-    message: 'ここなら、気持ちをそのまま書けるよ。\nどんな気持ちも、受けとめます。',
+    message: 'いまの気持ちを、\nあなたのペースで。',
     headerIllustration: AppIllustrations.welcome,
     horizontalPadding: 12,
     messageFontSize: 12.5,
