@@ -238,7 +238,7 @@ class _HomeHeader extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        if (showDecoration) SizedBox(height: 90 + leafSize),
+        if (showDecoration) SizedBox(height: 102 + leafSize),
         if (showDecoration) ...[
           Positioned(
             top: -36,
@@ -252,7 +252,7 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 90,
+            top: 102,
             right: -6,
             child: ExcludeSemantics(
               child: SvgPicture.asset(
