@@ -10,8 +10,8 @@ class AppColors {
   /// 黄。セカンダリボタン・選択中チップ等。
   static const secondary = Color(0xFFF6CA65);
 
-  /// 紙。画面背景。白カードとの区別がつくよう、やや濃いめのクリームに調整。
-  static const background = Color(0xFFFBF2DE);
+  /// 紙。画面背景。白カードとの区別はつけつつ、やや明るめのクリームに調整。
+  static const background = Color(0xFFFDF6E8);
 
   /// クリーム。案内・装飾の背景。
   static const surface = Color(0xFFFFF3D5);
