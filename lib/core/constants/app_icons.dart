@@ -58,6 +58,7 @@ class AppIcons {
   static const settingsNotificationsOff =
       '$_base/icon-settings-notifications-off.svg';
   static const settingsSliders = '$_base/icon-settings-sliders.svg';
+  static const settingsGear = '$_base/icon-settings-gear.svg';
 }
 
 /// 装飾モチーフ(240×240)。
@@ -72,6 +73,10 @@ class AppDecorations {
   static const cloudSoft = '$_base/decoration-cloud-soft.svg';
   static const flowerCoral = '$_base/decoration-flower-coral.svg';
   static const sparkles = '$_base/decoration-sparkles.svg';
+  static const tulip = '$_base/decoration-tulip.svg';
+  static const cornerLeavesLeft = '$_base/decoration-corner-leaves-left.svg';
+  static const cloudsBottom = '$_base/decoration-clouds-bottom.svg';
+  static const logoGoldenLeaves = '$_base/decoration-logo-golden-leaves.svg';
 }
 
 /// 画面ごとのイラスト(240×240)。
@@ -97,6 +102,10 @@ class AppIllustrations {
   static const supportResources = '$_base/illustration-support-resources.svg';
   static const firstPostGuide = '$_base/illustration-first-post-guide.svg';
   static const loginRequired = '$_base/illustration-login-required.svg';
+  static const supportHeartHands = '$_base/illustration-support-heart-hands.svg';
+  static const supportHomeFamily = '$_base/illustration-support-home-family.svg';
+  static const supportParentChild =
+      '$_base/illustration-support-parent-child.svg';
 }
 
 /// 既定アカウント画像(240×240)。
@@ -107,6 +116,8 @@ class AppAvatars {
 
   static const defaultSun = '$_base/avatar-default-sun.svg';
   static const defaultSprout = '$_base/avatar-default-sprout.svg';
+  static const defaultLittleBird = '$_base/avatar-little-bird.svg';
+  static const defaultYellowFlower = '$_base/avatar-yellow-flower.svg';
 }
 
 /// 共感リアクションの定型文アイコン(240×240)。
