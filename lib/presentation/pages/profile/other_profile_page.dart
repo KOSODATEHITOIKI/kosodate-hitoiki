@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../widgets/comfort_page.dart';
 import '../auth/auth_page.dart';
+import '../report/report_page.dart';
 
 /// S-08。プロフィール取得はモック。認証状態は実際のProviderで分岐する。
 class OtherProfilePage extends ConsumerWidget {
@@ -128,7 +129,14 @@ class OtherProfilePage extends ConsumerWidget {
             label: const Text('ブロック'),
           ),
           OutlinedButton.icon(
-            onPressed: () => _notice(context, '通報'),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => ReportPage(
+                  targetId: profile.id,
+                  targetType: ReportTargetType.user,
+                ),
+              ),
+            ),
             icon: const Icon(Icons.flag_outlined, size: 20),
             label: const Text('通報'),
           ),

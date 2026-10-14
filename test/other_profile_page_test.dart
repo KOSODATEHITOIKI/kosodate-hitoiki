@@ -127,8 +127,8 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('通報'));
         await tester.pumpAndSettle();
-        expect(find.text('通報は準備中です'), findsOneWidget);
-        await tester.tap(find.text('閉じる'));
+        expect(find.text('この利用者について'), findsOneWidget);
+        await tester.pageBack();
         await tester.pumpAndSettle();
         await tester.ensureVisible(find.text('ブロック'));
         await tester.pumpAndSettle();
