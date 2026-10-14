@@ -4,6 +4,7 @@ import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/mypage/mypage_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/settings/settings_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/profile/profile_edit_page.dart';
+import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 
 void main() {
   testWidgets('保存した投稿に切り替え、登録案内を閉じても選択を保持する', (tester) async {
@@ -43,8 +44,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('登録・ログイン'));
     await tester.pumpAndSettle();
-    expect(find.text('登録・ログインは準備中です'), findsOneWidget);
-    await tester.tap(find.text('閉じる'));
+    expect(find.byType(AuthPage), findsOneWidget);
+    await tester.pageBack();
     await tester.pumpAndSettle();
     expect(
       tester
