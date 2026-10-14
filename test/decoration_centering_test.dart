@@ -5,7 +5,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  for (final name in ['leaves-sprout', 'heart-warm', 'sun-smiling']) {
+  for (final name in [
+    'leaves-sprout',
+    'heart-warm',
+    'sun-smiling',
+    'sun-simple',
+  ]) {
     testWidgets('$nameの絵がSVG枠の中央にあり、欠けていない', (tester) async {
       final key = GlobalKey();
       await tester.pumpWidget(

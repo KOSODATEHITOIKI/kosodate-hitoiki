@@ -90,7 +90,7 @@ class WelcomePage extends StatelessWidget {
                                   ),
                                   SizedBox(height: 24),
                                   _Guideline(
-                                    asset: AppDecorations.sunSmiling,
+                                    asset: AppDecorations.sunSimple,
                                     background: AppColors.surface,
                                     title: '自分のペースで大丈夫',
                                     description:

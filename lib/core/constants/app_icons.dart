@@ -75,6 +75,7 @@ class AppDecorations {
   static const _base = 'assets/decorations';
 
   static const sunSmiling = '$_base/decoration-sun-smiling.svg';
+  static const sunSimple = '$_base/decoration-sun-simple.svg';
   static const leavesSprout = '$_base/decoration-leaves-sprout.svg';
   static const heartWarm = '$_base/decoration-heart-warm.svg';
   static const cloudSoft = '$_base/decoration-cloud-soft.svg';
