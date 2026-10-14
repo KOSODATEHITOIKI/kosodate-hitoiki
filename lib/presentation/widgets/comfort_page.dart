@@ -159,8 +159,10 @@ class _ComfortHeader extends StatelessWidget {
                         child: Image.asset(
                           titleImage!,
                           width:
-                              (MediaQuery.sizeOf(context).width * 0.42)
-                                  .clamp(134.0, 180.0) *
+                              (MediaQuery.sizeOf(context).width * 0.42).clamp(
+                                134.0,
+                                180.0,
+                              ) *
                               titleImageScale,
                           fit: BoxFit.contain,
                           alignment: Alignment.centerLeft,
@@ -193,7 +195,9 @@ class _ComfortHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (showDecoration && !useBrandLogo && titleImage == null) ...[
+                  if (showDecoration &&
+                      !useBrandLogo &&
+                      titleImage == null) ...[
                     const SizedBox(width: 4),
                     SvgPicture.asset(
                       AppDecorations.leavesSprout,

@@ -121,17 +121,9 @@ class _ComposePageState extends State<ComposePage> {
         '反応の希望',
         Column(
           children: [
-            _modeOption(
-              _ResponseMode.listening,
-              'ただ聞いてほしい',
-              '共感ボタン・定型文のみ',
-            ),
+            _modeOption(_ResponseMode.listening, 'ただ聞いてほしい', '共感ボタン・定型文のみ'),
             const SizedBox(height: 12),
-            _modeOption(
-              _ResponseMode.advice,
-              '話を聞きたい',
-              '自由コメントを受け付ける',
-            ),
+            _modeOption(_ResponseMode.advice, '話を聞きたい', '自由コメントを受け付ける'),
           ],
         ),
       ),
