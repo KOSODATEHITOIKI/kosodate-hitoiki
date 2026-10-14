@@ -50,7 +50,6 @@ class _ComposePageState extends State<ComposePage> {
     message: 'いまの気持ちを、\nあなたのペースで。',
     headerIllustration: AppIllustrations.welcome,
     horizontalPadding: 12,
-    messageFontSize: 12.5,
     children: [
       _section(
         '投稿の種類',
