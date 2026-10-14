@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/app.dart';
 import 'package:kosodate_hitoiki/presentation/pages/welcome/welcome_page.dart';
+import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 
 void main() {
   testWidgets('起動時に利用案内を表示し、ゲスト閲覧後は案内に戻らない', (tester) async {
@@ -26,13 +27,13 @@ void main() {
   });
 
   for (final action in ['登録してはじめる', 'ログイン']) {
-    testWidgets('$actionから準備中の案内を閉じられる', (tester) async {
+    testWidgets('$actionから認証画面を開いて元の案内へ戻れる', (tester) async {
       await tester.pumpWidget(const ProviderScope(child: App()));
       await tester.ensureVisible(find.text(action));
       await tester.tap(find.text(action));
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsOneWidget);
-      await tester.tap(find.text('閉じる'));
+      expect(find.byType(AuthPage), findsOneWidget);
+      await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(WelcomePage), findsOneWidget);

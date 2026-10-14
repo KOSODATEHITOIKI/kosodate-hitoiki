@@ -24,7 +24,6 @@ class ComfortPage extends StatelessWidget {
   final double horizontalPadding;
   @override
   Widget build(BuildContext context) => SafeArea(
-    bottom: false,
     child: Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
