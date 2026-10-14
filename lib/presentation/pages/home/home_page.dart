@@ -91,12 +91,14 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 6,
+                runSpacing: 6,
                 children: [
                   for (final type in ['すべて', 'ぐち', '相談', 'コツ・体験談'])
                     ChoiceChip(
-                      label: Text(type),
+                      label: Text(type, maxLines: 1, softWrap: false),
+                      labelStyle: const TextStyle(fontSize: 12),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                       selected: _postType == type,
                       onSelected: (_) => setState(() => _postType = type),
                       showCheckmark: false,
@@ -109,8 +111,8 @@ class _HomePageState extends State<HomePage> {
                             : AppColors.divider,
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
+                        horizontal: 4,
+                        vertical: 4,
                       ),
                     ),
                 ],
