@@ -83,7 +83,7 @@ class AppTheme {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontFamily: AppTypography.fontFamily,
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             color: selected ? AppColors.primary : AppColors.textSecondary,
           );
@@ -95,7 +95,7 @@ class AppTheme {
         elevation: 0,
         titleTextStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),

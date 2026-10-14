@@ -139,7 +139,7 @@ class WelcomePage extends StatelessWidget {
                                               '登録してはじめる',
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 13.5,
                                                 fontWeight: FontWeight.w700,
                                               ),
                                             ),
@@ -176,7 +176,7 @@ class WelcomePage extends StatelessWidget {
                                       '登録せずに読む',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 13.5,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -192,7 +192,7 @@ class WelcomePage extends StatelessWidget {
                                       child: const Text(
                                         'ログイン',
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 13.5,
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -279,7 +279,7 @@ class _WelcomeHeader extends StatelessWidget {
                 const Text(
                   'ひと息',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 27,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
                   ),
@@ -301,7 +301,7 @@ class _WelcomeHeader extends StatelessWidget {
                 const Text(
                   '言いづらいことも、\nここでひと息。',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     height: 1.4,
                     fontWeight: FontWeight.w700,
                   ),
@@ -309,7 +309,7 @@ class _WelcomeHeader extends StatelessWidget {
               const SizedBox(height: 16),
               const Text(
                 '子育ての気持ちを、\n安心して書ける場所です。',
-                style: TextStyle(fontSize: 16, height: 1.65),
+                style: TextStyle(fontSize: 13.5, height: 1.65),
               ),
             ],
           ),
@@ -351,7 +351,7 @@ class _Guideline extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                   height: 1.5,
                 ),
@@ -360,7 +360,7 @@ class _Guideline extends StatelessWidget {
               Text(
                 description,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 13.5,
                   height: 1.7,
                   color: AppColors.textPrimary,
                 ),

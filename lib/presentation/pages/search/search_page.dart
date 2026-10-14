@@ -82,7 +82,7 @@ class _SearchPageState extends State<SearchPage> {
             Icon(Icons.eco_outlined),
             SizedBox(width: 12),
             Expanded(child: Text('話題を選ぶ')),
-            Text('準備中', style: TextStyle(fontSize: 12)),
+            Text('準備中', style: TextStyle(fontSize: 11)),
           ],
         ),
       ),
@@ -93,9 +93,9 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Text(
             '検索結果',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
           ),
-          Text('・ 新着順', style: TextStyle(fontSize: 14)),
+          Text('・ 新着順', style: TextStyle(fontSize: 12.5)),
         ],
       ),
       const SizedBox(height: 16),

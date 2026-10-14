@@ -44,7 +44,10 @@ class _ComfortHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
-    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(90.0, 110.0);
+    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
+      90.0,
+      110.0,
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -85,13 +88,12 @@ class _ComfortHeader extends StatelessWidget {
                     child: Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 27,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
-                  if (showDecoration) SizedBox(height: 90 + leafSize),
-        if (showDecoration) ...[
+                  if (showDecoration) ...[
                     const SizedBox(width: 4),
                     SvgPicture.asset(
                       AppDecorations.leavesSprout,
@@ -107,10 +109,7 @@ class _ComfortHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                message,
-                style: const TextStyle(fontSize: 17, height: 1.7),
-              ),
+              Text(message, style: const TextStyle(fontSize: 14, height: 1.7)),
             ],
           ),
         ),
@@ -148,13 +147,13 @@ class ComfortNotice extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, height: 1.7),
+          style: const TextStyle(fontSize: 12.5, height: 1.7),
         ),
       ],
     ),

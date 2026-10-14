@@ -112,7 +112,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                const Text('アイコンの選択肢は整備中です。', style: TextStyle(fontSize: 12)),
+                const Text('アイコンの選択肢は整備中です。', style: TextStyle(fontSize: 11)),
               ],
             ),
           ),
@@ -142,7 +142,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 ),
                 const Text(
                   '2〜12文字・変更は30日に1回です。\n本名やお子さんの名前は使わないでください。',
-                  style: TextStyle(fontSize: 13, height: 1.7),
+                  style: TextStyle(fontSize: 12, height: 1.7),
                 ),
               ],
             ),
@@ -166,7 +166,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           const SizedBox(height: 16),
           _section(
             '子どもの年齢帯（任意）',
-            const Text('年齢帯の選択は準備中です。', style: TextStyle(fontSize: 14)),
+            const Text('年齢帯の選択は準備中です。', style: TextStyle(fontSize: 12.5)),
           ),
           const SizedBox(height: 24),
           FilledButton(
@@ -178,7 +178,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           const Text(
             '保存機能は準備中です。\nこの画面を閉じると入力内容は消えます。',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, height: 1.7),
+            style: TextStyle(fontSize: 11, height: 1.7),
           ),
         ],
       ),
@@ -196,7 +196,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 16),
         child,

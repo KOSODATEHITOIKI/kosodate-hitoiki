@@ -33,7 +33,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
           foregroundColor: AppColors.textPrimary,
           minimumSize: const Size(48, 52),
           side: const BorderSide(color: AppColors.divider),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       const SizedBox(height: 24),
