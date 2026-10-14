@@ -17,7 +17,6 @@ class ComfortPage extends StatelessWidget {
   final List<Widget> children;
   @override
   Widget build(BuildContext context) => SafeArea(
-    bottom: false,
     child: Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
