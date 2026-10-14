@@ -46,7 +46,7 @@ class _ComposePageState extends State<ComposePage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: '書く',
-    message: 'いまの気持ちを、\nあなたのペースで。',
+    message: 'ここなら、気持ちをそのまま書けるよ。\nどんな気持ちも、受けとめます。',
     horizontalPadding: 12,
     children: [
       _section(
