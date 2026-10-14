@@ -48,7 +48,7 @@ class _ComposePageState extends State<ComposePage> {
   Widget build(BuildContext context) => ComfortPage(
     title: '書く',
     titleImage: AppBrand.titleCompose,
-    message: 'ここなら、気持ちをそのまま書けるよ。\nどんな気持ちも、受けとめます。',
+    message: 'ここなら、気持ちを書けるよ。\nどんな気持ちも、受けとめます。',
     messageFontSize: 13,
     horizontalPadding: 12,
     children: [
@@ -120,23 +120,18 @@ class _ComposePageState extends State<ComposePage> {
       const SizedBox(height: 16),
       _section(
         '反応の希望',
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Column(
           children: [
-            Expanded(
-              child: _modeOption(
-                _ResponseMode.listening,
-                'ただ聞いてほしい',
-                '共感ボタン・定型文のみ',
-              ),
+            _modeOption(
+              _ResponseMode.listening,
+              'ただ聞いてほしい',
+              '共感ボタン・定型文のみ',
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _modeOption(
-                _ResponseMode.advice,
-                '話を聞きたい',
-                '自由コメントを受け付ける',
-              ),
+            const SizedBox(height: 12),
+            _modeOption(
+              _ResponseMode.advice,
+              '話を聞きたい',
+              '自由コメントを受け付ける',
             ),
           ],
         ),

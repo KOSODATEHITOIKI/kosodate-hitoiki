@@ -4,7 +4,7 @@ import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_page.dart';
 
 void main() {
-  testWidgets('広い画面では反応の希望を横並びで選択できる', (tester) async {
+  testWidgets('反応の希望は縦並びで選択できる', (tester) async {
     tester.view.physicalSize = const Size(768, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -25,7 +25,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester.getTopLeft(find.text('話を聞きたい')).dy,
-      tester.getTopLeft(find.text('ただ聞いてほしい')).dy,
+      greaterThan(tester.getTopLeft(find.text('ただ聞いてほしい')).dy),
     );
     await tester.tap(find.text('話を聞きたい'));
     await tester.pumpAndSettle();
