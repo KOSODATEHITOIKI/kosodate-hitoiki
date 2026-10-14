@@ -4,13 +4,20 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/post.dart';
+import '../pages/post_detail/post_detail_page.dart';
 
 /// 投稿一覧・検索結果・マイページ共通の投稿カード(docs/design S-02・S-05参照)。
 class PostCard extends StatelessWidget {
-  const PostCard({super.key, required this.post, this.onToggleSaved});
+  const PostCard({
+    super.key,
+    required this.post,
+    this.onToggleSaved,
+    this.showOpenButton = true,
+  });
 
   final Post post;
   final VoidCallback? onToggleSaved;
+  final bool showOpenButton;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -71,6 +78,13 @@ class PostCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(post.body, style: const TextStyle(fontSize: 14.5, height: 1.6)),
+        if (showOpenButton)
+          TextButton(
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => PostDetailPage(post: post)),
+            ),
+            child: const Text('投稿の詳細を見る'),
+          ),
         const SizedBox(height: 12),
         Row(
           children: [
