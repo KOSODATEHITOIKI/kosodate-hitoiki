@@ -50,7 +50,6 @@ class _ComposePageState extends State<ComposePage> {
     titleImage: AppBrand.titleCompose,
     message: 'ここなら、気持ちを書けるよ。\nどんな気持ちも、受けとめます。',
     messageFontSize: 13,
-    horizontalPadding: 12,
     children: [
       _section(
         '投稿の種類',

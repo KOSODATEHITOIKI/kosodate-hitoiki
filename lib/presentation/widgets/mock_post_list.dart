@@ -1,0 +1,81 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/app_icons.dart';
+import '../../domain/models/post.dart';
+import '../providers/post_providers.dart';
+import 'comfort_page.dart';
+import 'post_card.dart';
+
+/// API未接続の画面確認用一覧。実際の投稿と区別して表示する。
+class MockPostList extends ConsumerWidget {
+  const MockPostList({
+    super.key,
+    required this.posts,
+    required this.emptyAsset,
+    required this.emptyTitle,
+    required this.onRetry,
+  });
+  final AsyncValue<List<Post>> posts;
+  final String emptyAsset;
+  final String emptyTitle;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const Text(
+        'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
+        style: TextStyle(fontSize: 11, height: 1.6),
+      ),
+      const SizedBox(height: 12),
+      posts.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => Column(
+          children: [
+            const ComfortNotice(
+              asset: AppIllustrations.connectionRetry,
+              title: '投稿を読み込めませんでした',
+              message: 'もう一度お試しください。',
+            ),
+            TextButton(onPressed: onRetry, child: const Text('再読み込み')),
+          ],
+        ),
+        data: (items) => items.isEmpty
+            ? ComfortNotice(
+                asset: emptyAsset,
+                title: emptyTitle,
+                message: '別の条件や投稿一覧をお試しください。',
+              )
+            : Column(
+                children: [
+                  for (final post in items) ...[
+                    PostCard(
+                      post: post,
+                      onToggleSaved: () async {
+                        try {
+                          await ref
+                              .read(postRepositoryProvider)
+                              .toggleSaved(post.id);
+                          if (!context.mounted) return;
+                          ref.invalidate(feedPostsProvider);
+                          ref.invalidate(searchResultsProvider);
+                          ref.invalidate(myPostsProvider);
+                          ref.invalidate(savedPostsProvider);
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('保存状態を変更できませんでした')),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+      ),
+    ],
+  );
+}

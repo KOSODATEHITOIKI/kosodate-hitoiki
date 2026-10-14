@@ -1,29 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
+import '../../widgets/mock_post_list.dart';
+import '../../providers/post_providers.dart';
 import '../settings/settings_page.dart';
 import '../profile/profile_edit_page.dart';
 import '../auth/auth_page.dart';
 
 /// S-07。プロフィール・投稿取得と認証分岐はIssue #12で接続する。
-class MyPagePage extends StatefulWidget {
+class MyPagePage extends ConsumerStatefulWidget {
   const MyPagePage({super.key});
 
   @override
-  State<MyPagePage> createState() => _MyPagePageState();
+  ConsumerState<MyPagePage> createState() => _MyPagePageState();
 }
 
-class _MyPagePageState extends State<MyPagePage> {
+class _MyPagePageState extends ConsumerState<MyPagePage> {
   bool _savedPosts = false;
 
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: 'マイページ',
     titleImage: AppBrand.titleMyPage,
+    titleImageScale: 1.15,
     message: 'あなたのペースで\nつながれる、ひと息の場所です。',
     children: [
       Align(
@@ -142,14 +146,14 @@ class _MyPagePageState extends State<MyPagePage> {
         ),
         const SizedBox(height: 16),
       ],
-      ComfortNotice(
-        asset: _savedPosts
+      MockPostList(
+        posts: ref.watch(_savedPosts ? savedPostsProvider : myPostsProvider),
+        emptyAsset: _savedPosts
             ? AppIllustrations.emptyBookmarks
             : AppIllustrations.emptyMyPosts,
-        title: _savedPosts ? '保存した投稿は準備中です' : '自分の投稿は準備中です',
-        message: _savedPosts
-            ? 'あとで読み返したい投稿を\nここで確認できるようになります。'
-            : 'あなたが書いた気持ちを\nここで振り返れるようになります。',
+        emptyTitle: _savedPosts ? '保存したサンプル投稿はありません' : '自分のサンプル投稿はありません',
+        onRetry: () =>
+            ref.invalidate(_savedPosts ? savedPostsProvider : myPostsProvider),
       ),
     ],
   );

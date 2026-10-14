@@ -1,22 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
+import '../../../domain/models/post.dart';
+import '../../providers/post_providers.dart';
+import '../../widgets/post_card.dart';
 
-/// S-02。投稿取得はIssue #7で接続する。
-class HomePage extends StatefulWidget {
+/// S-02。投稿取得(Issue #7)はMockPostRepositoryで仮接続済み。
+/// バックエンド実装後はpostRepositoryProviderの差し替えのみで切り替わる。
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key, required this.onCompose});
   final VoidCallback onCompose;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   String _postType = 'すべて';
+
+  static const _typeByLabel = {
+    'ぐち': PostType.grumble,
+    '相談': PostType.consult,
+    'コツ・体験談': PostType.tips,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +38,7 @@ class _HomePageState extends State<HomePage> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(12, 24, 12, 24),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
               const _HomeHeader(),
               const SizedBox(height: 24),
@@ -118,35 +129,12 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  children: [
-                    _illustration(AppIllustrations.emptyFeed, 160),
-                    const SizedBox(height: 16),
-                    const Text(
-                      '投稿一覧は準備中です',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'ここに、みんなの気持ちが並びます。',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
-                ),
+              const Text(
+                'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
+                style: TextStyle(fontSize: 11, height: 1.6),
               ),
+              const SizedBox(height: 12),
+              ..._buildFeed(),
             ],
           ),
         ),
@@ -160,6 +148,71 @@ class _HomePageState extends State<HomePage> {
     height: size,
     excludeFromSemantics: true,
   );
+
+  List<Widget> _buildFeed() {
+    final feed = ref.watch(feedPostsProvider);
+    return feed.when(
+      loading: () => const [
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 32),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ],
+      error: (error, stackTrace) => [_emptyFeedCard('投稿の取得に失敗しました')],
+      data: (posts) {
+        final filtered = _postType == 'すべて'
+            ? posts
+            : posts
+                  .where((post) => post.type == _typeByLabel[_postType])
+                  .toList();
+        if (filtered.isEmpty) {
+          return [_emptyFeedCard('投稿一覧は準備中です')];
+        }
+        return [
+          for (final post in filtered) ...[
+            PostCard(
+              post: post,
+              onToggleSaved: () => ref
+                  .read(postRepositoryProvider)
+                  .toggleSaved(post.id)
+                  .then((_) {
+                    if (!mounted) return;
+                    ref.invalidate(feedPostsProvider);
+                    ref.invalidate(searchResultsProvider);
+                    ref.invalidate(myPostsProvider);
+                    ref.invalidate(savedPostsProvider);
+                  }),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ];
+      },
+    );
+  }
+
+  Widget _emptyFeedCard(String title) => Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(24),
+    ),
+    child: Column(
+      children: [
+        _illustration(AppIllustrations.emptyFeed, 160),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'ここに、みんなの気持ちが並びます。',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textSecondary, height: 1.6),
+        ),
+      ],
+    ),
+  );
 }
 
 /// ボタンの背後に草と雲を配置し、操作・読み上げを遮らない。
@@ -172,7 +225,6 @@ class _ComposeBackdrop extends StatelessWidget {
     builder: (context, constraints) {
       final showDecoration = fitsDecoration(context);
       final cloudSize = (constraints.maxWidth * 0.52).clamp(140.0, 230.0);
-      final leafSize = (constraints.maxWidth * 0.28).clamp(80.0, 120.0);
       return Stack(
         clipBehavior: Clip.hardEdge,
         children: [
@@ -198,15 +250,6 @@ class _ComposeBackdrop extends StatelessWidget {
                           AppDecorations.cloudSoft,
                           width: cloudSize,
                           height: cloudSize,
-                        ),
-                      ),
-                      Positioned(
-                        left: -8,
-                        bottom: -8,
-                        child: SvgPicture.asset(
-                          AppDecorations.leavesSprout,
-                          width: leafSize,
-                          height: leafSize,
                         ),
                       ),
                     ],
@@ -235,7 +278,20 @@ class _HomeHeader extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         if (showDecoration) const SizedBox(height: 154),
-        if (showDecoration)
+        if (showDecoration) ...[
+          Positioned(
+            top: 30,
+            right: -40,
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: SvgPicture.asset(
+                  AppDecorations.cloudSoft,
+                  width: 150,
+                  height: 150,
+                ),
+              ),
+            ),
+          ),
           Positioned(
             top: -36,
             right: -50,
@@ -247,6 +303,7 @@ class _HomeHeader extends StatelessWidget {
               ),
             ),
           ),
+        ],
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -289,9 +346,9 @@ class _HomeHeader extends StatelessWidget {
               '今日も、おつかれさま。',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             const Text(
-              'がんばるあなたの気持ちに、ここでひと息つけますように。',
+              'がんばるあなたの気持ちに、\nここでひと息つけますように。',
               style: TextStyle(fontSize: 13.5, height: 1.7),
             ),
           ],

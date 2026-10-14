@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/mypage/mypage_page.dart';
@@ -9,9 +10,11 @@ import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 void main() {
   testWidgets('保存した投稿に切り替え、登録案内を閉じても選択を保持する', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const Scaffold(body: MyPagePage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: MyPagePage()),
+        ),
       ),
     );
     await tester.scrollUntilVisible(
@@ -62,11 +65,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
-          child: Scaffold(body: MyPagePage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
+            child: Scaffold(body: MyPagePage()),
+          ),
         ),
       ),
     );

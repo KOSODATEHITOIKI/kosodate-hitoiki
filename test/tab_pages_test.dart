@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/search/search_page.dart';
@@ -7,9 +8,11 @@ import 'package:kosodate_hitoiki/presentation/pages/notifications/notifications_
 void main() {
   testWidgets('検索語の入力とクリア、種類選択ができる', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const Scaffold(body: SearchPage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: SearchPage()),
+        ),
       ),
     );
     await tester.enterText(find.byType(TextField), '夜泣き');
@@ -34,11 +37,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
-          child: Scaffold(body: NotificationsPage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
+            child: Scaffold(body: NotificationsPage()),
+          ),
         ),
       ),
     );
