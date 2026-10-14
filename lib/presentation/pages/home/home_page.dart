@@ -52,10 +52,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   label: const Text(
                     '気持ちを書く  ›',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -75,7 +72,7 @@ class _HomePageState extends State<HomePage> {
                     _illustration(AppDecorations.leavesSprout, 36),
                     const SizedBox(width: 16),
                     const Expanded(
-                      child: Text('話題を選ぶ', style: TextStyle(fontSize: 13.5)),
+                      child: Text('話題を選ぶ', style: TextStyle(fontSize: 13)),
                     ),
                     IconButton(
                       tooltip: '話題の絞り込みは準備中です',
@@ -128,7 +125,7 @@ class _HomePageState extends State<HomePage> {
                     const Text(
                       '投稿一覧は準備中です',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -205,7 +202,7 @@ class _HomeHeader extends StatelessWidget {
                     child: Text(
                       'ひと息',
                       style: TextStyle(
-                        fontSize: 27,
+                        fontSize: 25,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2,
                       ),
@@ -229,12 +226,12 @@ class _HomeHeader extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 '今日も、おつかれさま。',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               const Text(
                 'がんばるあなたの気持ちに、\nここでひと息つけますように。',
-                style: TextStyle(fontSize: 13.5, height: 1.7),
+                style: TextStyle(fontSize: 13, height: 1.7),
               ),
             ],
           ),

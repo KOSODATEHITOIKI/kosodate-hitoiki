@@ -137,14 +137,14 @@ class UsageGuidePage extends StatelessWidget {
                 Text(
                   item.$1,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   item.$2,
-                  style: const TextStyle(fontSize: 13.5, height: 1.8),
+                  style: const TextStyle(fontSize: 13, height: 1.8),
                 ),
               ],
             ),

@@ -103,7 +103,7 @@ class _ComposePageState extends State<ComposePage> {
                   Expanded(
                     child: Text(
                       '名前・学校や園・住んでいる場所は書かないでね。',
-                      style: TextStyle(fontSize: 12.5, height: 1.6),
+                      style: TextStyle(fontSize: 12, height: 1.6),
                     ),
                   ),
                 ],
@@ -126,7 +126,7 @@ class _ComposePageState extends State<ComposePage> {
       const SizedBox(height: 16),
       _section(
         '話題（任意・1つ）',
-        const Text('話題の選択は準備中です。', style: TextStyle(fontSize: 12.5)),
+        const Text('話題の選択は準備中です。', style: TextStyle(fontSize: 12)),
       ),
       const SizedBox(height: 24),
       FilledButton.icon(
@@ -181,7 +181,7 @@ class _ComposePageState extends State<ComposePage> {
                       Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 13.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -212,7 +212,7 @@ class _ComposePageState extends State<ComposePage> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         child,

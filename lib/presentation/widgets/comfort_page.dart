@@ -88,7 +88,7 @@ class _ComfortHeader extends StatelessWidget {
                     child: Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 27,
+                        fontSize: 25,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -109,7 +109,7 @@ class _ComfortHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(message, style: const TextStyle(fontSize: 14, height: 1.7)),
+              Text(message, style: const TextStyle(fontSize: 13, height: 1.7)),
             ],
           ),
         ),
@@ -147,13 +147,13 @@ class ComfortNotice extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 12.5, height: 1.7),
+          style: const TextStyle(fontSize: 12, height: 1.7),
         ),
       ],
     ),
