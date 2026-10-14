@@ -225,7 +225,7 @@ class _WelcomeHeader extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        if (showDecoration)
+        if (showDecoration) ...[
           Positioned(
             top: -58,
             right: -50,
@@ -237,6 +237,18 @@ class _WelcomeHeader extends StatelessWidget {
               ),
             ),
           ),
+          Positioned(
+            top: 108,
+            right: -6,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.leavesTall,
+                width: 72,
+                height: 72,
+              ),
+            ),
+          ),
+        ],
         Padding(
           padding: EdgeInsets.zero,
           child: Column(

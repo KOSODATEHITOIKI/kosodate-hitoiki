@@ -47,7 +47,7 @@ class _ComfortHeader extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        if (showDecoration)
+        if (showDecoration) ...[
           Positioned(
             top: -36,
             right: -50,
@@ -59,6 +59,18 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
+          Positioned(
+            top: 90,
+            right: -6,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.leavesTall,
+                width: 60,
+                height: 60,
+              ),
+            ),
+          ),
+        ],
         Padding(
           padding: const EdgeInsets.only(right: 90),
           child: Column(

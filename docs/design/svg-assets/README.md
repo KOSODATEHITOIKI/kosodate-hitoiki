@@ -108,3 +108,6 @@ Google・Appleのブランドロゴ、ユーザーがアップロードする画
 |[illustration-support-heart-hands.svg](illustrations/illustration-support-heart-hands.svg)|こころの相談・手で包むハート|
 |[illustration-support-parent-child.svg](illustrations/illustration-support-parent-child.svg)|子育ての相談・親子|
 |[illustration-support-home-family.svg](illustrations/illustration-support-home-family.svg)|子どもの安全・家と家族|
+
+## Flutter用の変換版
+patternを直接描画する図形とclipPathに展開。PNGの埋め込みなし。元の色・質感・名前を維持。ブラウザー相当の描画で比較済み。flutter_svg 2.3.0のFlutterテストエンジンで全89点の描画を確認済み。2.0.10+1と実機では未検証です。詳細はFLUTTER-VALIDATION.md。図形数が増えるためイラストは事前読み込みなど描画負荷の確認が必要です。
