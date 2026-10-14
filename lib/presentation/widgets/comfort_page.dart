@@ -82,18 +82,12 @@ class _ComfortHeader extends StatelessWidget {
       180.0,
       240.0,
     );
-    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
-      90.0,
-      110.0,
-    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
         if (showDecoration)
           SizedBox(
-            height: illustration == null
-                ? 102 + leafSize
-                : illustrationSize * 0.85,
+            height: illustration == null ? 154.0 : illustrationSize * 0.85,
           ),
         if (showDecoration && illustration != null)
           Positioned(
@@ -109,7 +103,7 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
-        if (showDecoration && illustration == null) ...[
+        if (showDecoration && illustration == null)
           Positioned(
             top: -36,
             right: -50,
@@ -121,18 +115,6 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: 102,
-            right: -6,
-            child: ExcludeSemantics(
-              child: SvgPicture.asset(
-                AppDecorations.leavesTall,
-                width: leafSize,
-                height: leafSize,
-              ),
-            ),
-          ),
-        ],
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

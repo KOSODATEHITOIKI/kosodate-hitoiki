@@ -231,15 +231,11 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
-    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
-      90.0,
-      110.0,
-    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        if (showDecoration) SizedBox(height: 102 + leafSize),
-        if (showDecoration) ...[
+        if (showDecoration) const SizedBox(height: 154),
+        if (showDecoration)
           Positioned(
             top: -36,
             right: -50,
@@ -251,18 +247,6 @@ class _HomeHeader extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: 102,
-            right: -6,
-            child: ExcludeSemantics(
-              child: SvgPicture.asset(
-                AppDecorations.leavesTall,
-                width: leafSize,
-                height: leafSize,
-              ),
-            ),
-          ),
-        ],
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
