@@ -49,6 +49,7 @@ class _ComposePageState extends State<ComposePage> {
     title: '書く',
     titleImage: AppBrand.titleCompose,
     message: 'ここなら、気持ちをそのまま書けるよ。\nどんな気持ちも、受けとめます。',
+    messageFontSize: 13,
     horizontalPadding: 12,
     children: [
       _section(
@@ -119,27 +120,25 @@ class _ComposePageState extends State<ComposePage> {
       const SizedBox(height: 16),
       _section(
         '反応の希望',
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final options = [
-              _modeOption(_ResponseMode.listening, 'ただ聞いてほしい', '共感ボタン・定型文のみ'),
-              _modeOption(_ResponseMode.advice, '話を聞きたい', '自由コメントを受け付ける'),
-            ];
-            final scale = MediaQuery.textScalerOf(context).scale(1);
-            if (constraints.maxWidth / scale >= 400) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: options[0]),
-                  const SizedBox(width: 12),
-                  Expanded(child: options[1]),
-                ],
-              );
-            }
-            return Column(
-              children: [options[0], const SizedBox(height: 12), options[1]],
-            );
-          },
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _modeOption(
+                _ResponseMode.listening,
+                'ただ聞いてほしい',
+                '共感ボタン・定型文のみ',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _modeOption(
+                _ResponseMode.advice,
+                '話を聞きたい',
+                '自由コメントを受け付ける',
+              ),
+            ),
+          ],
         ),
       ),
       const SizedBox(height: 16),
