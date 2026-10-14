@@ -172,7 +172,9 @@ class _ComfortHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (showDecoration && !useBrandLogo && titleImage == null) ...[
+                  if (showDecoration &&
+                      !useBrandLogo &&
+                      titleImage == null) ...[
                     const SizedBox(width: 4),
                     SvgPicture.asset(
                       AppDecorations.leavesSprout,
