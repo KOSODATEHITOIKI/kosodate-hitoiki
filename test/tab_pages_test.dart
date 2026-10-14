@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/presentation/pages/search/search_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/notifications/notifications_page.dart';
 
@@ -38,6 +39,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [isLoggedInProvider.overrideWithValue(true)],
         child: MaterialApp(
           theme: AppTheme.light,
           home: const MediaQuery(

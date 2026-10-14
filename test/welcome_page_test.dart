@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/app.dart';
@@ -7,7 +8,12 @@ import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 
 void main() {
   testWidgets('起動時に利用案内を表示し、ゲスト閲覧後は案内に戻らない', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: App()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [isLoggedInProvider.overrideWithValue(false)],
+        child: const App(),
+      ),
+    );
 
     expect(find.byType(WelcomePage), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
@@ -28,7 +34,12 @@ void main() {
 
   for (final action in ['登録してはじめる', 'ログイン']) {
     testWidgets('$actionから認証画面を開いて元の案内へ戻れる', (tester) async {
-      await tester.pumpWidget(const ProviderScope(child: App()));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [isLoggedInProvider.overrideWithValue(false)],
+          child: const App(),
+        ),
+      );
       await tester.ensureVisible(find.text(action));
       await tester.tap(find.text(action));
       await tester.pumpAndSettle();
