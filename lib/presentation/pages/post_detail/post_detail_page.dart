@@ -88,6 +88,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                   PostCard(
                     post: current,
                     showOpenButton: false,
+                    showPresetReactions: true,
                     onOpenComments: _openComments,
                     onToggleSaved: () async {
                       try {
