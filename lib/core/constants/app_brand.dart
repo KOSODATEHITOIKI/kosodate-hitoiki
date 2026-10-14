@@ -7,4 +7,9 @@ class AppBrand {
 
   static const logo = '$_base/logo-hitoiki.png';
   static const tagline = '$_base/tagline-hitoiki.png';
+
+  static const titleCompose = '$_base/title-compose.png';
+  static const titleSearch = '$_base/title-search.png';
+  static const titleNotifications = '$_base/title-notifications.png';
+  static const titleMyPage = '$_base/title-my-page.png';
 }

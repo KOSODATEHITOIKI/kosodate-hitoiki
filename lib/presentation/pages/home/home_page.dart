@@ -231,15 +231,11 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
-    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
-      90.0,
-      110.0,
-    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        if (showDecoration) SizedBox(height: 102 + leafSize),
-        if (showDecoration) ...[
+        if (showDecoration) const SizedBox(height: 154),
+        if (showDecoration)
           Positioned(
             top: -36,
             right: -50,
@@ -251,24 +247,12 @@ class _HomeHeader extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: 102,
-            right: -6,
-            child: ExcludeSemantics(
-              child: SvgPicture.asset(
-                AppDecorations.leavesTall,
-                width: leafSize,
-                height: leafSize,
-              ),
-            ),
-          ),
-        ],
-        Padding(
-          padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (showDecoration)
@@ -299,18 +283,18 @@ class _HomeHeader extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
-              const Text(
-                '今日も、おつかれさま。',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'がんばるあなたの気持ちに、ここでひと息つけますように。',
-                style: TextStyle(fontSize: 13.5, height: 1.7),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '今日も、おつかれさま。',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'がんばるあなたの気持ちに、ここでひと息つけますように。',
+              style: TextStyle(fontSize: 13.5, height: 1.7),
+            ),
+          ],
         ),
       ],
     );

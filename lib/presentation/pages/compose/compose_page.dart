@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
 
 /// S-04。投稿API・送信前チェックとの接続はIssue #9で行う。
@@ -44,17 +47,22 @@ class _ComposePageState extends State<ComposePage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: '書く',
-    message: 'ここなら、気持ちをそのまま書けるよ。\nどんな気持ちも、受けとめます。',
+    titleImage: AppBrand.titleCompose,
+    message: 'ここなら、気持ちを書けるよ。\nどんな気持ちも、受けとめます。',
+    messageFontSize: 13,
+    horizontalPadding: 12,
     children: [
       _section(
         '投稿の種類',
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 6,
+          runSpacing: 6,
           children: [
             for (final type in ['ぐち', '相談', 'コツ・体験談'])
               ChoiceChip(
-                label: Text(type),
+                label: Text(type, maxLines: 1, softWrap: false),
+                labelStyle: const TextStyle(fontSize: 12),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                 selected: _postType == type,
                 onSelected: (_) => setState(() => _postType = type),
                 showCheckmark: false,
@@ -62,10 +70,7 @@ class _ComposePageState extends State<ComposePage> {
                 backgroundColor: AppColors.background,
                 shape: const StadiumBorder(),
                 side: const BorderSide(color: AppColors.divider),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               ),
           ],
         ),
@@ -78,7 +83,7 @@ class _ComposePageState extends State<ComposePage> {
           children: [
             TextField(
               controller: _body,
-              minLines: 5,
+              minLines: 4,
               maxLines: 10,
               maxLength: 1000,
               onChanged: (_) => setState(() {}),
@@ -132,7 +137,18 @@ class _ComposePageState extends State<ComposePage> {
       FilledButton.icon(
         key: const ValueKey('compose-submit'),
         onPressed: _body.text.trim().isEmpty ? null : _showPostingNotice,
-        icon: const Icon(Icons.edit_outlined),
+        icon: SvgPicture.asset(
+          AppIcons.navCompose,
+          width: 24,
+          height: 24,
+          excludeFromSemantics: true,
+          colorFilter: ColorFilter.mode(
+            _body.text.trim().isEmpty
+                ? AppColors.textSecondary
+                : AppColors.white,
+            BlendMode.srcIn,
+          ),
+        ),
         label: const Text('投稿する'),
       ),
       const SizedBox(height: 12),
@@ -147,6 +163,7 @@ class _ComposePageState extends State<ComposePage> {
   Widget _modeOption(_ResponseMode value, String title, String description) {
     final selected = _mode == value;
     return Semantics(
+      key: ValueKey('response-${value.name}'),
       selected: selected,
       button: true,
       child: Material(
@@ -164,7 +181,7 @@ class _ComposePageState extends State<ComposePage> {
           borderRadius: BorderRadius.circular(16),
           onTap: () => setState(() => _mode = value),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Icon(
@@ -173,16 +190,21 @@ class _ComposePageState extends State<ComposePage> {
                       : Icons.radio_button_off,
                   color: selected ? AppColors.primary : AppColors.textPrimary,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -202,7 +224,7 @@ class _ComposePageState extends State<ComposePage> {
   }
 
   Widget _section(String title, Widget child) => Container(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
       color: AppColors.white,
       borderRadius: BorderRadius.circular(24),

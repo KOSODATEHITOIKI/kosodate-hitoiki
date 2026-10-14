@@ -13,15 +13,21 @@ class ComfortPage extends StatelessWidget {
     required this.message,
     required this.children,
     this.useBrandLogo = false,
+    this.titleImage,
     this.headerIllustration,
     this.horizontalPadding = 20,
+    this.messageFontSize = 14,
+    this.subtitle,
   });
   final String title;
   final String message;
   final List<Widget> children;
   final bool useBrandLogo;
+  final String? titleImage;
   final String? headerIllustration;
   final double horizontalPadding;
+  final double messageFontSize;
+  final String? subtitle;
   @override
   Widget build(BuildContext context) => SafeArea(
     child: Align(
@@ -40,7 +46,10 @@ class ComfortPage extends StatelessWidget {
               title: title,
               message: message,
               useBrandLogo: useBrandLogo,
+              titleImage: titleImage,
               illustration: headerIllustration,
+              messageFontSize: messageFontSize,
+              subtitle: subtitle,
             ),
             const SizedBox(height: 28),
             ...children,
@@ -57,12 +66,18 @@ class _ComfortHeader extends StatelessWidget {
     required this.title,
     required this.message,
     required this.useBrandLogo,
+    this.titleImage,
     this.illustration,
+    required this.messageFontSize,
+    this.subtitle,
   });
   final String title;
   final String message;
   final bool useBrandLogo;
+  final String? titleImage;
   final String? illustration;
+  final double messageFontSize;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -71,18 +86,12 @@ class _ComfortHeader extends StatelessWidget {
       180.0,
       240.0,
     );
-    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
-      90.0,
-      110.0,
-    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
         if (showDecoration)
           SizedBox(
-            height: illustration == null
-                ? 90 + leafSize
-                : illustrationSize * 0.85,
+            height: illustration == null ? 154.0 : illustrationSize * 0.85,
           ),
         if (showDecoration && illustration != null)
           Positioned(
@@ -98,7 +107,7 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
-        if (showDecoration && illustration == null) ...[
+        if (showDecoration && illustration == null)
           Positioned(
             top: -36,
             right: -50,
@@ -110,29 +119,34 @@ class _ComfortHeader extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: 90,
-            right: -6,
-            child: ExcludeSemantics(
-              child: SvgPicture.asset(
-                AppDecorations.leavesTall,
-                width: leafSize,
-                height: leafSize,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(
+                right: (useBrandLogo || titleImage != null)
+                    ? (showDecoration ? 72 : 0)
+                    : 90,
               ),
-            ),
-          ),
-        ],
-        Padding(
-          padding: EdgeInsets.only(
-            right: useBrandLogo ? (showDecoration ? 72 : 0) : 90,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (useBrandLogo && showDecoration)
+                  if (titleImage != null && showDecoration)
+                    Flexible(
+                      child: Semantics(
+                        label: title,
+                        header: true,
+                        child: Image.asset(
+                          titleImage!,
+                          width: (MediaQuery.sizeOf(context).width * 0.42)
+                              .clamp(134.0, 180.0),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    )
+                  else if (useBrandLogo && showDecoration)
                     Flexible(
                       child: Semantics(
                         label: title,
@@ -157,7 +171,9 @@ class _ComfortHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (showDecoration && !useBrandLogo) ...[
+                  if (showDecoration &&
+                      !useBrandLogo &&
+                      titleImage == null) ...[
                     const SizedBox(width: 4),
                     SvgPicture.asset(
                       AppDecorations.leavesSprout,
@@ -172,10 +188,23 @@ class _ComfortHeader extends StatelessWidget {
                   ],
                 ],
               ),
+            ),
+            if (subtitle != null) ...[
               const SizedBox(height: 8),
-              Text(message, style: const TextStyle(fontSize: 14, height: 1.7)),
+              Text(
+                subtitle!,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
-          ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: TextStyle(fontSize: messageFontSize, height: 1.7),
+            ),
+          ],
         ),
       ],
     );
