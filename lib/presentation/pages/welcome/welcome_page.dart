@@ -56,7 +56,7 @@ class WelcomePage extends StatelessWidget {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 480),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        padding: const EdgeInsets.fromLTRB(12, 24, 12, 32),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -65,7 +65,7 @@ class WelcomePage extends StatelessWidget {
                             const SizedBox(height: 24),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                                horizontal: 12,
                                 vertical: 20,
                               ),
                               decoration: BoxDecoration(
@@ -79,22 +79,21 @@ class WelcomePage extends StatelessWidget {
                                     background: AppColors.surface,
                                     title: '名前や個人情報は書かない',
                                     description:
-                                        '安心して気持ちを話せるように、\n個人が特定される情報は書かないでください。',
+                                        '安心して気持ちを話せるように、個人が特定される情報は書かないでください。',
                                   ),
                                   SizedBox(height: 24),
                                   _Guideline(
                                     asset: AppDecorations.heartWarm,
                                     background: AppColors.accentPink,
                                     title: '気持ちを否定しない',
-                                    description: 'どんな気持ちも、否定せずに\n受けとめ合いましょう。',
+                                    description: 'どんな気持ちも、否定せずに受けとめ合いましょう。',
                                   ),
                                   SizedBox(height: 24),
                                   _Guideline(
-                                    asset: AppDecorations.sunSimple,
+                                    asset: AppDecorations.sunSmiling,
                                     background: AppColors.surface,
                                     title: '自分のペースで大丈夫',
-                                    description:
-                                        '見るだけでも、書くのは後でも。\nあなたのペースで使えます。',
+                                    description: '見るだけでも、書くのは後でも。あなたのペースで使えます。',
                                   ),
                                 ],
                               ),
@@ -343,7 +342,7 @@ class _Guideline extends StatelessWidget {
           decoration: BoxDecoration(color: background, shape: BoxShape.circle),
           child: SvgPicture.asset(asset, excludeFromSemantics: true),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

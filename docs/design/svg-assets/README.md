@@ -111,7 +111,3 @@ Google・Appleのブランドロゴ、ユーザーがアップロードする画
 
 ## Flutter用の変換版
 patternを直接描画する図形とclipPathに展開。PNGの埋め込みなし。元の色・質感・名前を維持。ブラウザー相当の描画で比較済み。flutter_svg 2.3.0のFlutterテストエンジンで全89点の描画を確認済み。2.0.10+1と実機では未検証です。詳細はFLUTTER-VALIDATION.md。図形数が増えるためイラストは事前読み込みなど描画負荷の確認が必要です。
-
-### 案内画面の太陽（2026-10-14）
-
-`assets/decorations/decoration-sun-simple.svg` はS-01「自分のペースで大丈夫」用の顔なし太陽。笑顔の太陽から顔・頬のグループを除いたSVGで、水彩の円と光線、中央配置を保持する。ヘッダーには引き続き `decoration-sun-smiling.svg` を使う。
