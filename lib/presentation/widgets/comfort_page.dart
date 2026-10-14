@@ -13,6 +13,7 @@ class ComfortPage extends StatelessWidget {
     required this.message,
     required this.children,
     this.useBrandLogo = false,
+    this.titleImage,
     this.headerIllustration,
     this.horizontalPadding = 20,
     this.messageFontSize = 14,
@@ -22,6 +23,7 @@ class ComfortPage extends StatelessWidget {
   final String message;
   final List<Widget> children;
   final bool useBrandLogo;
+  final String? titleImage;
   final String? headerIllustration;
   final double horizontalPadding;
   final double messageFontSize;
@@ -45,6 +47,7 @@ class ComfortPage extends StatelessWidget {
               title: title,
               message: message,
               useBrandLogo: useBrandLogo,
+              titleImage: titleImage,
               illustration: headerIllustration,
               messageFontSize: messageFontSize,
               subtitle: subtitle,
@@ -64,6 +67,7 @@ class _ComfortHeader extends StatelessWidget {
     required this.title,
     required this.message,
     required this.useBrandLogo,
+    this.titleImage,
     this.illustration,
     required this.messageFontSize,
     this.subtitle,
@@ -71,6 +75,7 @@ class _ComfortHeader extends StatelessWidget {
   final String title;
   final String message;
   final bool useBrandLogo;
+  final String? titleImage;
   final String? illustration;
   final double messageFontSize;
   final String? subtitle;
@@ -120,12 +125,29 @@ class _ComfortHeader extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.only(
-                right: useBrandLogo ? (showDecoration ? 72 : 0) : 90,
+                right: (useBrandLogo || titleImage != null)
+                    ? (showDecoration ? 72 : 0)
+                    : 90,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (useBrandLogo && showDecoration)
+                  if (titleImage != null && showDecoration)
+                    Flexible(
+                      child: Semantics(
+                        label: title,
+                        header: true,
+                        child: Image.asset(
+                          titleImage!,
+                          width: (MediaQuery.sizeOf(context).width * 0.42)
+                              .clamp(134.0, 180.0),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    )
+                  else if (useBrandLogo && showDecoration)
                     Flexible(
                       child: Semantics(
                         label: title,
@@ -150,7 +172,7 @@ class _ComfortHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (showDecoration && !useBrandLogo) ...[
+                  if (showDecoration && !useBrandLogo && titleImage == null) ...[
                     const SizedBox(width: 4),
                     SvgPicture.asset(
                       AppDecorations.leavesSprout,

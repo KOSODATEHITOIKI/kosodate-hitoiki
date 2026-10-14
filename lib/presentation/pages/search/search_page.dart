@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
@@ -24,6 +25,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: '検索',
+    titleImage: AppBrand.titleSearch,
     message: '子育ての毎日に、\nひと息つける場所を。',
     horizontalPadding: 12,
     children: [

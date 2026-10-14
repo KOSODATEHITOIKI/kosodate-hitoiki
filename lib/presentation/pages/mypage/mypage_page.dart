@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
@@ -37,6 +38,7 @@ class _MyPagePageState extends State<MyPagePage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: 'マイページ',
+    titleImage: AppBrand.titleMyPage,
     message: 'あなたのペースで\nつながれる、ひと息の場所です。',
     children: [
       Align(

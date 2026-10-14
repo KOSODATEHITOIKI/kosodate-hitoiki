@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
@@ -15,6 +16,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: 'お知らせ',
+    titleImage: AppBrand.titleNotifications,
     message: 'ひと息のつながりから、\nうれしいお知らせをお届けします。',
     children: [
       SegmentedButton<bool>(

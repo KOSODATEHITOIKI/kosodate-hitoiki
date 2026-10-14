@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
@@ -46,6 +47,7 @@ class _ComposePageState extends State<ComposePage> {
   @override
   Widget build(BuildContext context) => ComfortPage(
     title: '書く',
+    titleImage: AppBrand.titleCompose,
     message: 'ここなら、気持ちをそのまま書けるよ。\nどんな気持ちも、受けとめます。',
     horizontalPadding: 12,
     children: [
