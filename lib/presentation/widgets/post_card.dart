@@ -10,6 +10,7 @@ import '../pages/profile/other_profile_page.dart';
 import '../pages/auth/auth_page.dart';
 import '../providers/auth_provider.dart';
 import '../providers/mock_reaction_providers.dart';
+import 'reaction_picker.dart';
 
 /// 投稿一覧・検索結果・マイページ共通の投稿カード(docs/design S-02・S-05参照)。
 class PostCard extends ConsumerWidget {
@@ -19,16 +20,19 @@ class PostCard extends ConsumerWidget {
     this.onToggleSaved,
     this.showOpenButton = true,
     this.onOpenComments,
+    this.showPresetReactions = false,
   });
 
   final Post post;
   final VoidCallback? onToggleSaved;
   final bool showOpenButton;
   final VoidCallback? onOpenComments;
+  final bool showPresetReactions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reacted = ref.watch(mockEmpathyProvider).contains(post.id);
+    final reaction = ref.watch(mockReactionsProvider)[post.id];
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -116,8 +120,12 @@ class PostCard extends ConsumerWidget {
                     _FooterChip(
                       icon: AppIcons.heart,
                       label:
-                          '${post.isMine ? 'わかる ${post.empathyCount}' : 'わかる'}${reacted ? ' ✓' : ''}',
-                      selected: reacted,
+                          !showPresetReactions && reaction != null && !reacted
+                          ? '${reaction.label} ✓'
+                          : '${post.isMine ? 'わかる ${post.empathyCount}' : 'わかる'}${reacted ? ' ✓' : ''}',
+                      selected: showPresetReactions
+                          ? reacted
+                          : reaction != null,
                       onTap: () {
                         if (!ref.read(isLoggedInProvider)) {
                           Navigator.of(context).push<void>(
@@ -126,12 +134,16 @@ class PostCard extends ConsumerWidget {
                           return;
                         }
                         ref.read(mockReactionAuthGuardProvider);
-                        final current = ref.read(mockEmpathyProvider);
-                        ref
-                            .read(mockEmpathyProvider.notifier)
-                            .state = current.contains(post.id)
-                            ? ({...current}..remove(post.id))
-                            : {...current, post.id};
+                        final current = {...ref.read(mockReactionsProvider)};
+                        if (current[post.id] == MockReaction.empathy ||
+                            (!showPresetReactions &&
+                                current.containsKey(post.id))) {
+                          current.remove(post.id);
+                        } else {
+                          current[post.id] = MockReaction.empathy;
+                        }
+                        ref.read(mockReactionsProvider.notifier).state =
+                            current;
                       },
                       background: reacted
                           ? AppColors.secondary
@@ -154,11 +166,25 @@ class PostCard extends ConsumerWidget {
                             ? 'コメント ${post.commentCount}'
                             : 'コメントする',
                         background: AppColors.accentLeaf.withValues(alpha: 0.3),
-                      )
-                    else
+                      ),
+                    if (showPresetReactions)
                       _FooterChip(
                         icon: AppIcons.send,
-                        label: '定型文を送る',
+                        selected: reaction != null && !reacted,
+                        onTap: () {
+                          if (!ref.read(isLoggedInProvider)) {
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute(
+                                builder: (_) => const AuthPage(),
+                              ),
+                            );
+                            return;
+                          }
+                          showReactionPicker(context, post.id);
+                        },
+                        label: reaction != null && !reacted
+                            ? '${reaction.label} ✓'
+                            : '定型文を送る',
                         background: AppColors.secondary.withValues(alpha: 0.45),
                       ),
                   ],
