@@ -42,6 +42,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
   Widget build(BuildContext context) => ComfortPage(
     title: 'マイページ',
     titleImage: AppBrand.titleMyPage,
+    titleImageScale: 1.15,
     message: 'あなたのペースで\nつながれる、ひと息の場所です。',
     children: [
       Align(

@@ -14,6 +14,7 @@ class ComfortPage extends StatelessWidget {
     required this.children,
     this.useBrandLogo = false,
     this.titleImage,
+    this.titleImageScale = 1,
     this.headerIllustration,
     this.horizontalPadding = 20,
     this.messageFontSize = 14,
@@ -24,6 +25,7 @@ class ComfortPage extends StatelessWidget {
   final List<Widget> children;
   final bool useBrandLogo;
   final String? titleImage;
+  final double titleImageScale;
   final String? headerIllustration;
   final double horizontalPadding;
   final double messageFontSize;
@@ -48,6 +50,7 @@ class ComfortPage extends StatelessWidget {
               message: message,
               useBrandLogo: useBrandLogo,
               titleImage: titleImage,
+              titleImageScale: titleImageScale,
               illustration: headerIllustration,
               messageFontSize: messageFontSize,
               subtitle: subtitle,
@@ -68,6 +71,7 @@ class _ComfortHeader extends StatelessWidget {
     required this.message,
     required this.useBrandLogo,
     this.titleImage,
+    this.titleImageScale = 1,
     this.illustration,
     required this.messageFontSize,
     this.subtitle,
@@ -76,6 +80,7 @@ class _ComfortHeader extends StatelessWidget {
   final String message;
   final bool useBrandLogo;
   final String? titleImage;
+  final double titleImageScale;
   final String? illustration;
   final double messageFontSize;
   final String? subtitle;
@@ -139,8 +144,10 @@ class _ComfortHeader extends StatelessWidget {
                         header: true,
                         child: Image.asset(
                           titleImage!,
-                          width: (MediaQuery.sizeOf(context).width * 0.42)
-                              .clamp(134.0, 180.0),
+                          width:
+                              (MediaQuery.sizeOf(context).width * 0.42)
+                                  .clamp(134.0, 180.0) *
+                              titleImageScale,
                           fit: BoxFit.contain,
                           alignment: Alignment.centerLeft,
                           excludeFromSemantics: true,

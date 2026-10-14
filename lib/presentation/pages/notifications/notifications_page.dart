@@ -17,6 +17,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget build(BuildContext context) => ComfortPage(
     title: 'お知らせ',
     titleImage: AppBrand.titleNotifications,
+    titleImageScale: 1.15,
     message: 'ひと息のつながりから、\nうれしいお知らせをお届けします。',
     children: [
       SegmentedButton<bool>(
