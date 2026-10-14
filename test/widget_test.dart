@@ -3,10 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kosodate_hitoiki/app.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 
 void main() {
   testWidgets('ボトムナビゲーションの5タブが表示される', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: App()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [isLoggedInProvider.overrideWithValue(false)],
+        child: const App(),
+      ),
+    );
     await tester.ensureVisible(find.text('登録せずに読む'));
     await tester.tap(find.text('登録せずに読む'));
     await tester.pumpAndSettle();
@@ -23,7 +29,12 @@ void main() {
   });
 
   testWidgets('ホームの投稿ボタンから書くタブへ移動できる', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: App()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [isLoggedInProvider.overrideWithValue(false)],
+        child: const App(),
+      ),
+    );
     await tester.ensureVisible(find.text('登録せずに読む'));
     await tester.tap(find.text('登録せずに読む'));
     await tester.pumpAndSettle();

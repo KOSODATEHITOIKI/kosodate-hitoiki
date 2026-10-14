@@ -9,6 +9,7 @@ class MockNotification {
     required this.asset,
     required this.ageLabel,
     this.initiallyRead = false,
+    this.postId,
   });
   final String id;
   final String title;
@@ -16,11 +17,13 @@ class MockNotification {
   final String asset;
   final String ageLabel;
   final bool initiallyRead;
+  final String? postId;
 }
 
 const mockNotifications = [
   MockNotification(
     id: 'comment',
+    postId: 'p2',
     title: 'はなさんがコメントしました',
     body: '「わかります！うちも同じです。一緒にがんばりましょう。」',
     asset: AppAvatars.defaultTulip,
@@ -28,6 +31,7 @@ const mockNotifications = [
   ),
   MockNotification(
     id: 'reply',
+    postId: 'p3',
     title: '返信が届きました',
     body: '「そうなんですね！とても参考になりました。」',
     asset: AppIcons.reply,
@@ -35,6 +39,7 @@ const mockNotifications = [
   ),
   MockNotification(
     id: 'empathy',
+    postId: 'p1',
     title: '共感が届きました',
     body: 'あなたの投稿に8件の共感が届いています。',
     asset: AppDecorations.heartWarm,
