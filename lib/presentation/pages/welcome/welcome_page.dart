@@ -223,7 +223,10 @@ class _WelcomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
-    final leafSize = (MediaQuery.sizeOf(context).width * 0.28).clamp(96.0, 128.0);
+    final leafSize = (MediaQuery.sizeOf(context).width * 0.28).clamp(
+      96.0,
+      128.0,
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -263,7 +266,10 @@ class _WelcomeHeader extends StatelessWidget {
                   image: true,
                   child: Image.asset(
                     AppBrand.logo,
-                    height: 44,
+                    width: (MediaQuery.sizeOf(context).width * 0.42).clamp(
+                      134.0,
+                      180.0,
+                    ),
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
                     excludeFromSemantics: true,
