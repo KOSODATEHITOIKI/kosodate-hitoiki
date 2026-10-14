@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_brand.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/utils/accessibility.dart';
 
@@ -11,10 +12,16 @@ class ComfortPage extends StatelessWidget {
     required this.title,
     required this.message,
     required this.children,
+    this.useBrandLogo = false,
+    this.headerIllustration,
+    this.horizontalPadding = 20,
   });
   final String title;
   final String message;
   final List<Widget> children;
+  final bool useBrandLogo;
+  final String? headerIllustration;
+  final double horizontalPadding;
   @override
   Widget build(BuildContext context) => SafeArea(
     child: Align(
@@ -22,9 +29,19 @@ class ComfortPage extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            20,
+            horizontalPadding,
+            32,
+          ),
           children: [
-            _ComfortHeader(title: title, message: message),
+            _ComfortHeader(
+              title: title,
+              message: message,
+              useBrandLogo: useBrandLogo,
+              illustration: headerIllustration,
+            ),
             const SizedBox(height: 28),
             ...children,
           ],
@@ -36,13 +53,24 @@ class ComfortPage extends StatelessWidget {
 
 /// docs/design のS-02/S-04〜S-07/S-11共通の見出し(大きな太陽+葉のアクセント)。
 class _ComfortHeader extends StatelessWidget {
-  const _ComfortHeader({required this.title, required this.message});
+  const _ComfortHeader({
+    required this.title,
+    required this.message,
+    required this.useBrandLogo,
+    this.illustration,
+  });
   final String title;
   final String message;
+  final bool useBrandLogo;
+  final String? illustration;
 
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
+    final illustrationSize = (MediaQuery.sizeOf(context).width * 0.6).clamp(
+      180.0,
+      240.0,
+    );
     final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
       90.0,
       110.0,
@@ -50,8 +78,27 @@ class _ComfortHeader extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        if (showDecoration) SizedBox(height: 90 + leafSize),
-        if (showDecoration) ...[
+        if (showDecoration)
+          SizedBox(
+            height: illustration == null
+                ? 90 + leafSize
+                : illustrationSize * 0.85,
+          ),
+        if (showDecoration && illustration != null)
+          Positioned(
+            top: -16,
+            right: -20,
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: SvgPicture.asset(
+                  illustration!,
+                  width: illustrationSize,
+                  height: illustrationSize,
+                ),
+              ),
+            ),
+          ),
+        if (showDecoration && illustration == null) ...[
           Positioned(
             top: -36,
             right: -50,
@@ -76,23 +123,41 @@ class _ComfortHeader extends StatelessWidget {
           ),
         ],
         Padding(
-          padding: const EdgeInsets.only(right: 90),
+          padding: EdgeInsets.only(
+            right: useBrandLogo ? (showDecoration ? 72 : 0) : 90,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
+                  if (useBrandLogo && showDecoration)
+                    Flexible(
+                      child: Semantics(
+                        label: title,
+                        header: true,
+                        child: Image.asset(
+                          AppBrand.logo,
+                          width: (MediaQuery.sizeOf(context).width * 0.42)
+                              .clamp(134.0, 180.0),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 27,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                  ),
-                  if (showDecoration) ...[
+                  if (showDecoration && !useBrandLogo) ...[
                     const SizedBox(width: 4),
                     SvgPicture.asset(
                       AppDecorations.leavesSprout,
