@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/post.dart';
 import '../pages/post_detail/post_detail_page.dart';
+import '../pages/profile/other_profile_page.dart';
 
 /// 投稿一覧・検索結果・マイページ共通の投稿カード(docs/design S-02・S-05参照)。
 class PostCard extends StatelessWidget {
@@ -45,11 +46,21 @@ class PostCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    post.authorName,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
+                  InkWell(
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => OtherProfilePage(userId: post.authorId),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        post.authorName,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                   Text(
