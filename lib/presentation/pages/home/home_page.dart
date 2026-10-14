@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
 
@@ -26,11 +27,11 @@ class _HomePageState extends State<HomePage> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: const EdgeInsets.fromLTRB(12, 24, 12, 24),
             children: [
               const _HomeHeader(),
               const SizedBox(height: 24),
-              Center(
+              _ComposeBackdrop(
                 child: FilledButton.icon(
                   onPressed: widget.onCompose,
                   style: FilledButton.styleFrom(
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 24),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: 12,
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
@@ -73,7 +74,7 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   children: [
                     _illustration(AppDecorations.leavesSprout, 36),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                     const Expanded(
                       child: Text('話題を選ぶ', style: TextStyle(fontSize: 13.5)),
                     ),
@@ -90,16 +91,18 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 6,
+                runSpacing: 6,
                 children: [
                   for (final type in ['すべて', 'ぐち', '相談', 'コツ・体験談'])
                     ChoiceChip(
-                      label: Text(type),
+                      label: Text(type, maxLines: 1, softWrap: false),
+                      labelStyle: const TextStyle(fontSize: 12),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                       selected: _postType == type,
                       onSelected: (_) => setState(() => _postType = type),
                       showCheckmark: false,
-                      selectedColor: AppColors.primary,
+                      selectedColor: AppColors.secondary,
                       backgroundColor: AppColors.white,
                       shape: const StadiumBorder(),
                       side: BorderSide(
@@ -108,8 +111,8 @@ class _HomePageState extends State<HomePage> {
                             : AppColors.divider,
                       ),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
+                        horizontal: 4,
+                        vertical: 4,
                       ),
                     ),
                 ],
@@ -159,6 +162,68 @@ class _HomePageState extends State<HomePage> {
   );
 }
 
+/// ボタンの背後に草と雲を配置し、操作・読み上げを遮らない。
+class _ComposeBackdrop extends StatelessWidget {
+  const _ComposeBackdrop({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final showDecoration = fitsDecoration(context);
+      final cloudSize = (constraints.maxWidth * 0.52).clamp(140.0, 230.0);
+      final leafSize = (constraints.maxWidth * 0.28).clamp(80.0, 120.0);
+      return Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          if (showDecoration)
+            Positioned.fill(
+              child: ExcludeSemantics(
+                child: IgnorePointer(
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: -cloudSize * 0.35,
+                        bottom: -cloudSize * 0.4,
+                        child: SvgPicture.asset(
+                          AppDecorations.cloudSoft,
+                          width: cloudSize,
+                          height: cloudSize,
+                        ),
+                      ),
+                      Positioned(
+                        right: -cloudSize * 0.25,
+                        bottom: -cloudSize * 0.35,
+                        child: SvgPicture.asset(
+                          AppDecorations.cloudSoft,
+                          width: cloudSize,
+                          height: cloudSize,
+                        ),
+                      ),
+                      Positioned(
+                        left: -8,
+                        bottom: -8,
+                        child: SvgPicture.asset(
+                          AppDecorations.leavesSprout,
+                          width: leafSize,
+                          height: leafSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: child),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 /// docs/design S-02と同じ、大きな太陽+葉のアクセントを使う見出し。
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader();
@@ -166,9 +231,14 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
+    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
+      90.0,
+      110.0,
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
+        if (showDecoration) SizedBox(height: 102 + leafSize),
         if (showDecoration) ...[
           Positioned(
             top: -36,
@@ -182,48 +252,51 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 90,
+            top: 102,
             right: -6,
             child: ExcludeSemantics(
               child: SvgPicture.asset(
                 AppDecorations.leavesTall,
-                width: 60,
-                height: 60,
+                width: leafSize,
+                height: leafSize,
               ),
             ),
           ),
         ],
         Padding(
-          padding: const EdgeInsets.only(right: 90),
+          padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Flexible(
-                    child: Text(
-                      'ひと息',
-                      style: TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2,
+                  if (showDecoration)
+                    Flexible(
+                      child: Semantics(
+                        label: 'ひと息',
+                        header: true,
+                        child: Image.asset(
+                          AppBrand.logo,
+                          width: (MediaQuery.sizeOf(context).width * 0.42)
+                              .clamp(134.0, 180.0),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    )
+                  else
+                    const Flexible(
+                      child: Text(
+                        'ひと息',
+                        style: TextStyle(
+                          fontSize: 27,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2,
+                        ),
                       ),
                     ),
-                  ),
-                  if (showDecoration) ...[
-                    const SizedBox(width: 4),
-                    SvgPicture.asset(
-                      AppDecorations.leavesSprout,
-                      width: 28,
-                      height: 28,
-                      excludeFromSemantics: true,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.secondary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ],
                 ],
               ),
               const SizedBox(height: 8),
@@ -233,7 +306,7 @@ class _HomeHeader extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'がんばるあなたの気持ちに、\nここでひと息つけますように。',
+                'がんばるあなたの気持ちに、ここでひと息つけますように。',
                 style: TextStyle(fontSize: 13.5, height: 1.7),
               ),
             ],
