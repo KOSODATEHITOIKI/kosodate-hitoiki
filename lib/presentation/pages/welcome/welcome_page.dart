@@ -223,6 +223,7 @@ class _WelcomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
+    final leafSize = (MediaQuery.sizeOf(context).width * 0.28).clamp(96.0, 128.0);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -244,8 +245,8 @@ class _WelcomeHeader extends StatelessWidget {
             child: ExcludeSemantics(
               child: SvgPicture.asset(
                 AppDecorations.leavesTall,
-                width: 72,
-                height: 72,
+                width: leafSize,
+                height: leafSize,
               ),
             ),
           ),
