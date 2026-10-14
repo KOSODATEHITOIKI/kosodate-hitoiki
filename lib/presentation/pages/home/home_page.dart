@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
 
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: const EdgeInsets.fromLTRB(12, 24, 12, 24),
             children: [
               const _HomeHeader(),
               const SizedBox(height: 24),
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 24),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: 12,
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
@@ -73,7 +74,7 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   children: [
                     _illustration(AppDecorations.leavesSprout, 36),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                     const Expanded(
                       child: Text('話題を選ぶ', style: TextStyle(fontSize: 13.5)),
                     ),
@@ -99,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                       selected: _postType == type,
                       onSelected: (_) => setState(() => _postType = type),
                       showCheckmark: false,
-                      selectedColor: AppColors.primary,
+                      selectedColor: AppColors.secondary,
                       backgroundColor: AppColors.white,
                       shape: const StadiumBorder(),
                       side: BorderSide(
@@ -166,9 +167,14 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
+    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
+      90.0,
+      110.0,
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
+        if (showDecoration) SizedBox(height: 90 + leafSize),
         if (showDecoration) ...[
           Positioned(
             top: -36,
@@ -187,43 +193,46 @@ class _HomeHeader extends StatelessWidget {
             child: ExcludeSemantics(
               child: SvgPicture.asset(
                 AppDecorations.leavesTall,
-                width: 60,
-                height: 60,
+                width: leafSize,
+                height: leafSize,
               ),
             ),
           ),
         ],
         Padding(
-          padding: const EdgeInsets.only(right: 90),
+          padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Flexible(
-                    child: Text(
-                      'ひと息',
-                      style: TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2,
+                  if (showDecoration)
+                    Flexible(
+                      child: Semantics(
+                        label: 'ひと息',
+                        header: true,
+                        child: Image.asset(
+                          AppBrand.logo,
+                          width: (MediaQuery.sizeOf(context).width * 0.42)
+                              .clamp(134.0, 180.0),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          excludeFromSemantics: true,
+                        ),
+                      ),
+                    )
+                  else
+                    const Flexible(
+                      child: Text(
+                        'ひと息',
+                        style: TextStyle(
+                          fontSize: 27,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2,
+                        ),
                       ),
                     ),
-                  ),
-                  if (showDecoration) ...[
-                    const SizedBox(width: 4),
-                    SvgPicture.asset(
-                      AppDecorations.leavesSprout,
-                      width: 28,
-                      height: 28,
-                      excludeFromSemantics: true,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.secondary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ],
                 ],
               ),
               const SizedBox(height: 8),
@@ -233,7 +242,7 @@ class _HomeHeader extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'がんばるあなたの気持ちに、\nここでひと息つけますように。',
+                'がんばるあなたの気持ちに、ここでひと息つけますように。',
                 style: TextStyle(fontSize: 13.5, height: 1.7),
               ),
             ],
