@@ -115,8 +115,10 @@ class AppIllustrations {
   static const supportResources = '$_base/illustration-support-resources.svg';
   static const firstPostGuide = '$_base/illustration-first-post-guide.svg';
   static const loginRequired = '$_base/illustration-login-required.svg';
-  static const supportHeartHands = '$_base/illustration-support-heart-hands.svg';
-  static const supportHomeFamily = '$_base/illustration-support-home-family.svg';
+  static const supportHeartHands =
+      '$_base/illustration-support-heart-hands.svg';
+  static const supportHomeFamily =
+      '$_base/illustration-support-home-family.svg';
   static const supportParentChild =
       '$_base/illustration-support-parent-child.svg';
 }
