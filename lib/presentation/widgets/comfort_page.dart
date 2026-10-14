@@ -24,29 +24,7 @@ class ComfortPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                if (fitsDecoration(context))
-                  SvgPicture.asset(
-                    AppDecorations.sunSmiling,
-                    width: 96,
-                    height: 96,
-                    excludeFromSemantics: true,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(message, style: const TextStyle(fontSize: 17, height: 1.7)),
+            _ComfortHeader(title: title, message: message),
             const SizedBox(height: 28),
             ...children,
           ],
@@ -54,6 +32,89 @@ class ComfortPage extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// docs/design のS-02/S-04〜S-07/S-11共通の見出し(大きな太陽+葉のアクセント)。
+class _ComfortHeader extends StatelessWidget {
+  const _ComfortHeader({required this.title, required this.message});
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final showDecoration = fitsDecoration(context);
+    final leafSize = (MediaQuery.sizeOf(context).width * 0.25).clamp(
+      90.0,
+      110.0,
+    );
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (showDecoration) SizedBox(height: 90 + leafSize),
+        if (showDecoration) ...[
+          Positioned(
+            top: -36,
+            right: -50,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.sunSmiling,
+                width: 190,
+                height: 190,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 90,
+            right: -6,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.leavesTall,
+                width: leafSize,
+                height: leafSize,
+              ),
+            ),
+          ),
+        ],
+        Padding(
+          padding: const EdgeInsets.only(right: 90),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (showDecoration) ...[
+                    const SizedBox(width: 4),
+                    SvgPicture.asset(
+                      AppDecorations.leavesSprout,
+                      width: 28,
+                      height: 28,
+                      excludeFromSemantics: true,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.secondary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(message, style: const TextStyle(fontSize: 14, height: 1.7)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class ComfortNotice extends StatelessWidget {
@@ -85,13 +146,13 @@ class ComfortNotice extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, height: 1.7),
+          style: const TextStyle(fontSize: 12.5, height: 1.7),
         ),
       ],
     ),

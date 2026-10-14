@@ -103,7 +103,7 @@ class _ComposePageState extends State<ComposePage> {
                   Expanded(
                     child: Text(
                       '名前・学校や園・住んでいる場所は書かないでね。',
-                      style: TextStyle(fontSize: 14, height: 1.6),
+                      style: TextStyle(fontSize: 12.5, height: 1.6),
                     ),
                   ),
                 ],
@@ -126,7 +126,7 @@ class _ComposePageState extends State<ComposePage> {
       const SizedBox(height: 16),
       _section(
         '話題（任意・1つ）',
-        const Text('話題の選択は準備中です。', style: TextStyle(fontSize: 14)),
+        const Text('話題の選択は準備中です。', style: TextStyle(fontSize: 12.5)),
       ),
       const SizedBox(height: 24),
       FilledButton.icon(
@@ -139,7 +139,7 @@ class _ComposePageState extends State<ComposePage> {
       const Text(
         '入力内容はこの画面を開いている間だけ保持されます。\n投稿機能は準備中です。',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 12, height: 1.6),
+        style: TextStyle(fontSize: 11, height: 1.6),
       ),
     ],
   );
@@ -181,14 +181,14 @@ class _ComposePageState extends State<ComposePage> {
                       Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         description,
-                        style: const TextStyle(fontSize: 13, height: 1.5),
+                        style: const TextStyle(fontSize: 12, height: 1.5),
                       ),
                     ],
                   ),
@@ -212,7 +212,7 @@ class _ComposePageState extends State<ComposePage> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         child,

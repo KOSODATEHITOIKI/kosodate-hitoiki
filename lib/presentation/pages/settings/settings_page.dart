@@ -75,7 +75,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                     subtitle: group[index].$2 == '利用ガイド'
                         ? null
-                        : const Text('準備中', style: TextStyle(fontSize: 12)),
+                        : const Text('準備中', style: TextStyle(fontSize: 11)),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       if (group[index].$2 == '利用ガイド') {
@@ -137,14 +137,14 @@ class UsageGuidePage extends StatelessWidget {
                 Text(
                   item.$1,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   item.$2,
-                  style: const TextStyle(fontSize: 15, height: 1.8),
+                  style: const TextStyle(fontSize: 13.5, height: 1.8),
                 ),
               ],
             ),

@@ -29,11 +29,16 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(find.byType(TextField), '今日は少し疲れた。');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('compose-submit')),
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('compose-submit')));
     await tester.pumpAndSettle();
     expect(find.text('投稿機能は準備中です'), findsOneWidget);

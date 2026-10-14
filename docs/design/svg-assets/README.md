@@ -1,6 +1,6 @@
-# ひと息 B案 SVG素材集
+# ひと息 B案 水彩風SVG素材集
 
-オリジナルの編集可能なベクター素材。背景は透明。水彩風モックの温かさを、シンプルな線と塗りに置き換えています。
+オリジナルの編集可能なベクター素材。背景は透明。承認済みの太陽を基準に、水彩風の色むら・筆跡をベクターで描いています。操作アイコンは小さくても読める丸い線を維持しています。元の画像との完全一致ではなく、同じ雰囲気に寄せた描き直しです。
 
 ## 命名
 半角英小文字の kebab-case。`icon-用途-意味.svg`、`illustration-状態.svg`、`decoration-モチーフ.svg`、`avatar-default-モチーフ.svg`、`reaction-意味.svg`。
@@ -85,3 +85,33 @@ Google・Appleのブランドロゴ、ユーザーがアップロードする画
 |[reaction-take-a-break.svg](reactions/reaction-take-a-break.svg)|おつかれさま|
 |[reaction-listening.svg](reactions/reaction-listening.svg)|聞いているよ|
 |[reaction-gentle-cheer.svg](reactions/reaction-gentle-cheer.svg)|そっと応援|
+|[avatar-tulip.svg](avatars/avatar-tulip.svg)|アカウント画像・チューリップ|
+|[avatar-yellow-flower.svg](avatars/avatar-yellow-flower.svg)|アカウント画像・黄色い花|
+|[avatar-blue-flowers.svg](avatars/avatar-blue-flowers.svg)|アカウント画像・青い花|
+|[avatar-little-bird.svg](avatars/avatar-little-bird.svg)|アカウント画像・小鳥|
+|[decoration-tulip.svg](decorations/decoration-tulip.svg)|チューリップ|
+|[decoration-logo-golden-leaves.svg](decorations/decoration-logo-golden-leaves.svg)|アプリ名の横の黄色い葉|
+|[decoration-clouds-bottom.svg](decorations/decoration-clouds-bottom.svg)|画面下部の重なった雲|
+|[decoration-clouds-left.svg](decorations/decoration-clouds-left.svg)|左側の重なった雲|
+|[decoration-clouds-right.svg](decorations/decoration-clouds-right.svg)|右側の重なった雲|
+|[decoration-corner-leaves-left.svg](decorations/decoration-corner-leaves-left.svg)|左下の雲と葉|
+|[decoration-corner-leaves-right.svg](decorations/decoration-corner-leaves-right.svg)|右下の雲と葉|
+|[decoration-leaves-tall.svg](decorations/decoration-leaves-tall.svg)|背の高い三枚葉|
+|[decoration-watercolor-wash.svg](decorations/decoration-watercolor-wash.svg)|淡い水彩背景|
+|[icon-settings-gear.svg](icons/icon-settings-gear.svg)|歯車|
+|[icon-status-lightbulb.svg](icons/icon-status-lightbulb.svg)|電球|
+|[icon-guide-book.svg](icons/icon-guide-book.svg)|利用ガイドの本|
+|[icon-notice-megaphone.svg](icons/icon-notice-megaphone.svg)|運営のお知らせ|
+|[icon-account-document.svg](icons/icon-account-document.svg)|規約・書類|
+|[icon-settings-device.svg](icons/icon-settings-device.svg)|端末の設定|
+|[reaction-applause.svg](reactions/reaction-applause.svg)|拍手・がんばってるね|
+|[illustration-support-heart-hands.svg](illustrations/illustration-support-heart-hands.svg)|こころの相談・手で包むハート|
+|[illustration-support-parent-child.svg](illustrations/illustration-support-parent-child.svg)|子育ての相談・親子|
+|[illustration-support-home-family.svg](illustrations/illustration-support-home-family.svg)|子どもの安全・家と家族|
+
+## Flutter用の変換版
+patternを直接描画する図形とclipPathに展開。PNGの埋め込みなし。元の色・質感・名前を維持。ブラウザー相当の描画で比較済み。flutter_svg 2.3.0のFlutterテストエンジンで全89点の描画を確認済み。2.0.10+1と実機では未検証です。詳細はFLUTTER-VALIDATION.md。図形数が増えるためイラストは事前読み込みなど描画負荷の確認が必要です。
+
+### 案内アイコンの太陽
+
+S-01「自分のペースで大丈夫」は `decoration-sun-simple.svg`（顔なし）を使用。ヘッダーは `decoration-sun-smiling.svg` を使用する。

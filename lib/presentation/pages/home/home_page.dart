@@ -28,34 +28,7 @@ class _HomePageState extends State<HomePage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Flexible(
-                    child: Text(
-                      'ひと息',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                  if (fitsDecoration(context))
-                    _illustration(AppDecorations.sunSmiling, 100),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '今日も、おつかれさま。',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'がんばるあなたの気持ちに、\nここでひと息つけますように。',
-                style: TextStyle(fontSize: 16, height: 1.7),
-              ),
+              const _HomeHeader(),
               const SizedBox(height: 24),
               Center(
                 child: FilledButton.icon(
@@ -79,7 +52,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   label: const Text(
                     '気持ちを書く  ›',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -99,7 +75,7 @@ class _HomePageState extends State<HomePage> {
                     _illustration(AppDecorations.leavesSprout, 36),
                     const SizedBox(width: 16),
                     const Expanded(
-                      child: Text('話題を選ぶ', style: TextStyle(fontSize: 16)),
+                      child: Text('話題を選ぶ', style: TextStyle(fontSize: 13.5)),
                     ),
                     IconButton(
                       tooltip: '話題の絞り込みは準備中です',
@@ -152,7 +128,7 @@ class _HomePageState extends State<HomePage> {
                     const Text(
                       '投稿一覧は準備中です',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -181,4 +157,89 @@ class _HomePageState extends State<HomePage> {
     height: size,
     excludeFromSemantics: true,
   );
+}
+
+/// docs/design S-02と同じ、大きな太陽+葉のアクセントを使う見出し。
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final showDecoration = fitsDecoration(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (showDecoration) ...[
+          Positioned(
+            top: -36,
+            right: -50,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.sunSmiling,
+                width: 190,
+                height: 190,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 90,
+            right: -6,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.leavesTall,
+                width: 60,
+                height: 60,
+              ),
+            ),
+          ),
+        ],
+        Padding(
+          padding: const EdgeInsets.only(right: 90),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'ひと息',
+                      style: TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                  if (showDecoration) ...[
+                    const SizedBox(width: 4),
+                    SvgPicture.asset(
+                      AppDecorations.leavesSprout,
+                      width: 28,
+                      height: 28,
+                      excludeFromSemantics: true,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.secondary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '今日も、おつかれさま。',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'がんばるあなたの気持ちに、\nここでひと息つけますように。',
+                style: TextStyle(fontSize: 13.5, height: 1.7),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }

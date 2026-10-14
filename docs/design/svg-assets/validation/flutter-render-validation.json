@@ -1,0 +1,536 @@
+[
+  {
+    "file": "avatar-blue-flowers.svg",
+    "decodeAndRasterMs": 163,
+    "paintedPixels": 37678,
+    "bytes": 198135
+  },
+  {
+    "file": "avatar-default-sprout.svg",
+    "decodeAndRasterMs": 50,
+    "paintedPixels": 42666,
+    "bytes": 140788
+  },
+  {
+    "file": "avatar-default-sun.svg",
+    "decodeAndRasterMs": 235,
+    "paintedPixels": 42666,
+    "bytes": 1556940
+  },
+  {
+    "file": "avatar-little-bird.svg",
+    "decodeAndRasterMs": 19,
+    "paintedPixels": 37678,
+    "bytes": 146594
+  },
+  {
+    "file": "avatar-tulip.svg",
+    "decodeAndRasterMs": 20,
+    "paintedPixels": 37678,
+    "bytes": 144140
+  },
+  {
+    "file": "avatar-yellow-flower.svg",
+    "decodeAndRasterMs": 14,
+    "paintedPixels": 37678,
+    "bytes": 152327
+  },
+  {
+    "file": "decoration-cloud-soft.svg",
+    "decodeAndRasterMs": 8,
+    "paintedPixels": 16441,
+    "bytes": 58805
+  },
+  {
+    "file": "decoration-clouds-bottom.svg",
+    "decodeAndRasterMs": 15,
+    "paintedPixels": 24959,
+    "bytes": 159964
+  },
+  {
+    "file": "decoration-clouds-left.svg",
+    "decodeAndRasterMs": 14,
+    "paintedPixels": 24955,
+    "bytes": 162901
+  },
+  {
+    "file": "decoration-clouds-right.svg",
+    "decodeAndRasterMs": 14,
+    "paintedPixels": 24959,
+    "bytes": 161298
+  },
+  {
+    "file": "decoration-corner-leaves-left.svg",
+    "decodeAndRasterMs": 15,
+    "paintedPixels": 24999,
+    "bytes": 173557
+  },
+  {
+    "file": "decoration-corner-leaves-right.svg",
+    "decodeAndRasterMs": 15,
+    "paintedPixels": 24999,
+    "bytes": 171884
+  },
+  {
+    "file": "decoration-flower-coral.svg",
+    "decodeAndRasterMs": 7,
+    "paintedPixels": 12367,
+    "bytes": 76321
+  },
+  {
+    "file": "decoration-heart-warm.svg",
+    "decodeAndRasterMs": 2,
+    "paintedPixels": 12716,
+    "bytes": 21024
+  },
+  {
+    "file": "decoration-leaves-sprout.svg",
+    "decodeAndRasterMs": 1,
+    "paintedPixels": 4580,
+    "bytes": 12091
+  },
+  {
+    "file": "decoration-leaves-tall.svg",
+    "decodeAndRasterMs": 2,
+    "paintedPixels": 6057,
+    "bytes": 21557
+  },
+  {
+    "file": "decoration-logo-golden-leaves.svg",
+    "decodeAndRasterMs": 2,
+    "paintedPixels": 3616,
+    "bytes": 17136
+  },
+  {
+    "file": "decoration-sparkles.svg",
+    "decodeAndRasterMs": 5,
+    "paintedPixels": 3604,
+    "bytes": 43420
+  },
+  {
+    "file": "decoration-sun-smiling.svg",
+    "decodeAndRasterMs": 147,
+    "paintedPixels": 8285,
+    "bytes": 1409680
+  },
+  {
+    "file": "decoration-tulip.svg",
+    "decodeAndRasterMs": 3,
+    "paintedPixels": 5581,
+    "bytes": 31255
+  },
+  {
+    "file": "decoration-watercolor-wash.svg",
+    "decodeAndRasterMs": 8,
+    "paintedPixels": 23536,
+    "bytes": 73538
+  },
+  {
+    "file": "icon-account-crop.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 12530,
+    "bytes": 322
+  },
+  {
+    "file": "icon-account-document.svg",
+    "decodeAndRasterMs": 1,
+    "paintedPixels": 19346,
+    "bytes": 346
+  },
+  {
+    "file": "icon-account-eye-off.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14280,
+    "bytes": 354
+  },
+  {
+    "file": "icon-account-eye.svg",
+    "decodeAndRasterMs": 2,
+    "paintedPixels": 13941,
+    "bytes": 366
+  },
+  {
+    "file": "icon-account-image.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 18853,
+    "bytes": 354
+  },
+  {
+    "file": "icon-account-lock.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14697,
+    "bytes": 343
+  },
+  {
+    "file": "icon-account-logout.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 11391,
+    "bytes": 331
+  },
+  {
+    "file": "icon-account-mail.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 16708,
+    "bytes": 315
+  },
+  {
+    "file": "icon-account-upload.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 11191,
+    "bytes": 339
+  },
+  {
+    "file": "icon-action-add.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 6584,
+    "bytes": 303
+  },
+  {
+    "file": "icon-action-back.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 4596,
+    "bytes": 302
+  },
+  {
+    "file": "icon-action-bookmark-saved.svg",
+    "decodeAndRasterMs": 1,
+    "paintedPixels": 27118,
+    "bytes": 3789
+  },
+  {
+    "file": "icon-action-bookmark.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 12640,
+    "bytes": 306
+  },
+  {
+    "file": "icon-action-check.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 4592,
+    "bytes": 316
+  },
+  {
+    "file": "icon-action-chevron-down.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 4054,
+    "bytes": 313
+  },
+  {
+    "file": "icon-action-close.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 7782,
+    "bytes": 310
+  },
+  {
+    "file": "icon-action-comment.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 11202,
+    "bytes": 339
+  },
+  {
+    "file": "icon-action-delete.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 16646,
+    "bytes": 340
+  },
+  {
+    "file": "icon-action-edit.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 10370,
+    "bytes": 323
+  },
+  {
+    "file": "icon-action-external-link.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14834,
+    "bytes": 333
+  },
+  {
+    "file": "icon-action-filter.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 8076,
+    "bytes": 316
+  },
+  {
+    "file": "icon-action-heart.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 12376,
+    "bytes": 328
+  },
+  {
+    "file": "icon-action-more.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 2568,
+    "bytes": 335
+  },
+  {
+    "file": "icon-action-next.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 4597,
+    "bytes": 301
+  },
+  {
+    "file": "icon-action-refresh.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 10852,
+    "bytes": 319
+  },
+  {
+    "file": "icon-action-reply.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 7681,
+    "bytes": 317
+  },
+  {
+    "file": "icon-action-send.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 13971,
+    "bytes": 316
+  },
+  {
+    "file": "icon-guide-book.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 17181,
+    "bytes": 352
+  },
+  {
+    "file": "icon-nav-compose.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 10370,
+    "bytes": 323
+  },
+  {
+    "file": "icon-nav-home.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14739,
+    "bytes": 326
+  },
+  {
+    "file": "icon-nav-my-page.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 10067,
+    "bytes": 354
+  },
+  {
+    "file": "icon-nav-notifications.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 11975,
+    "bytes": 347
+  },
+  {
+    "file": "icon-nav-search.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 11217,
+    "bytes": 335
+  },
+  {
+    "file": "icon-notice-megaphone.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 15846,
+    "bytes": 347
+  },
+  {
+    "file": "icon-safety-block.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14114,
+    "bytes": 339
+  },
+  {
+    "file": "icon-safety-mute.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 11861,
+    "bytes": 334
+  },
+  {
+    "file": "icon-safety-report.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 12752,
+    "bytes": 322
+  },
+  {
+    "file": "icon-safety-shield.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14474,
+    "bytes": 351
+  },
+  {
+    "file": "icon-safety-support.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 16100,
+    "bytes": 363
+  },
+  {
+    "file": "icon-settings-device.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14011,
+    "bytes": 352
+  },
+  {
+    "file": "icon-settings-gear.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 16475,
+    "bytes": 375
+  },
+  {
+    "file": "icon-settings-notifications-off.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 14777,
+    "bytes": 347
+  },
+  {
+    "file": "icon-settings-sliders.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 13590,
+    "bytes": 359
+  },
+  {
+    "file": "icon-status-info.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 12853,
+    "bytes": 341
+  },
+  {
+    "file": "icon-status-lightbulb.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 12611,
+    "bytes": 346
+  },
+  {
+    "file": "icon-status-warning.svg",
+    "decodeAndRasterMs": 0,
+    "paintedPixels": 13489,
+    "bytes": 328
+  },
+  {
+    "file": "illustration-connection-retry.svg",
+    "decodeAndRasterMs": 7,
+    "paintedPixels": 17729,
+    "bytes": 65075
+  },
+  {
+    "file": "illustration-empty-bookmarks.svg",
+    "decodeAndRasterMs": 9,
+    "paintedPixels": 17474,
+    "bytes": 97782
+  },
+  {
+    "file": "illustration-empty-feed.svg",
+    "decodeAndRasterMs": 6,
+    "paintedPixels": 16988,
+    "bytes": 63619
+  },
+  {
+    "file": "illustration-empty-my-posts.svg",
+    "decodeAndRasterMs": 8,
+    "paintedPixels": 17219,
+    "bytes": 93123
+  },
+  {
+    "file": "illustration-empty-notifications.svg",
+    "decodeAndRasterMs": 9,
+    "paintedPixels": 16855,
+    "bytes": 76395
+  },
+  {
+    "file": "illustration-empty-search.svg",
+    "decodeAndRasterMs": 8,
+    "paintedPixels": 16901,
+    "bytes": 87589
+  },
+  {
+    "file": "illustration-first-post-guide.svg",
+    "decodeAndRasterMs": 16,
+    "paintedPixels": 21823,
+    "bytes": 147674
+  },
+  {
+    "file": "illustration-login-required.svg",
+    "decodeAndRasterMs": 13,
+    "paintedPixels": 20879,
+    "bytes": 123975
+  },
+  {
+    "file": "illustration-password-reset-complete.svg",
+    "decodeAndRasterMs": 12,
+    "paintedPixels": 18273,
+    "bytes": 73491
+  },
+  {
+    "file": "illustration-password-reset-sent.svg",
+    "decodeAndRasterMs": 11,
+    "paintedPixels": 19239,
+    "bytes": 113809
+  },
+  {
+    "file": "illustration-post-published.svg",
+    "decodeAndRasterMs": 138,
+    "paintedPixels": 18741,
+    "bytes": 1503359
+  },
+  {
+    "file": "illustration-report-received.svg",
+    "decodeAndRasterMs": 10,
+    "paintedPixels": 18590,
+    "bytes": 97310
+  },
+  {
+    "file": "illustration-support-heart-hands.svg",
+    "decodeAndRasterMs": 14,
+    "paintedPixels": 33662,
+    "bytes": 159997
+  },
+  {
+    "file": "illustration-support-home-family.svg",
+    "decodeAndRasterMs": 16,
+    "paintedPixels": 37002,
+    "bytes": 182414
+  },
+  {
+    "file": "illustration-support-parent-child.svg",
+    "decodeAndRasterMs": 20,
+    "paintedPixels": 35031,
+    "bytes": 216645
+  },
+  {
+    "file": "illustration-support-resources.svg",
+    "decodeAndRasterMs": 13,
+    "paintedPixels": 20935,
+    "bytes": 102697
+  },
+  {
+    "file": "illustration-welcome.svg",
+    "decodeAndRasterMs": 139,
+    "paintedPixels": 19707,
+    "bytes": 1477580
+  },
+  {
+    "file": "reaction-applause.svg",
+    "decodeAndRasterMs": 4,
+    "paintedPixels": 11927,
+    "bytes": 44634
+  },
+  {
+    "file": "reaction-empathy.svg",
+    "decodeAndRasterMs": 2,
+    "paintedPixels": 6088,
+    "bytes": 20957
+  },
+  {
+    "file": "reaction-gentle-cheer.svg",
+    "decodeAndRasterMs": 135,
+    "paintedPixels": 7299,
+    "bytes": 1404570
+  },
+  {
+    "file": "reaction-listening.svg",
+    "decodeAndRasterMs": 7,
+    "paintedPixels": 18609,
+    "bytes": 77090
+  },
+  {
+    "file": "reaction-take-a-break.svg",
+    "decodeAndRasterMs": 2,
+    "paintedPixels": 9751,
+    "bytes": 26684
+  }
+]

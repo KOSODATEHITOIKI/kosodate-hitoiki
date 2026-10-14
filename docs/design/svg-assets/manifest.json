@@ -460,5 +460,166 @@
     "label": "そっと応援",
     "size": 240,
     "group": "reactions"
+  },
+  {
+    "file": "avatars/avatar-tulip.svg",
+    "name": "avatar-tulip",
+    "label": "アカウント画像・チューリップ",
+    "size": 240,
+    "group": "avatars"
+  },
+  {
+    "file": "avatars/avatar-yellow-flower.svg",
+    "name": "avatar-yellow-flower",
+    "label": "アカウント画像・黄色い花",
+    "size": 240,
+    "group": "avatars"
+  },
+  {
+    "file": "avatars/avatar-blue-flowers.svg",
+    "name": "avatar-blue-flowers",
+    "label": "アカウント画像・青い花",
+    "size": 240,
+    "group": "avatars"
+  },
+  {
+    "file": "avatars/avatar-little-bird.svg",
+    "name": "avatar-little-bird",
+    "label": "アカウント画像・小鳥",
+    "size": 240,
+    "group": "avatars"
+  },
+  {
+    "file": "decorations/decoration-tulip.svg",
+    "name": "decoration-tulip",
+    "label": "チューリップ",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-logo-golden-leaves.svg",
+    "name": "decoration-logo-golden-leaves",
+    "label": "アプリ名の横の黄色い葉",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-clouds-bottom.svg",
+    "name": "decoration-clouds-bottom",
+    "label": "画面下部の重なった雲",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-clouds-left.svg",
+    "name": "decoration-clouds-left",
+    "label": "左側の重なった雲",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-clouds-right.svg",
+    "name": "decoration-clouds-right",
+    "label": "右側の重なった雲",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-corner-leaves-left.svg",
+    "name": "decoration-corner-leaves-left",
+    "label": "左下の雲と葉",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-corner-leaves-right.svg",
+    "name": "decoration-corner-leaves-right",
+    "label": "右下の雲と葉",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-leaves-tall.svg",
+    "name": "decoration-leaves-tall",
+    "label": "背の高い三枚葉",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "decorations/decoration-watercolor-wash.svg",
+    "name": "decoration-watercolor-wash",
+    "label": "淡い水彩背景",
+    "size": 240,
+    "group": "decorations"
+  },
+  {
+    "file": "icons/icon-settings-gear.svg",
+    "name": "icon-settings-gear",
+    "label": "歯車",
+    "size": 24,
+    "group": "icons"
+  },
+  {
+    "file": "icons/icon-status-lightbulb.svg",
+    "name": "icon-status-lightbulb",
+    "label": "電球",
+    "size": 24,
+    "group": "icons"
+  },
+  {
+    "file": "icons/icon-guide-book.svg",
+    "name": "icon-guide-book",
+    "label": "利用ガイドの本",
+    "size": 24,
+    "group": "icons"
+  },
+  {
+    "file": "icons/icon-notice-megaphone.svg",
+    "name": "icon-notice-megaphone",
+    "label": "運営のお知らせ",
+    "size": 24,
+    "group": "icons"
+  },
+  {
+    "file": "icons/icon-account-document.svg",
+    "name": "icon-account-document",
+    "label": "規約・書類",
+    "size": 24,
+    "group": "icons"
+  },
+  {
+    "file": "icons/icon-settings-device.svg",
+    "name": "icon-settings-device",
+    "label": "端末の設定",
+    "size": 24,
+    "group": "icons"
+  },
+  {
+    "file": "reactions/reaction-applause.svg",
+    "name": "reaction-applause",
+    "label": "拍手・がんばってるね",
+    "size": 240,
+    "group": "reactions"
+  },
+  {
+    "file": "illustrations/illustration-support-heart-hands.svg",
+    "name": "illustration-support-heart-hands",
+    "label": "こころの相談・手で包むハート",
+    "size": 240,
+    "group": "illustrations"
+  },
+  {
+    "file": "illustrations/illustration-support-parent-child.svg",
+    "name": "illustration-support-parent-child",
+    "label": "子育ての相談・親子",
+    "size": 240,
+    "group": "illustrations"
+  },
+  {
+    "file": "illustrations/illustration-support-home-family.svg",
+    "name": "illustration-support-home-family",
+    "label": "子どもの安全・家と家族",
+    "size": 240,
+    "group": "illustrations"
   }
 ]
