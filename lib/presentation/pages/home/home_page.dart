@@ -237,20 +237,12 @@ class _ComposeBackdrop extends StatelessWidget {
                       Positioned(
                         left: -cloudSize * 0.35,
                         bottom: -cloudSize * 0.4,
-                        child: SvgPicture.asset(
-                          AppDecorations.cloudSoft,
-                          width: cloudSize,
-                          height: cloudSize,
-                        ),
+                        child: _whiteCloud(cloudSize),
                       ),
                       Positioned(
                         right: -cloudSize * 0.25,
                         bottom: -cloudSize * 0.35,
-                        child: SvgPicture.asset(
-                          AppDecorations.cloudSoft,
-                          width: cloudSize,
-                          height: cloudSize,
-                        ),
+                        child: _whiteCloud(cloudSize),
                       ),
                     ],
                   ),
@@ -264,6 +256,18 @@ class _ComposeBackdrop extends StatelessWidget {
         ],
       );
     },
+  );
+
+  Widget _whiteCloud(double size) => ColorFiltered(
+    colorFilter: ColorFilter.mode(
+      AppColors.white.withValues(alpha: 0.7),
+      BlendMode.srcATop,
+    ),
+    child: SvgPicture.asset(
+      AppDecorations.cloudSoft,
+      width: size,
+      height: size,
+    ),
   );
 }
 
