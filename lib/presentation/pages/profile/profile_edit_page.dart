@@ -166,7 +166,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           const SizedBox(height: 16),
           _section(
             '子どもの年齢帯（任意）',
-            const Text('年齢帯の選択は準備中です。', style: TextStyle(fontSize: 12)),
+            const Text('年齢帯の選択は準備中です。', style: TextStyle(fontSize: 12.5)),
           ),
           const SizedBox(height: 24),
           FilledButton(
@@ -196,7 +196,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 16),
         child,

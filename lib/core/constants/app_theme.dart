@@ -95,7 +95,7 @@ class AppTheme {
         elevation: 0,
         titleTextStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),

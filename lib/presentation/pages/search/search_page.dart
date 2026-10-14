@@ -93,9 +93,9 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Text(
             '検索結果',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
           ),
-          Text('・ 新着順', style: TextStyle(fontSize: 12)),
+          Text('・ 新着順', style: TextStyle(fontSize: 12.5)),
         ],
       ),
       const SizedBox(height: 16),

@@ -81,14 +81,14 @@ class _MyPagePageState extends State<MyPagePage> {
                       Text(
                         'あなたのプロフィール',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 17,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       SizedBox(height: 8),
                       Text(
                         'マイページの利用には\nログインが必要です。',
-                        style: TextStyle(fontSize: 12, height: 1.7),
+                        style: TextStyle(fontSize: 12.5, height: 1.7),
                       ),
                     ],
                   ),
@@ -135,19 +135,22 @@ class _MyPagePageState extends State<MyPagePage> {
           foregroundColor: AppColors.textPrimary,
           minimumSize: const Size(48, 52),
           side: const BorderSide(color: AppColors.divider),
-          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       const SizedBox(height: 24),
       if (_savedPosts) ...[
         const Text(
           'あとで読みたい投稿',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         const Text(
           '保存したことは相手に通知されません。',
-          style: TextStyle(fontSize: 12, height: 1.7),
+          style: TextStyle(fontSize: 12.5, height: 1.7),
         ),
         const SizedBox(height: 16),
       ],
