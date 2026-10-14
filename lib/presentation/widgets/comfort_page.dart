@@ -92,7 +92,7 @@ class _ComfortHeader extends StatelessWidget {
         if (showDecoration)
           SizedBox(
             height: illustration == null
-                ? 90 + leafSize
+                ? 102 + leafSize
                 : illustrationSize * 0.85,
           ),
         if (showDecoration && illustration != null)
@@ -122,7 +122,7 @@ class _ComfortHeader extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 90,
+            top: 102,
             right: -6,
             child: ExcludeSemantics(
               child: SvgPicture.asset(

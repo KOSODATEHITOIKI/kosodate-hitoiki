@@ -45,10 +45,8 @@ class _ComposePageState extends State<ComposePage> {
 
   @override
   Widget build(BuildContext context) => ComfortPage(
-    title: 'ひと息',
-    useBrandLogo: true,
+    title: '書く',
     message: 'いまの気持ちを、\nあなたのペースで。',
-    headerIllustration: AppIllustrations.welcome,
     horizontalPadding: 12,
     children: [
       _section(
