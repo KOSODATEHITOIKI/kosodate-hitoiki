@@ -15,6 +15,7 @@ class ComfortPage extends StatelessWidget {
     this.useBrandLogo = false,
     this.headerIllustration,
     this.horizontalPadding = 20,
+    this.messageFontSize = 14,
   });
   final String title;
   final String message;
@@ -22,6 +23,7 @@ class ComfortPage extends StatelessWidget {
   final bool useBrandLogo;
   final String? headerIllustration;
   final double horizontalPadding;
+  final double messageFontSize;
   @override
   Widget build(BuildContext context) => SafeArea(
     bottom: false,
@@ -42,6 +44,7 @@ class ComfortPage extends StatelessWidget {
               message: message,
               useBrandLogo: useBrandLogo,
               illustration: headerIllustration,
+              messageFontSize: messageFontSize,
             ),
             const SizedBox(height: 28),
             ...children,
@@ -59,11 +62,13 @@ class _ComfortHeader extends StatelessWidget {
     required this.message,
     required this.useBrandLogo,
     this.illustration,
+    required this.messageFontSize,
   });
   final String title;
   final String message;
   final bool useBrandLogo;
   final String? illustration;
+  final double messageFontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +179,10 @@ class _ComfortHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(message, style: const TextStyle(fontSize: 14, height: 1.7)),
+              Text(
+                message,
+                style: TextStyle(fontSize: messageFontSize, height: 1.7),
+              ),
             ],
           ),
         ),
