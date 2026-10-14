@@ -14,11 +14,13 @@ class PostCard extends StatelessWidget {
     required this.post,
     this.onToggleSaved,
     this.showOpenButton = true,
+    this.onOpenComments,
   });
 
   final Post post;
   final VoidCallback? onToggleSaved;
   final bool showOpenButton;
+  final VoidCallback? onOpenComments;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -112,6 +114,16 @@ class PostCard extends StatelessWidget {
                   if (post.responseMode == ResponseMode.advice)
                     _FooterChip(
                       icon: AppIcons.comment,
+                      onTap:
+                          onOpenComments ??
+                          () => Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => PostDetailPage(
+                                post: post,
+                                focusComments: true,
+                              ),
+                            ),
+                          ),
                       label: post.commentCount > 0
                           ? 'コメント ${post.commentCount}'
                           : 'コメントする',
@@ -181,39 +193,45 @@ class _FooterChip extends StatelessWidget {
     required this.icon,
     required this.label,
     this.background = AppColors.surface,
+    this.onTap,
   });
   final String icon;
   final String label;
   final Color background;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(
-      color: background,
-      borderRadius: BorderRadius.circular(999),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SvgPicture.asset(
-          icon,
-          width: 16,
-          height: 16,
-          excludeFromSemantics: true,
-          colorFilter: const ColorFilter.mode(
-            AppColors.textPrimary,
-            BlendMode.srcIn,
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(999),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            icon,
+            width: 16,
+            height: 16,
+            excludeFromSemantics: true,
+            colorFilter: const ColorFilter.mode(
+              AppColors.textPrimary,
+              BlendMode.srcIn,
+            ),
           ),
-        ),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }

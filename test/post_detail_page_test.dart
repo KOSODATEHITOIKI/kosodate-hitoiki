@@ -10,6 +10,36 @@ import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/post_card.dart';
 
 void main() {
+  testWidgets('コメントボタンは詳細のログイン案内まで移動する', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final post = (await MockPostRepository().fetchFeed()).firstWhere(
+      (post) => post.id == 'p2',
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [isLoggedInProvider.overrideWithValue(false)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: SingleChildScrollView(child: PostCard(post: post)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('コメント 3'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('コメント 3'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PostDetailPage), findsOneWidget);
+    expect(find.text('ログイン').hitTestable(), findsOneWidget);
+    final scroll = tester.state<ScrollableState>(find.byType(Scrollable).first);
+    expect(scroll.position.pixels, greaterThan(0));
+    expect(tester.takeException(), isNull);
+  });
   for (final width in [320.0, 768.0]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('幅$width・文字倍率$scaleで本文からログインし投稿に戻れる', (tester) async {
