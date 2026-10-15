@@ -13,9 +13,7 @@ final authStateChangesProvider = StreamProvider<AuthState>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges;
 });
 
-/// 現在ログイン中の利用者ID(未ログイン時はnull)。ログイン・ログアウトだけで
-/// なく、ログインしたまま別の利用者に切り替わった場合も値が変わるため、
-/// モックデータ・下書きのリセット判定にはisLoggedInProviderではなくこちらを使う。
+/// 現在ログイン中の利用者ID(未ログイン時はnull)。A→Bの利用者切り替えも検知できるため、リセット判定に使う。
 final currentUserIdProvider = Provider<String?>((ref) {
   final authState = ref.watch(authStateChangesProvider).valueOrNull;
   if (authState != null) {

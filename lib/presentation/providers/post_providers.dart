@@ -5,14 +5,7 @@ import '../../domain/models/post.dart';
 import '../../domain/repositories/post_repository.dart';
 
 /// 投稿データの取得先。バックエンド接続時はここをSupabase実装に差し替える。
-///
-/// ログイン状態の変化(ログイン・ログアウト・利用者の切り替え)時には
-/// lib/app.dartがこのProviderをinvalidateし、新しいリポジトリを作り直す。
-/// モック実装は投稿データをメモリ内に保持するため、作り直さないと前の
-/// 利用者が変更した保存状態等が次の利用者に引き継がれてしまう。
-/// ここでisLoggedInProviderを直接watchしない(Supabase初期化前の単体
-/// テストやAppを経由しないWidget単体テストが、認証チェーンに巻き込まれて
-/// 壊れるのを避けるため)。
+/// 利用者ID変化時はlib/app.dartがinvalidateして作り直す(ここで直接authをwatchしないのは、認証未初期化の単体テストを壊さないため)。
 final postRepositoryProvider = Provider<PostRepository>(
   (ref) => MockPostRepository(),
 );

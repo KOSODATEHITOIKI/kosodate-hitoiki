@@ -10,10 +10,7 @@ bool fitsDecoration(BuildContext context, {double maxScale = 1.3}) {
 const double _designBaseWidth = 390;
 
 /// 画面幅が基準より狭い端末では文字をやや小さく調整する。
-/// OSの文字拡大設定(非線形スケールを含む)とは合成で尊重する。scale(1)の
-/// 一点サンプルから線形倍率を作ると、OS側が非線形カーブ(大きいフォントほど
-/// 比率を抑える設定)を使っている場合に曲線形状が失われるため、元の
-/// TextScalerをラップしてfontSizeごとに合成する。
+/// OSの文字拡大設定(非線形スケールを含む)は、元のTextScalerをラップして合成し曲線形状を保つ。
 /// 基準幅以上(タブレット等)では縮小せず1.0のまま=OS設定のみ反映。
 TextScaler responsiveTextScaler(
   BuildContext context, {

@@ -9,8 +9,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/post_card.dart';
 
 void main() {
   testWidgets('本文検索・種類選択・クリアと保存一覧への同期', (tester) async {
-    // 保存操作はログイン必須(認証確認を一本化した仕様)のため、
-    // ログイン済みとして扱う。
+    // 保存操作はログイン必須のため、ログイン済みとして扱う。
     final container = ProviderContainer(
       overrides: [isLoggedInProvider.overrideWithValue(true)],
     );

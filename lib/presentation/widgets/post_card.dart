@@ -13,10 +13,7 @@ import '../providers/mock_reaction_providers.dart';
 import '../providers/post_providers.dart';
 import 'reaction_picker.dart';
 
-/// 投稿の保存・解除。未ログイン時はログイン画面へ導き、一覧系Providerを
-/// まとめて更新する。カードの保存ボタン・投稿詳細のメニューなど、
-/// 保存操作を行うすべての箇所からこの関数を呼ぶ(認証確認・一覧更新・
-/// エラー表示を1箇所に集約する)。
+/// 投稿の保存・解除。認証確認・一覧Providerの更新・エラー表示をここに集約する。
 Future<void> togglePostSaved(
   BuildContext context,
   WidgetRef ref,
@@ -30,8 +27,7 @@ Future<void> togglePostSaved(
   }
   try {
     await ref.read(postRepositoryProvider).toggleSaved(post.id);
-    // 実通信に置き換わるとawait中に画面が閉じられうる。破棄後のウィジェットの
-    // refを使うと例外になるため、後続のref操作の前に必ずmounted確認する。
+    // await中に画面が閉じられている可能性があるため、refを使う前に確認する。
     if (!context.mounted) return;
     ref.invalidate(feedPostsProvider);
     ref.invalidate(searchResultsProvider);

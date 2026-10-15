@@ -63,11 +63,16 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ログアウト・利用者切り替え時は、表示中の本文が前の利用者のものに
-    // なるため、確認画面ごと閉じて最新状態の書く画面へ戻す。
+    // 利用者切り替え時、上に乗ったダイアログ/相談先画面ごとこの画面を閉じる(pop1回だと取り残される)。
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
-      if (previous != next && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (previous == next) return;
+      final navigator = Navigator.of(context);
+      final myRoute = ModalRoute.of(context);
+      if (myRoute != null) {
+        navigator.popUntil((route) => route == myRoute);
+      }
+      if (navigator.canPop()) {
+        navigator.pop();
       }
     });
     final result = _result;

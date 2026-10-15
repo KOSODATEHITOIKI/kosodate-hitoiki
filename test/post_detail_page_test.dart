@@ -84,10 +84,7 @@ void main() {
         await tester.pageBack();
         await tester.pumpAndSettle();
         expect(find.byType(PostDetailPage), findsOneWidget);
-        // ログイン完了を模して、ログイン済み状態で投稿詳細を開き直す。
-        // 保存操作は未ログインではログイン画面へ誘導するため(認証確認を
-        // 一本化した仕様)、実際に保存できることを確認するにはログイン済み
-        // 状態が必要。
+        // 保存操作はログイン必須のため、ログイン完了を模して投稿詳細を開き直す。
         await tester.pumpWidget(
           ProviderScope(
             overrides: [

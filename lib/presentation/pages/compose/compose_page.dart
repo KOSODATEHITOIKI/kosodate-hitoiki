@@ -40,9 +40,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     }
   }
 
-  // ログアウト・利用者切り替え時に下書きを破棄する。編集対象の投稿は
-  // 次に開いた時点の状態を取得し直すため、isMine等の判定もログインし
-  // 直した後に揃う。
+  // ログアウト・利用者切り替え時に下書きを破棄する。
   void _resetDraft() {
     _body.clear();
     _postType = 'ぐち';

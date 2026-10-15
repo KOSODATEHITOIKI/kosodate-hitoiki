@@ -8,9 +8,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// 本番署名鍵はリポジトリに含めない。android/key.properties(.gitignore対象)に
-// keyAlias・keyPassword・storeFile・storePasswordを用意した場合のみ本番鍵で署名し、
-// 未用意の場合は従来どおりdebug鍵にフォールバックして`flutter run --release`を保つ。
+// 本番署名鍵はコミットせず、android/key.properties(.gitignore対象)があれば使う。
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 val hasReleaseSigning = keystorePropertiesFile.exists()
@@ -69,10 +67,7 @@ android {
 
     buildTypes {
         release {
-            // android/key.properties が用意されていれば本番鍵で署名する。
-            // 未用意の間はdebug鍵のままとし、`flutter run --release` を壊さない。
-            // 本番配布用(prodReleaseVariant)はこのフォールバックを許さず、
-            // 下のapplicationVariants.allでビルド自体を失敗させる。
+            // key.properties未設定時はdebug鍵へフォールバック(prod releaseは下で別途失敗させる)。
             signingConfig = if (hasReleaseSigning) {
                 signingConfigs.getByName("release")
             } else {
@@ -80,21 +75,20 @@ android {
             }
         }
     }
-
 }
 
-// 本番配布(prodフレーバーのrelease)は、debug鍵へのフォールバックに気づかず
-// 配布してしまう事故を防ぐため、key.properties未設定ならビルド自体を
-// 失敗させる。dev/profileはこの対象外(開発用途のためdebug鍵フォールバックを
-// 許容する)。applicationVariants.all{}は対象外のタスク実行時にも全variantを
-// 評価してしまうため、実際にprodReleaseが要求されたタスクかどうかを
-// startParameterで確認してから失敗させる。
-afterEvaluate {
-    val requestedProdRelease = gradle.startParameter.taskNames.any { taskName ->
-        val normalized = taskName.substringAfterLast(":")
-        normalized.contains("ProdRelease") || normalized == "assembleRelease"
+// prod releaseのdebug鍵フォールバック配布を防ぐ。assemble等の集約タスクも拾えるよう解決済みタスクグラフで判定する。
+val prodReleaseOutputTasks = setOf(
+    "assembleProdRelease",
+    "bundleProdRelease",
+    "packageProdRelease",
+    "validateSigningProdRelease",
+)
+gradle.taskGraph.whenReady {
+    val buildsProdRelease = allTasks.any {
+        it.path.substringAfterLast(":") in prodReleaseOutputTasks
     }
-    if (requestedProdRelease && !hasReleaseSigning) {
+    if (buildsProdRelease && !hasReleaseSigning) {
         throw GradleException(
             "本番配布(prod release)には android/key.properties による署名設定が必須です。" +
                 "keyAlias・keyPassword・storeFile・storePasswordを用意してください。"

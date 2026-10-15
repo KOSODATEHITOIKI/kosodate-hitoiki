@@ -13,10 +13,7 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 利用者IDが変わるたびに投稿リポジトリを作り直し、前の利用者が
-    // 変更したモックデータ(保存状態等)を次の利用者に引き継がない。
-    // ログイン・ログアウトだけでなく、ログインしたまま別の利用者に
-    // 切り替わった場合(A→B)も検知するため、真偽値ではなく利用者IDを監視する。
+    // 利用者ID(A→B切替も含む)が変わるたびに投稿リポジトリを作り直し、前の利用者のモックデータを引き継がない。
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
       if (previous != next) ref.invalidate(postRepositoryProvider);
     });
