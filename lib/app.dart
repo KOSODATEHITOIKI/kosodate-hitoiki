@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/flavor.dart';
 import 'core/constants/app_theme.dart';
 import 'core/utils/accessibility.dart';
 import 'presentation/pages/welcome/welcome_page.dart';
+import 'presentation/providers/auth_provider.dart';
+import 'presentation/providers/post_providers.dart';
 
-class App extends StatelessWidget {
+class App extends ConsumerWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ログイン状態が変わるたびに投稿リポジトリを作り直し、前の利用者が
+    // 変更したモックデータ(保存状態等)を次の利用者に引き継がない。
+    ref.listen<bool>(isLoggedInProvider, (_, _) {
+      ref.invalidate(postRepositoryProvider);
+    });
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,

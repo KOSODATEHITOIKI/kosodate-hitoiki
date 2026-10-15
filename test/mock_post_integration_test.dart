@@ -3,12 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/search/search_page.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/post_card.dart';
 
 void main() {
   testWidgets('本文検索・種類選択・クリアと保存一覧への同期', (tester) async {
-    final container = ProviderContainer();
+    // 保存操作はログイン必須(認証確認を一本化した仕様)のため、
+    // ログイン済みとして扱う。
+    final container = ProviderContainer(
+      overrides: [isLoggedInProvider.overrideWithValue(true)],
+    );
     addTearDown(container.dispose);
     expect((await container.read(savedPostsProvider.future)).length, 2);
     await tester.pumpWidget(

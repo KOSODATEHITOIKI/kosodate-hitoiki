@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_page.dart';
@@ -10,11 +11,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(2)),
-          child: Scaffold(body: ComposePage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: Scaffold(body: ComposePage()),
+          ),
         ),
       ),
     );
@@ -56,9 +59,11 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const Scaffold(body: ComposePage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
       ),
     );
     await tester.scrollUntilVisible(
@@ -86,9 +91,11 @@ void main() {
   });
   testWidgets('空白だけでは投稿不可、初回案内と確認後も本文を保持する', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const Scaffold(body: ComposePage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
       ),
     );
     await tester.enterText(find.byType(TextField), '   ');
@@ -153,11 +160,13 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: const MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
-          child: Scaffold(body: ComposePage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(1.5)),
+            child: Scaffold(body: ComposePage()),
+          ),
         ),
       ),
     );

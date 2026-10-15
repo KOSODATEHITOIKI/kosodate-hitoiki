@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/post.dart';
-import '../providers/post_providers.dart';
 import 'comfort_page.dart';
 import 'post_card.dart';
 
@@ -50,27 +49,7 @@ class MockPostList extends ConsumerWidget {
             : Column(
                 children: [
                   for (final post in items) ...[
-                    PostCard(
-                      post: post,
-                      onToggleSaved: () async {
-                        try {
-                          await ref
-                              .read(postRepositoryProvider)
-                              .toggleSaved(post.id);
-                          if (!context.mounted) return;
-                          ref.invalidate(feedPostsProvider);
-                          ref.invalidate(searchResultsProvider);
-                          ref.invalidate(myPostsProvider);
-                          ref.invalidate(savedPostsProvider);
-                        } catch (_) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('保存状態を変更できませんでした')),
-                            );
-                          }
-                        }
-                      },
-                    ),
+                    PostCard(post: post),
                     const SizedBox(height: 12),
                   ],
                 ],
