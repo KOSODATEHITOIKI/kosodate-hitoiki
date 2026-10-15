@@ -76,7 +76,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                   children: [
                     for (final item in const [
                       (AppAvatars.defaultSprout, '芽'),
-                      (AppAvatars.defaultSun, '太陽'),
+                      (AppAvatars.defaultYellowFlower, '花'),
+                      (AppAvatars.defaultTulip, 'チューリップ'),
+                      (AppAvatars.defaultLittleBird, '鳥'),
                     ])
                       Semantics(
                         button: true,
@@ -111,8 +113,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                const Text('アイコンの選択肢は整備中です。', style: TextStyle(fontSize: 11)),
               ],
             ),
           ),

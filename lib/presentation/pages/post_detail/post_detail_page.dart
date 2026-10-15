@@ -17,9 +17,11 @@ class PostDetailPage extends ConsumerStatefulWidget {
     super.key,
     required this.post,
     this.focusComments = false,
+    this.autoOpenMenu = false,
   });
   final Post post;
   final bool focusComments;
+  final bool autoOpenMenu;
   @override
   ConsumerState<PostDetailPage> createState() => _PostDetailPageState();
 }
@@ -35,6 +37,9 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     super.initState();
     if (widget.focusComments) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _openComments());
+    }
+    if (widget.autoOpenMenu) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _menu(post));
     }
   }
 
@@ -106,6 +111,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                     post: current,
                     showOpenButton: false,
                     showPresetReactions: true,
+                    showMenuButton: false,
                     onOpenComments: _openComments,
                     onToggleSaved: () async {
                       try {
