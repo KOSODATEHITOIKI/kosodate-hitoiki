@@ -9,6 +9,7 @@ import '../../../core/utils/accessibility.dart';
 import '../../../domain/models/post.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/post_card.dart';
+import '../support/support_resources_page.dart';
 
 /// S-02。投稿取得(Issue #7)はMockPostRepositoryで仮接続済み。
 /// バックエンド実装後はpostRepositoryProviderの差し替えのみで切り替わる。
@@ -41,6 +42,21 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             children: [
               const _HomeHeader(),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute(
+                      builder: (_) => const SupportResourcesPage(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.support_agent, size: 18),
+                  label: const Text(
+                    '困ったときの相談先',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
               Center(
                 child: FilledButton.icon(

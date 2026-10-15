@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/moderation_result.dart';
 import '../../widgets/comfort_page.dart';
+import '../support/support_resources_page.dart';
 
 enum _Preview { normal, confirm, block, support }
 
@@ -132,18 +133,8 @@ class _ComposeReviewPageState extends State<ComposeReviewPage> {
               style: TextStyle(fontSize: 14, height: 1.7),
             ),
             TextButton(
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('相談先の画面は準備中です'),
-                  content: const Text('相談先画面との接続を準備しています。'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('閉じる'),
-                    ),
-                  ],
-                ),
+              onPressed: () => Navigator.of(context).push<void>(
+                MaterialPageRoute(builder: (_) => const SupportResourcesPage()),
               ),
               child: const Text('困ったときの相談先'),
             ),

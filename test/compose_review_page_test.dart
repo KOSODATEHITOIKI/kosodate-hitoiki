@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_review_page.dart';
+import 'package:kosodate_hitoiki/presentation/pages/support/support_resources_page.dart';
 
 Future<void> showSample(WidgetTester tester, String label) async {
   final target = find.widgetWithText(ChoiceChip, label);
@@ -73,6 +74,13 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('困ったときの相談先'), findsOneWidget);
+      await tester.ensureVisible(find.text('困ったときの相談先'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('困ったときの相談先'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SupportResourcesPage), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
       expect(find.text('この内容で投稿する'), findsOneWidget);
       await tester.ensureVisible(find.text('この内容で投稿する'));
       await tester.pumpAndSettle();
