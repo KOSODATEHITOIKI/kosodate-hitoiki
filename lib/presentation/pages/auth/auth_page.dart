@@ -115,7 +115,9 @@ class _AuthPageState extends State<AuthPage> {
                           side: const BorderSide(color: AppColors.divider),
                         ),
                         icon: Icon(
-                          provider == 'Apple' ? Icons.apple : Icons.g_mobiledata,
+                          provider == 'Apple'
+                              ? Icons.apple
+                              : Icons.g_mobiledata,
                           size: provider == 'Apple' ? 20 : 26,
                         ),
                         label: Text('$providerで続ける'),
@@ -331,8 +333,10 @@ class _AuthHeader extends StatelessWidget {
                       label: 'ひと息',
                       child: Image.asset(
                         AppBrand.logo,
-                        width: (MediaQuery.sizeOf(context).width * 0.42)
-                            .clamp(134.0, 180.0),
+                        width: (MediaQuery.sizeOf(context).width * 0.42).clamp(
+                          134.0,
+                          180.0,
+                        ),
                         fit: BoxFit.contain,
                         alignment: Alignment.centerLeft,
                         excludeFromSemantics: true,
