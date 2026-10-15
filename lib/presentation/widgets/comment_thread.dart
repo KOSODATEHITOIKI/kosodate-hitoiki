@@ -8,8 +8,9 @@ import '../pages/report/report_page.dart';
 
 /// S-03のサンプルコメント。取得・送信・保存はIssue #23で接続する。
 class CommentThread extends ConsumerStatefulWidget {
-  const CommentThread({super.key, required this.postId});
+  const CommentThread({super.key, required this.postId, this.accepting = true});
   final String postId;
+  final bool accepting;
   @override
   ConsumerState<CommentThread> createState() => _CommentThreadState();
 }
@@ -111,7 +112,7 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
           ],
         ),
         Text(body, style: const TextStyle(fontSize: 14, height: 1.7)),
-        if (!reply)
+        if (!reply && widget.accepting)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
@@ -166,53 +167,56 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Text('まだサンプルコメントはありません。', style: TextStyle(fontSize: 14)),
           ),
-        Container(
-          key: _inputKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_replyTo != null)
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      '$_replyToさんへの返信',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    TextButton(
-                      onPressed: () => setState(() => _replyTo = null),
-                      child: const Text('返信をやめる'),
-                    ),
-                  ],
+        if (!widget.accepting)
+          const Text('コメントの受付は終了しています。', style: TextStyle(fontSize: 14)),
+        if (widget.accepting)
+          Container(
+            key: _inputKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_replyTo != null)
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '$_replyToさんへの返信',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _replyTo = null),
+                        child: const Text('返信をやめる'),
+                      ),
+                    ],
+                  ),
+                TextField(
+                  controller: _draft,
+                  minLines: 2,
+                  maxLines: 6,
+                  maxLength: 500,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: _replyTo == null ? 'コメントを書く' : '返信を書く',
+                    hintText: 'あなたの経験を、やさしく',
+                  ),
                 ),
-              TextField(
-                controller: _draft,
-                minLines: 2,
-                maxLines: 6,
-                maxLength: 500,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: _replyTo == null ? 'コメントを書く' : '返信を書く',
-                  hintText: 'あなたの経験を、やさしく',
+                const SizedBox(height: 8),
+                const Text(
+                  '名前や個人情報は書かないでください。',
+                  style: TextStyle(fontSize: 12, height: 1.6),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '名前や個人情報は書かないでください。',
-                style: TextStyle(fontSize: 12, height: 1.6),
-              ),
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed:
-                    _draft.text.trim().isEmpty ||
-                        _draft.text.characters.length > 500
-                    ? null
-                    : _submit,
-                child: const Text('送信'),
-              ),
-            ],
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed:
+                      _draft.text.trim().isEmpty ||
+                          _draft.text.characters.length > 500
+                      ? null
+                      : _submit,
+                  child: const Text('送信'),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
