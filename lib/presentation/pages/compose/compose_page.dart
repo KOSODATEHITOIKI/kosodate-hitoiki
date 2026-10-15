@@ -6,8 +6,9 @@ import '../../../core/constants/app_icons.dart';
 import '../../../domain/models/post.dart';
 import '../../widgets/comfort_page.dart';
 import '../../widgets/topic_picker.dart';
+import 'compose_review_page.dart';
 
-/// S-04。投稿API・送信前チェックとの接続はIssue #9で行う。
+/// S-04。投稿API・送信前チェックとの接続はIssue #20で行う。
 class ComposePage extends StatefulWidget {
   const ComposePage({super.key, this.initialPost});
   final Post? initialPost;
@@ -22,6 +23,7 @@ class _ComposePageState extends State<ComposePage> {
   String _postType = 'ぐち';
   _ResponseMode _mode = _ResponseMode.listening;
   String? _topic;
+  bool _guideSeen = false;
 
   @override
   void initState() {
@@ -42,21 +44,60 @@ class _ComposePageState extends State<ComposePage> {
     super.dispose();
   }
 
-  void _showPostingNotice() {
+  Future<void> _showPostingNotice() async {
     FocusScope.of(context).unfocus();
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('投稿機能は準備中です'),
-        content: const Text(
-          '投稿にはログインが必要です。\n現在は入力画面をお試しいただけます。入力した内容は送信・保存されません。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('書く画面に戻る'),
+    if (_body.text.trim().isEmpty || _body.text.characters.length > 1000) {
+      return;
+    }
+    if (!_guideSeen && widget.initialPost == null) {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          scrollable: true,
+          title: const Text('はじめて投稿する前に'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                AppDecorations.sunSmiling,
+                width: 96,
+                height: 96,
+                excludeFromSemantics: true,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'ここに書いたことは、登録していない人も読めます。\n\n名前・学校や園・勤務先・住んでいる地域は書かず、「上の子」「夫」のように続柄で伝えましょう。\n\n入力した文章は残っています。',
+                style: TextStyle(fontSize: 14, height: 1.7),
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('あとにする'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('確認して書く'),
+            ),
+          ],
+        ),
+      );
+      if (mounted && accepted == true) setState(() => _guideSeen = true);
+      return;
+    }
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => ComposeReviewPage(
+          body: _body.text,
+          postType: _postType,
+          responseMode: _mode == _ResponseMode.listening
+              ? 'ただ聞いてほしい'
+              : '話を聞きたい',
+          topic: _topic,
+          editing: widget.initialPost != null,
+        ),
       ),
     );
   }

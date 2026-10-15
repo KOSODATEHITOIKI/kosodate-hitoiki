@@ -4,6 +4,52 @@ import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_page.dart';
 
 void main() {
+  testWidgets('初回案内は320px文字2倍でも延期でき、本文を失わない', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    await tester.scrollUntilVisible(
+      find.byType(TextField),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'いまの気持ち');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('compose-submit')),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('はじめて投稿する前に'), findsOneWidget);
+    await tester.tap(find.text('あとにする'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byType(TextField),
+      -180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'いまの気持ち',
+    );
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('反応の希望は縦並びで選択できる', (tester) async {
     tester.view.physicalSize = const Size(768, 900);
     tester.view.devicePixelRatio = 1;
@@ -38,7 +84,7 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
-  testWidgets('空白だけでは投稿不可、入力後も準備中の案内で本文を保持する', (tester) async {
+  testWidgets('空白だけでは投稿不可、初回案内と確認後も本文を保持する', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
@@ -75,8 +121,20 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('compose-submit')));
     await tester.pumpAndSettle();
-    expect(find.text('投稿機能は準備中です'), findsOneWidget);
-    await tester.tap(find.text('書く画面に戻る'));
+    expect(find.text('はじめて投稿する前に'), findsOneWidget);
+    await tester.tap(find.text('確認して書く'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('投稿の確認'), findsOneWidget);
+    expect(find.text('今日は少し疲れた。'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('書き直す'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('書き直す'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byType(TextField),
