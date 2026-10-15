@@ -6,6 +6,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../widgets/comfort_page.dart';
 import 'withdrawal_page.dart';
 import 'notification_settings_page.dart';
+import 'block_management_page.dart';
 
 /// S-11。未接続の設定操作は案内だけを表示する。
 class SettingsPage extends StatelessWidget {
@@ -75,7 +76,13 @@ class SettingsPage extends StatelessWidget {
                       group[index].$2,
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
-                    subtitle: ['利用ガイド', '退会', '通知'].contains(group[index].$2)
+                    subtitle:
+                        [
+                          '利用ガイド',
+                          '退会',
+                          '通知',
+                          'ブロック管理',
+                        ].contains(group[index].$2)
                         ? null
                         : const Text('準備中', style: TextStyle(fontSize: 11)),
                     trailing: const Icon(Icons.chevron_right),
@@ -96,6 +103,12 @@ class SettingsPage extends StatelessWidget {
                         Navigator.of(context).push<void>(
                           MaterialPageRoute(
                             builder: (_) => const NotificationSettingsPage(),
+                          ),
+                        );
+                      } else if (group[index].$2 == 'ブロック管理') {
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => const BlockManagementPage(),
                           ),
                         );
                       } else {
