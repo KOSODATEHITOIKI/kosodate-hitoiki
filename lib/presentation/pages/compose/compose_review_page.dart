@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models/moderation_result.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/comfort_page.dart';
 import '../support/support_resources_page.dart';
 
 enum _Preview { normal, confirm, block, support }
 
 /// 送信前チェック表示のモック。入力文の判定・送信・保存は行わない。
-class ComposeReviewPage extends StatefulWidget {
+class ComposeReviewPage extends ConsumerStatefulWidget {
   const ComposeReviewPage({
     super.key,
     required this.body,
@@ -21,10 +23,10 @@ class ComposeReviewPage extends StatefulWidget {
   final String? topic;
   final bool editing;
   @override
-  State<ComposeReviewPage> createState() => _ComposeReviewPageState();
+  ConsumerState<ComposeReviewPage> createState() => _ComposeReviewPageState();
 }
 
-class _ComposeReviewPageState extends State<ComposeReviewPage> {
+class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
   _Preview _preview = _Preview.confirm;
 
   ModerationResult get _result => switch (_preview) {
@@ -61,6 +63,18 @@ class _ComposeReviewPageState extends State<ComposeReviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 利用者切り替え時、上に乗ったダイアログ/相談先画面ごとこの画面を閉じる(pop1回だと取り残される)。
+    ref.listen<String?>(currentUserIdProvider, (previous, next) {
+      if (previous == next) return;
+      final navigator = Navigator.of(context);
+      final myRoute = ModalRoute.of(context);
+      if (myRoute != null) {
+        navigator.popUntil((route) => route == myRoute);
+      }
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    });
     final result = _result;
     return Scaffold(
       appBar: AppBar(title: const Text('投稿の確認')),

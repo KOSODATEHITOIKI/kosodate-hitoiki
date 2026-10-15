@@ -10,14 +10,43 @@ import '../pages/profile/other_profile_page.dart';
 import '../pages/auth/auth_page.dart';
 import '../providers/auth_provider.dart';
 import '../providers/mock_reaction_providers.dart';
+import '../providers/post_providers.dart';
 import 'reaction_picker.dart';
+
+/// 投稿の保存・解除。認証確認・一覧Providerの更新・エラー表示をここに集約する。
+Future<void> togglePostSaved(
+  BuildContext context,
+  WidgetRef ref,
+  Post post,
+) async {
+  if (!ref.read(isLoggedInProvider)) {
+    Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => const AuthPage()));
+    return;
+  }
+  try {
+    await ref.read(postRepositoryProvider).toggleSaved(post.id);
+    // await中に画面が閉じられている可能性があるため、refを使う前に確認する。
+    if (!context.mounted) return;
+    ref.invalidate(feedPostsProvider);
+    ref.invalidate(searchResultsProvider);
+    ref.invalidate(myPostsProvider);
+    ref.invalidate(savedPostsProvider);
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('保存状態を変更できませんでした')));
+    }
+  }
+}
 
 /// 投稿一覧・検索結果・マイページ共通の投稿カード(docs/design S-02・S-05参照)。
 class PostCard extends ConsumerWidget {
   const PostCard({
     super.key,
     required this.post,
-    this.onToggleSaved,
     this.showOpenButton = true,
     this.onOpenComments,
     this.showPresetReactions = false,
@@ -25,7 +54,6 @@ class PostCard extends ConsumerWidget {
   });
 
   final Post post;
-  final VoidCallback? onToggleSaved;
   final bool showOpenButton;
   final VoidCallback? onOpenComments;
   final bool showPresetReactions;
@@ -205,7 +233,7 @@ class PostCard extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                onPressed: onToggleSaved,
+                onPressed: () => togglePostSaved(context, ref, post),
                 tooltip: post.isSaved ? '保存を解除' : '保存する',
                 icon: SvgPicture.asset(
                   post.isSaved ? AppIcons.bookmarkSaved : AppIcons.bookmark,

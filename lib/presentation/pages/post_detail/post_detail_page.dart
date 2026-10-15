@@ -113,23 +113,6 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                     showPresetReactions: true,
                     showMenuButton: false,
                     onOpenComments: _openComments,
-                    onToggleSaved: () async {
-                      try {
-                        await ref
-                            .read(postRepositoryProvider)
-                            .toggleSaved(post.id);
-                        if (!context.mounted) return;
-                        ref.invalidate(feedPostsProvider);
-                        ref.invalidate(searchResultsProvider);
-                        ref.invalidate(myPostsProvider);
-                        ref.invalidate(savedPostsProvider);
-                      } catch (_) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('保存状態を変更できませんでした')),
-                        );
-                      }
-                    },
                   ),
                   const SizedBox(height: 20),
                   Container(
@@ -278,20 +261,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     }
     switch (action) {
       case 'save':
-        try {
-          await ref.read(postRepositoryProvider).toggleSaved(post.id);
-          if (!mounted) return;
-          ref.invalidate(feedPostsProvider);
-          ref.invalidate(searchResultsProvider);
-          ref.invalidate(myPostsProvider);
-          ref.invalidate(savedPostsProvider);
-        } catch (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('保存状態を変更できませんでした')));
-          }
-        }
+        await togglePostSaved(context, ref, post);
       case 'hide':
         await _notice('非表示は準備中です', 'この投稿はまだ非表示になりません。非表示機能の接続を準備しています。');
       case 'block':

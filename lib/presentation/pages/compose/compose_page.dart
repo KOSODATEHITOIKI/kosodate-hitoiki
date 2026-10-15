@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../domain/models/post.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/comfort_page.dart';
 import '../../widgets/topic_picker.dart';
 import 'compose_review_page.dart';
 
 /// S-04。投稿API・送信前チェックとの接続はIssue #20で行う。
-class ComposePage extends StatefulWidget {
+class ComposePage extends ConsumerStatefulWidget {
   const ComposePage({super.key, this.initialPost});
   final Post? initialPost;
   @override
-  State<ComposePage> createState() => _ComposePageState();
+  ConsumerState<ComposePage> createState() => _ComposePageState();
 }
 
 enum _ResponseMode { listening, advice }
 
-class _ComposePageState extends State<ComposePage> {
+class _ComposePageState extends ConsumerState<ComposePage> {
   final _body = TextEditingController();
   String _postType = 'ぐち';
   _ResponseMode _mode = _ResponseMode.listening;
@@ -36,6 +38,15 @@ class _ComposePageState extends State<ComposePage> {
           ? _ResponseMode.advice
           : _ResponseMode.listening;
     }
+  }
+
+  // ログアウト・利用者切り替え時に下書きを破棄する。
+  void _resetDraft() {
+    _body.clear();
+    _postType = 'ぐち';
+    _mode = _ResponseMode.listening;
+    _topic = null;
+    _guideSeen = false;
   }
 
   @override
@@ -103,7 +114,14 @@ class _ComposePageState extends State<ComposePage> {
   }
 
   @override
-  Widget build(BuildContext context) => ComfortPage(
+  Widget build(BuildContext context) {
+    ref.listen<String?>(currentUserIdProvider, (previous, next) {
+      if (previous != next) setState(_resetDraft);
+    });
+    return _build(context);
+  }
+
+  Widget _build(BuildContext context) => ComfortPage(
     title: '書く',
     titleImage: AppBrand.titleCompose,
     message: 'ここなら、気持ちを書けるよ。\nどんな気持ちも、受けとめます。',

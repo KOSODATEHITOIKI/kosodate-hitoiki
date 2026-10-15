@@ -5,6 +5,7 @@ import '../../domain/models/post.dart';
 import '../../domain/repositories/post_repository.dart';
 
 /// 投稿データの取得先。バックエンド接続時はここをSupabase実装に差し替える。
+/// 利用者ID変化時はlib/app.dartがinvalidateして作り直す(ここで直接authをwatchしないのは、認証未初期化の単体テストを壊さないため)。
 final postRepositoryProvider = Provider<PostRepository>(
   (ref) => MockPostRepository(),
 );

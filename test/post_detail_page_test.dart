@@ -84,6 +84,26 @@ void main() {
         await tester.pageBack();
         await tester.pumpAndSettle();
         expect(find.byType(PostDetailPage), findsOneWidget);
+        // 保存操作はログイン必須のため、ログイン完了を模して投稿詳細を開き直す。
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              isLoggedInProvider.overrideWithValue(true),
+              postRepositoryProvider.overrideWithValue(repository),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!,
+              ),
+              home: PostDetailPage(post: post),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
         await tester.ensureVisible(find.byTooltip('保存する'));
         await tester.pumpAndSettle();
         await tester.tap(find.byTooltip('保存する'));

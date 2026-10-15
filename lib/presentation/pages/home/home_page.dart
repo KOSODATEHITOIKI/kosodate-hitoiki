@@ -186,19 +186,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         }
         return [
           for (final post in filtered) ...[
-            PostCard(
-              post: post,
-              onToggleSaved: () => ref
-                  .read(postRepositoryProvider)
-                  .toggleSaved(post.id)
-                  .then((_) {
-                    if (!mounted) return;
-                    ref.invalidate(feedPostsProvider);
-                    ref.invalidate(searchResultsProvider);
-                    ref.invalidate(myPostsProvider);
-                    ref.invalidate(savedPostsProvider);
-                  }),
-            ),
+            PostCard(post: post),
             const SizedBox(height: 12),
           ],
         ];
