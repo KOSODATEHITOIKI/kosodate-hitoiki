@@ -18,6 +18,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   final _bio = TextEditingController();
   String _avatar = AppAvatars.defaultSprout;
   String? _nameError;
+  String _ageBand = '';
+
+  // 年齢帯の区分は未確定。画面確認用のサンプルとして扱う。
+  static const _sampleAgeBands = ['', '乳児', '未就学児', '小学生', '中学生以上'];
 
   @override
   void dispose() {
@@ -166,7 +170,42 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           const SizedBox(height: 16),
           _section(
             '子どもの年齢帯（任意）',
-            const Text('年齢帯の選択は準備中です。', style: TextStyle(fontSize: 12.5)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InputDecorator(
+                  decoration: const InputDecoration(labelText: '年齢帯'),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      key: const ValueKey('profile-age-band'),
+                      value: _ageBand,
+                      isExpanded: true,
+                      itemHeight: null,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                      items: [
+                        for (final age in _sampleAgeBands)
+                          DropdownMenuItem(
+                            value: age,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Text(age.isEmpty ? '未選択' : age),
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => _ageBand = value ?? ''),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '選ばなくても構いません。選択肢は画面確認用のサンプルです。',
+                  style: TextStyle(fontSize: 12, height: 1.7),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           FilledButton(
