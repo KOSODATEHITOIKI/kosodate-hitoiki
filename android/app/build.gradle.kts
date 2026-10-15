@@ -71,13 +71,34 @@ android {
         release {
             // android/key.properties が用意されていれば本番鍵で署名する。
             // 未用意の間はdebug鍵のままとし、`flutter run --release` を壊さない。
-            // 本番配布前には必ずkey.propertiesを用意すること。
+            // 本番配布用(prodReleaseVariant)はこのフォールバックを許さず、
+            // 下のapplicationVariants.allでビルド自体を失敗させる。
             signingConfig = if (hasReleaseSigning) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
         }
+    }
+
+}
+
+// 本番配布(prodフレーバーのrelease)は、debug鍵へのフォールバックに気づかず
+// 配布してしまう事故を防ぐため、key.properties未設定ならビルド自体を
+// 失敗させる。dev/profileはこの対象外(開発用途のためdebug鍵フォールバックを
+// 許容する)。applicationVariants.all{}は対象外のタスク実行時にも全variantを
+// 評価してしまうため、実際にprodReleaseが要求されたタスクかどうかを
+// startParameterで確認してから失敗させる。
+afterEvaluate {
+    val requestedProdRelease = gradle.startParameter.taskNames.any { taskName ->
+        val normalized = taskName.substringAfterLast(":")
+        normalized.contains("ProdRelease") || normalized == "assembleRelease"
+    }
+    if (requestedProdRelease && !hasReleaseSigning) {
+        throw GradleException(
+            "本番配布(prod release)には android/key.properties による署名設定が必須です。" +
+                "keyAlias・keyPassword・storeFile・storePasswordを用意してください。"
+        )
     }
 }
 

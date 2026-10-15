@@ -40,8 +40,9 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     }
   }
 
-  // ログアウト時に下書きを破棄する。編集対象の投稿は次に開いた時点の
-  // 状態を取得し直すため、isMine等の判定もログインし直した後に揃う。
+  // ログアウト・利用者切り替え時に下書きを破棄する。編集対象の投稿は
+  // 次に開いた時点の状態を取得し直すため、isMine等の判定もログインし
+  // 直した後に揃う。
   void _resetDraft() {
     _body.clear();
     _postType = 'ぐち';
@@ -116,8 +117,8 @@ class _ComposePageState extends ConsumerState<ComposePage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<bool>(isLoggedInProvider, (_, next) {
-      if (!next) setState(_resetDraft);
+    ref.listen<String?>(currentUserIdProvider, (previous, next) {
+      if (previous != next) setState(_resetDraft);
     });
     return _build(context);
   }

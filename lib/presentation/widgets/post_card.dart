@@ -30,6 +30,9 @@ Future<void> togglePostSaved(
   }
   try {
     await ref.read(postRepositoryProvider).toggleSaved(post.id);
+    // 実通信に置き換わるとawait中に画面が閉じられうる。破棄後のウィジェットの
+    // refを使うと例外になるため、後続のref操作の前に必ずmounted確認する。
+    if (!context.mounted) return;
     ref.invalidate(feedPostsProvider);
     ref.invalidate(searchResultsProvider);
     ref.invalidate(myPostsProvider);
