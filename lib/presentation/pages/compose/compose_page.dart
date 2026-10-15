@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../domain/models/post.dart';
 import '../../widgets/comfort_page.dart';
+import '../../widgets/topic_picker.dart';
 
 /// S-04。投稿API・送信前チェックとの接続はIssue #9で行う。
 class ComposePage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _ComposePageState extends State<ComposePage> {
   final _body = TextEditingController();
   String _postType = 'ぐち';
   _ResponseMode _mode = _ResponseMode.listening;
+  String? _topic;
 
   @override
   void initState() {
@@ -145,7 +147,27 @@ class _ComposePageState extends State<ComposePage> {
       const SizedBox(height: 16),
       _section(
         '話題（任意・1つ）',
-        const Text('話題の選択は準備中です。', style: TextStyle(fontSize: 12.5)),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final topic in kMockTopics)
+              ChoiceChip(
+                label: Text(topic, maxLines: 1, softWrap: false),
+                labelStyle: const TextStyle(fontSize: 12),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                selected: _topic == topic,
+                onSelected: (selected) =>
+                    setState(() => _topic = selected ? topic : null),
+                showCheckmark: false,
+                selectedColor: AppColors.secondary,
+                backgroundColor: AppColors.background,
+                shape: const StadiumBorder(),
+                side: const BorderSide(color: AppColors.divider),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              ),
+          ],
+        ),
       ),
       const SizedBox(height: 24),
       FilledButton.icon(

@@ -21,6 +21,7 @@ class PostCard extends ConsumerWidget {
     this.showOpenButton = true,
     this.onOpenComments,
     this.showPresetReactions = false,
+    this.showMenuButton = true,
   });
 
   final Post post;
@@ -28,6 +29,7 @@ class PostCard extends ConsumerWidget {
   final bool showOpenButton;
   final VoidCallback? onOpenComments;
   final bool showPresetReactions;
+  final bool showMenuButton;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,6 +88,18 @@ class PostCard extends ConsumerWidget {
                   ],
                 ),
               ),
+              if (showMenuButton)
+                IconButton(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PostDetailPage(post: post, autoOpenMenu: true),
+                    ),
+                  ),
+                  tooltip: '投稿メニュー',
+                  icon: const Icon(Icons.more_horiz),
+                  visualDensity: VisualDensity.compact,
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -93,7 +107,7 @@ class PostCard extends ConsumerWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _Tag(label: post.type.label, background: AppColors.secondary),
+              _Tag(label: post.type.label, background: _typeColor(post.type)),
               _Tag(
                 label: post.responseMode.label,
                 background: AppColors.accentPink,
@@ -206,6 +220,11 @@ class PostCard extends ConsumerWidget {
       ),
     );
   }
+
+  static Color _typeColor(PostType type) => switch (type) {
+    PostType.grumble => AppColors.accentPink,
+    PostType.consult || PostType.tips => AppColors.secondary,
+  };
 
   static String _relativeTime(DateTime time) {
     final diff = DateTime.now().difference(time);

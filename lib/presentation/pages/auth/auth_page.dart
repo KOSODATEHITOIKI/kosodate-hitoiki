@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/utils/accessibility.dart';
 
 /// S-10。フォームと画面遷移のみ。認証・メール送信は未接続。
 enum AuthMode { login, register, reset }
@@ -80,48 +82,30 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(_title)),
     body: SafeArea(
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             child: Form(
               key: _form,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'ひと息',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      SvgPicture.asset(
-                        AppDecorations.sunSmiling,
-                        width: 96,
-                        height: 96,
-                        excludeFromSemantics: true,
-                      ),
-                    ],
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: BackButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(switch (_mode) {
-                    AuthMode.login => 'おかえりなさい。',
-                    AuthMode.register => 'がんばる毎日に、やさしいつながりを。',
-                    AuthMode.reset => '登録したメールアドレスを入力してください。',
-                  }, style: const TextStyle(fontSize: 18, height: 1.7)),
+                  const SizedBox(height: 4),
+                  _AuthHeader(title: _title, mode: _mode),
                   const SizedBox(height: 24),
                   if (_mode != AuthMode.reset) ...[
                     for (final provider in ['Apple', 'Google']) ...[
-                      OutlinedButton(
+                      OutlinedButton.icon(
                         onPressed: () =>
                             _notice('$providerでの認証は準備中です', 'この画面では認証は行われません。'),
                         style: OutlinedButton.styleFrom(
@@ -130,7 +114,13 @@ class _AuthPageState extends State<AuthPage> {
                           minimumSize: const Size.fromHeight(52),
                           side: const BorderSide(color: AppColors.divider),
                         ),
-                        child: Text('$providerで続ける'),
+                        icon: Icon(
+                          provider == 'Apple'
+                              ? Icons.apple
+                              : Icons.g_mobiledata,
+                          size: provider == 'Apple' ? 20 : 26,
+                        ),
+                        label: Text('$providerで続ける'),
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -157,6 +147,8 @@ class _AuthPageState extends State<AuthPage> {
                       decoration: const InputDecoration(
                         labelText: 'ニックネーム',
                         helperText: '2〜12文字・本名は使わないでください。',
+                        counterText: '',
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
                       validator: (value) =>
                           (value ?? '').trim().characters.length < 2
@@ -171,10 +163,13 @@ class _AuthPageState extends State<AuthPage> {
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'メールアドレス',
                       hintText: 'example@example.com',
-                      prefixIcon: Icon(Icons.mail_outline),
+                      helperText: _mode == AuthMode.register
+                          ? '他の人には公開されません'
+                          : null,
+                      prefixIcon: const Icon(Icons.mail_outline),
                     ),
                     validator: (value) =>
                         RegExp(
@@ -286,4 +281,89 @@ class _AuthPageState extends State<AuthPage> {
       ),
     ),
   );
+}
+
+/// docs/design S-10と同じ、ロゴ+大きな太陽を使う見出し。
+class _AuthHeader extends StatelessWidget {
+  const _AuthHeader({required this.title, required this.mode});
+  final String title;
+  final AuthMode mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final showDecoration = fitsDecoration(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (showDecoration) const SizedBox(height: 154),
+        if (showDecoration) ...[
+          Positioned(
+            top: 30,
+            right: -40,
+            child: ExcludeSemantics(
+              child: IgnorePointer(
+                child: SvgPicture.asset(
+                  AppDecorations.cloudSoft,
+                  width: 150,
+                  height: 150,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -36,
+            right: -50,
+            child: ExcludeSemantics(
+              child: SvgPicture.asset(
+                AppDecorations.sunSmiling,
+                width: 190,
+                height: 190,
+              ),
+            ),
+          ),
+        ],
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
+              child: showDecoration
+                  ? Semantics(
+                      header: true,
+                      label: 'ひと息',
+                      child: Image.asset(
+                        AppBrand.logo,
+                        width: (MediaQuery.sizeOf(context).width * 0.42).clamp(
+                          134.0,
+                          180.0,
+                        ),
+                        fit: BoxFit.contain,
+                        alignment: Alignment.centerLeft,
+                        excludeFromSemantics: true,
+                      ),
+                    )
+                  : const Text(
+                      'ひと息',
+                      style: TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 12),
+            Text(switch (mode) {
+              AuthMode.login => 'おかえりなさい。',
+              AuthMode.register => 'がんばる毎日に、\nやさしいつながりを。',
+              AuthMode.reset => '登録したメールアドレスを\n入力してください。',
+            }, style: const TextStyle(fontSize: 15.5, height: 1.7)),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
