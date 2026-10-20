@@ -297,7 +297,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
                           title,
                           maxLines: 1,
                           style: const TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -329,7 +329,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         child,

@@ -249,7 +249,7 @@ class _WelcomeHeader extends StatelessWidget {
                 const Text(
                   'ひと息',
                   style: TextStyle(
-                    fontSize: 27,
+                    fontSize: 24,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
                   ),

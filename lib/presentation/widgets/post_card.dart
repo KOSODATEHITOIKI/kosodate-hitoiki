@@ -103,7 +103,7 @@ class PostCard extends ConsumerWidget {
                         child: Text(
                           post.authorName,
                           style: const TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -146,7 +146,7 @@ class PostCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(post.body, style: const TextStyle(fontSize: 14.5, height: 1.6)),
+          Text(post.body, style: const TextStyle(fontSize: 13.5, height: 1.6)),
           if (showOpenButton)
             TextButton(
               onPressed: () => Navigator.of(context).push<void>(

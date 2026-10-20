@@ -65,7 +65,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           label: const Text(
             '気持ちを書く  ›',
-            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
           ),
         ),
       ),
@@ -82,7 +82,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             _illustration(AppDecorations.leavesSprout, 36),
             const SizedBox(width: 8),
             const Expanded(
-              child: Text('話題を選ぶ', style: TextStyle(fontSize: 13.5)),
+              child: Text('話題を選ぶ', style: TextStyle(fontSize: 12.5)),
             ),
             IconButton(
               tooltip: '話題の絞り込みは準備中です',
@@ -187,7 +187,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         const SizedBox(height: 16),
         Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         const Text(
@@ -207,9 +207,9 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
-    final logoWidth = (MediaQuery.sizeOf(context).width * 0.42).clamp(
-      134.0,
-      180.0,
+    final logoWidth = (MediaQuery.sizeOf(context).width * 0.36).clamp(
+      110.0,
+      150.0,
     );
     return Stack(
       clipBehavior: Clip.none,
@@ -273,7 +273,7 @@ class _HomeHeader extends StatelessWidget {
                       child: Text(
                         'ひと息',
                         style: TextStyle(
-                          fontSize: 27,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 2,
                         ),
@@ -285,12 +285,12 @@ class _HomeHeader extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               '今日も、おつかれさま。',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
             const Text(
               'がんばるあなたの気持ちに、\nここでひと息つけますように。',
-              style: TextStyle(fontSize: 13.5, height: 1.7),
+              style: TextStyle(fontSize: 12.5, height: 1.7),
             ),
           ],
         ),

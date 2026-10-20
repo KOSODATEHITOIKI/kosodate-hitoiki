@@ -88,7 +88,7 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
                         const Text(
                           'ブロック中の相手',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -113,7 +113,7 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
                                     child: Text(
                                       'あおぞら',
                                       style: TextStyle(
-                                        fontSize: 15,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),

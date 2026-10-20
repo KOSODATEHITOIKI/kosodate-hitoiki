@@ -87,7 +87,7 @@ class OtherProfilePage extends ConsumerWidget {
       Text(
         profile.nickname,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
+        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
       ),
       const SizedBox(height: 12),
       Text(
