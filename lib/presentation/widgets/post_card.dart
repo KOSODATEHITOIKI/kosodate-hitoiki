@@ -61,8 +61,11 @@ class PostCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reacted = ref.watch(mockEmpathyProvider).contains(post.id);
-    final reaction = ref.watch(mockReactionsProvider)[post.id];
+    // 自分の投稿のリアクションだけを監視し、他の投稿への操作で再構築しない。
+    final reaction = ref.watch(
+      mockReactionsProvider.select((reactions) => reactions[post.id]),
+    );
+    final reacted = reaction == MockReaction.empathy;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
