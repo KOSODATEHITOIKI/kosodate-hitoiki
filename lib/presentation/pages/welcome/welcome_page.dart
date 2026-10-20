@@ -43,17 +43,17 @@ class WelcomePage extends StatelessWidget {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 480),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 24, 12, 32),
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const _WelcomeHeader(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
-                                vertical: 20,
+                                vertical: 14,
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.white,
@@ -68,14 +68,14 @@ class WelcomePage extends StatelessWidget {
                                     description:
                                         '安心して気持ちを話せるように、個人が特定される情報は書かないでください。',
                                   ),
-                                  SizedBox(height: 24),
+                                  SizedBox(height: 12),
                                   _Guideline(
                                     asset: AppDecorations.heartWarm,
                                     background: AppColors.accentPink,
                                     title: '気持ちを否定しない',
                                     description: 'どんな気持ちも、否定せずに受けとめ合いましょう。',
                                   ),
-                                  SizedBox(height: 24),
+                                  SizedBox(height: 12),
                                   _Guideline(
                                     asset: AppDecorations.sunSimple,
                                     background: AppColors.surface,
@@ -85,7 +85,7 @@ class WelcomePage extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -107,10 +107,10 @@ class WelcomePage extends StatelessWidget {
                                     ),
                                     child: FilledButton(
                                       style: FilledButton.styleFrom(
-                                        minimumSize: const Size.fromHeight(60),
+                                        minimumSize: const Size.fromHeight(52),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 24,
-                                          vertical: 16,
+                                          vertical: 12,
                                         ),
                                         shape: const StadiumBorder(),
                                       ),
@@ -145,7 +145,7 @@ class WelcomePage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 12),
                                   FilledButton(
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.secondary,
@@ -167,7 +167,7 @@ class WelcomePage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 4),
                                   Center(
                                     child: TextButton(
                                       onPressed: () =>
@@ -254,14 +254,14 @@ class _WelcomeHeader extends StatelessWidget {
                     letterSpacing: 1,
                   ),
                 ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               if (showDecoration)
                 Semantics(
                   label: '言いづらいことも、ここでひと息。',
                   image: true,
                   child: Image.asset(
                     AppBrand.tagline,
-                    height: 100,
+                    height: 76,
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
                     excludeFromSemantics: true,
@@ -276,7 +276,7 @@ class _WelcomeHeader extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Text(
                 '子育ての気持ちを、\n安心して書ける場所です。',
                 style: TextStyle(fontSize: 13.5, height: 1.65),
