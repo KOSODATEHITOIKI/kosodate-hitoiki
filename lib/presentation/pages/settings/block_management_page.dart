@@ -56,7 +56,7 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
       appBar: AppBar(title: const Text('ブロック管理')),
       body: !loggedIn
           ? ComfortPage(
-              title: 'ログインして、ひと息',
+              title: 'ログインして、\nひと息',
               message: 'ブロック管理には、\n登録・ログインが必要です。',
               children: [
                 FilledButton(

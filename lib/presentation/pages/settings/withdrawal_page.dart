@@ -45,7 +45,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
       appBar: AppBar(title: const Text('退会')),
       body: !loggedIn
           ? ComfortPage(
-              title: 'ログインして、ひと息',
+              title: 'ログインして、\nひと息',
               message: '退会の確認には、\nログインが必要です。',
               children: [
                 OutlinedButton(

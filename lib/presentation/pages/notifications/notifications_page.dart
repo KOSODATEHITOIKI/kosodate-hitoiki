@@ -178,7 +178,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     });
     if (!ref.watch(isLoggedInProvider)) {
       return ComfortPage(
-        title: 'ログインして、ひと息',
+        title: 'ログインして、\nひと息',
         message: 'お知らせを見るには、\n登録・ログインが必要です。',
         children: [
           FilledButton(

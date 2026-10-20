@@ -36,7 +36,7 @@ class _NotificationSettingsPageState
       appBar: AppBar(title: const Text('通知設定')),
       body: !loggedIn
           ? ComfortPage(
-              title: 'ログインして、ひと息',
+              title: 'ログインして、\nひと息',
               message: '通知設定には、\n登録・ログインが必要です。',
               children: [
                 FilledButton(
