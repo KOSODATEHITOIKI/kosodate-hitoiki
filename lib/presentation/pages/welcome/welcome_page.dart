@@ -125,7 +125,7 @@ class WelcomePage extends StatelessWidget {
                                               '登録してはじめる',
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                fontSize: 13.5,
+                                                fontSize: 12.5,
                                                 fontWeight: FontWeight.w700,
                                               ),
                                             ),
@@ -162,7 +162,7 @@ class WelcomePage extends StatelessWidget {
                                       '登録せずに読む',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 13.5,
+                                        fontSize: 12.5,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -178,7 +178,7 @@ class WelcomePage extends StatelessWidget {
                                       child: const Text(
                                         'ログイン',
                                         style: TextStyle(
-                                          fontSize: 13.5,
+                                          fontSize: 12.5,
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -219,8 +219,8 @@ class _WelcomeHeader extends StatelessWidget {
             child: ExcludeSemantics(
               child: AppAsset(
                 AppDecorations.sunSmiling,
-                width: 230,
-                height: 230,
+                width: 190,
+                height: 190,
               ),
             ),
           ),
@@ -236,9 +236,9 @@ class _WelcomeHeader extends StatelessWidget {
                   image: true,
                   child: Image.asset(
                     AppBrand.logo,
-                    width: (MediaQuery.sizeOf(context).width * 0.42).clamp(
-                      134.0,
-                      180.0,
+                    width: (MediaQuery.sizeOf(context).width * 0.36).clamp(
+                      110.0,
+                      150.0,
                     ),
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
@@ -261,7 +261,7 @@ class _WelcomeHeader extends StatelessWidget {
                   image: true,
                   child: Image.asset(
                     AppBrand.tagline,
-                    height: 76,
+                    height: 64,
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
                     excludeFromSemantics: true,
@@ -271,7 +271,7 @@ class _WelcomeHeader extends StatelessWidget {
                 const Text(
                   '言いづらいことも、\nここでひと息。',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     height: 1.4,
                     fontWeight: FontWeight.w700,
                   ),
@@ -279,7 +279,7 @@ class _WelcomeHeader extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 '子育ての気持ちを、\n安心して書ける場所です。',
-                style: TextStyle(fontSize: 13.5, height: 1.65),
+                style: TextStyle(fontSize: 12.5, height: 1.6),
               ),
             ],
           ),
@@ -308,8 +308,8 @@ class _Guideline extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 54,
-          height: 54,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(color: background, shape: BoxShape.circle),
           child: AppAsset(asset, excludeFromSemantics: true),
         ),
@@ -321,7 +321,7 @@ class _Guideline extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   height: 1.5,
                 ),
@@ -330,8 +330,8 @@ class _Guideline extends StatelessWidget {
               Text(
                 description,
                 style: const TextStyle(
-                  fontSize: 13.5,
-                  height: 1.7,
+                  fontSize: 12.5,
+                  height: 1.6,
                   color: AppColors.textPrimary,
                 ),
               ),
