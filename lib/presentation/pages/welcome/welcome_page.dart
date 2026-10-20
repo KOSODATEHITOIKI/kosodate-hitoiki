@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
@@ -131,7 +131,7 @@ class WelcomePage extends StatelessWidget {
                                             ),
                                           ),
                                           const SizedBox(width: 16),
-                                          SvgPicture.asset(
+                                          AppAsset(
                                             AppIcons.next,
                                             width: 24,
                                             height: 24,
@@ -217,7 +217,7 @@ class _WelcomeHeader extends StatelessWidget {
             top: -58,
             right: -50,
             child: ExcludeSemantics(
-              child: SvgPicture.asset(
+              child: AppAsset(
                 AppDecorations.sunSmiling,
                 width: 230,
                 height: 230,
@@ -311,7 +311,7 @@ class _Guideline extends StatelessWidget {
           width: 54,
           height: 54,
           decoration: BoxDecoration(color: background, shape: BoxShape.circle),
-          child: SvgPicture.asset(asset, excludeFromSemantics: true),
+          child: AppAsset(asset, excludeFromSemantics: true),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -360,7 +360,7 @@ class _WelcomeBackground extends StatelessWidget {
             Positioned(
               bottom: -10,
               left: -12,
-              child: SvgPicture.asset(
+              child: AppAsset(
                 AppDecorations.leavesSprout,
                 width: 110,
                 height: 110,
@@ -369,7 +369,7 @@ class _WelcomeBackground extends StatelessWidget {
             Positioned(
               bottom: -12,
               right: -4,
-              child: SvgPicture.asset(
+              child: AppAsset(
                 AppDecorations.leavesSprout,
                 width: 120,
                 height: 120,
@@ -382,5 +382,5 @@ class _WelcomeBackground extends StatelessWidget {
   }
 
   Widget _cloud(double size) =>
-      SvgPicture.asset(AppDecorations.cloudSoft, width: size, height: size);
+      AppAsset(AppDecorations.cloudSoft, width: size, height: size);
 }

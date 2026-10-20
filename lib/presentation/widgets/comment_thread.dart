@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
 import '../providers/auth_provider.dart';
@@ -81,12 +81,7 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
       children: [
         Row(
           children: [
-            SvgPicture.asset(
-              avatar,
-              width: 32,
-              height: 32,
-              excludeFromSemantics: true,
-            ),
+            AppAsset(avatar, width: 32, height: 32, excludeFromSemantics: true),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

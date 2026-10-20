@@ -1,5 +1,5 @@
 /// SVGアセットのパス定数(docs/design/svg-assets/README.md参照、2026-09-29確定)。
-/// 表示には`flutter_svg`の`SvgPicture.asset`を使う。
+/// 表示には`AppAsset`を使う(.svgは`flutter_svg`、重い画像は.png)。
 library;
 
 /// アイコン(24×24、線幅2)。
@@ -74,16 +74,16 @@ class AppDecorations {
 
   static const _base = 'assets/decorations';
 
-  static const sunSmiling = '$_base/decoration-sun-smiling.svg';
-  static const sunSimple = '$_base/decoration-sun-simple.svg';
+  static const sunSmiling = '$_base/decoration-sun-smiling.png';
+  static const sunSimple = '$_base/decoration-sun-simple.png';
   static const leavesSprout = '$_base/decoration-leaves-sprout.svg';
   static const heartWarm = '$_base/decoration-heart-warm.svg';
   static const cloudSoft = '$_base/decoration-cloud-soft.svg';
   static const flowerCoral = '$_base/decoration-flower-coral.svg';
   static const sparkles = '$_base/decoration-sparkles.svg';
   static const tulip = '$_base/decoration-tulip.svg';
-  static const cornerLeavesLeft = '$_base/decoration-corner-leaves-left.svg';
-  static const cornerLeavesRight = '$_base/decoration-corner-leaves-right.svg';
+  static const cornerLeavesLeft = '$_base/decoration-corner-leaves-left.png';
+  static const cornerLeavesRight = '$_base/decoration-corner-leaves-right.png';
   static const cloudsBottom = '$_base/decoration-clouds-bottom.svg';
   static const cloudsLeft = '$_base/decoration-clouds-left.svg';
   static const cloudsRight = '$_base/decoration-clouds-right.svg';
@@ -98,29 +98,29 @@ class AppIllustrations {
 
   static const _base = 'assets/illustrations';
 
-  static const welcome = '$_base/illustration-welcome.svg';
+  static const welcome = '$_base/illustration-welcome.png';
   static const emptyFeed = '$_base/illustration-empty-feed.svg';
   static const emptySearch = '$_base/illustration-empty-search.svg';
   static const emptyBookmarks = '$_base/illustration-empty-bookmarks.svg';
   static const emptyNotifications =
       '$_base/illustration-empty-notifications.svg';
   static const emptyMyPosts = '$_base/illustration-empty-my-posts.svg';
-  static const postPublished = '$_base/illustration-post-published.svg';
+  static const postPublished = '$_base/illustration-post-published.png';
   static const passwordResetSent =
-      '$_base/illustration-password-reset-sent.svg';
+      '$_base/illustration-password-reset-sent.png';
   static const passwordResetComplete =
       '$_base/illustration-password-reset-complete.svg';
   static const reportReceived = '$_base/illustration-report-received.svg';
   static const connectionRetry = '$_base/illustration-connection-retry.svg';
-  static const supportResources = '$_base/illustration-support-resources.svg';
-  static const firstPostGuide = '$_base/illustration-first-post-guide.svg';
-  static const loginRequired = '$_base/illustration-login-required.svg';
+  static const supportResources = '$_base/illustration-support-resources.png';
+  static const firstPostGuide = '$_base/illustration-first-post-guide.png';
+  static const loginRequired = '$_base/illustration-login-required.png';
   static const supportHeartHands =
-      '$_base/illustration-support-heart-hands.svg';
+      '$_base/illustration-support-heart-hands.png';
   static const supportHomeFamily =
-      '$_base/illustration-support-home-family.svg';
+      '$_base/illustration-support-home-family.png';
   static const supportParentChild =
-      '$_base/illustration-support-parent-child.svg';
+      '$_base/illustration-support-parent-child.png';
 }
 
 /// 既定アカウント画像(240×240)。
@@ -129,12 +129,12 @@ class AppAvatars {
 
   static const _base = 'assets/avatars';
 
-  static const defaultSun = '$_base/avatar-default-sun.svg';
-  static const defaultSprout = '$_base/avatar-default-sprout.svg';
-  static const defaultLittleBird = '$_base/avatar-little-bird.svg';
-  static const defaultYellowFlower = '$_base/avatar-yellow-flower.svg';
-  static const defaultTulip = '$_base/avatar-tulip.svg';
-  static const defaultBlueFlowers = '$_base/avatar-blue-flowers.svg';
+  static const defaultSun = '$_base/avatar-default-sun.png';
+  static const defaultSprout = '$_base/avatar-default-sprout.png';
+  static const defaultLittleBird = '$_base/avatar-little-bird.png';
+  static const defaultYellowFlower = '$_base/avatar-yellow-flower.png';
+  static const defaultTulip = '$_base/avatar-tulip.png';
+  static const defaultBlueFlowers = '$_base/avatar-blue-flowers.png';
 }
 
 /// 共感リアクションの定型文アイコン(240×240)。
@@ -146,6 +146,6 @@ class AppReactions {
   static const empathy = '$_base/reaction-empathy.svg';
   static const takeABreak = '$_base/reaction-take-a-break.svg';
   static const listening = '$_base/reaction-listening.svg';
-  static const gentleCheer = '$_base/reaction-gentle-cheer.svg';
+  static const gentleCheer = '$_base/reaction-gentle-cheer.png';
   static const applause = '$_base/reaction-applause.svg';
 }

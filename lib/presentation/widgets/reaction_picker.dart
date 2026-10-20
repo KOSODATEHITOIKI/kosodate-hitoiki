@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../providers/auth_provider.dart';
 import '../providers/mock_reaction_providers.dart';
 
@@ -57,7 +57,7 @@ class _ReactionPicker extends ConsumerWidget {
             for (final reaction in MockReaction.values)
               ListTile(
                 selected: selected == reaction,
-                leading: SvgPicture.asset(
+                leading: AppAsset(
                   reaction.asset,
                   width: 36,
                   height: 36,

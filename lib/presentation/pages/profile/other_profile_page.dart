@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/user_profile.dart';
 import '../../providers/auth_provider.dart';
@@ -73,7 +73,7 @@ class OtherProfilePage extends ConsumerWidget {
           builder: (context, constraints) {
             final size = (constraints.maxWidth * 0.38).clamp(96.0, 144.0);
             return ClipOval(
-              child: SvgPicture.asset(
+              child: AppAsset(
                 profile.avatarAsset,
                 width: size,
                 height: size,
