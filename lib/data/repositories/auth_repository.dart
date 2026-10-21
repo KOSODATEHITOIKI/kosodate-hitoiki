@@ -26,6 +26,16 @@ class AuthRepository {
     return _client.auth.signInWithPassword(email: email, password: password);
   }
 
+  /// 登録の確認メールを、もう一度送る。
+  Future<ResendResponse> resendSignupEmail(String email) {
+    return _client.auth.resend(type: OtpType.signup, email: email);
+  }
+
+  /// パスワード再設定のメールを送る。登録の有無は、応答からも分からない(Supabaseの仕様)。
+  Future<void> sendPasswordReset(String email) {
+    return _client.auth.resetPasswordForEmail(email);
+  }
+
   Future<bool> signInWithGoogle() {
     return _client.auth.signInWithOAuth(OAuthProvider.google);
   }

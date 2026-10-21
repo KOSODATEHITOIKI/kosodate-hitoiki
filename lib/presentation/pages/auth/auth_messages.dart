@@ -22,9 +22,6 @@ String authErrorMessage(Object error) {
         return 'メールアドレスまたはパスワードが違います。';
       case 'email_not_confirmed':
         return '確認メールのリンクを開いてから、ログインしてください。';
-      case 'user_already_exists':
-      case 'email_exists':
-        return 'このメールアドレスでは登録できません。ログインをお試しください。';
       case 'weak_password':
         return 'パスワードが条件を満たしていません。${PasswordPolicy.description}';
       case 'over_email_send_rate_limit':
