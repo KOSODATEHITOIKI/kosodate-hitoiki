@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -35,18 +36,25 @@ void main() {
       final boundary =
           key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       await tester.runAsync(() async {
-        // PNGは非同期にデコードされるため、描画前に読み込みを待つ。
-        if (_heavy.contains(name)) {
-          await precacheImage(
-            AssetImage('assets/decorations/decoration-$name.png'),
-            key.currentContext!,
-          );
+        // PNGは非同期にデコードされる(表示サイズに縮小するため、precacheでは
+        // 同じ画像にならない)。何か描画されるまで、少しずつ待って撮り直す。
+        late ByteData rgba;
+        late ui.Image image;
+        for (var attempt = 0; attempt < 100; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
           await tester.pump();
+          image = await boundary.toImage(pixelRatio: 1);
+          rgba = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+          var drawn = false;
+          for (var i = 3; i < rgba.lengthInBytes; i += 4) {
+            if (rgba.getUint8(i) >= 32) {
+              drawn = true;
+              break;
+            }
+          }
+          if (drawn) break;
+          image.dispose();
         }
-        final image = await boundary.toImage(pixelRatio: 1);
-        final rgba = (await image.toByteData(
-          format: ui.ImageByteFormat.rawRgba,
-        ))!;
         var left = 240, top = 240, right = -1, bottom = -1;
         for (var y = 0; y < 240; y++) {
           for (var x = 0; x < 240; x++) {
