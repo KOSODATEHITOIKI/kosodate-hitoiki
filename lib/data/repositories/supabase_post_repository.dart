@@ -4,6 +4,7 @@ import '../../core/constants/app_icons.dart';
 import '../api/api_exception.dart';
 import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
+import '../../domain/models/reaction_type.dart';
 import '../../domain/repositories/post_repository.dart';
 
 /// 投稿の読み取り(新着一覧・検索)をSupabaseから取得する。
@@ -298,6 +299,82 @@ class SupabasePostRepository implements PostRepository {
   @override
   Future<void> blockUser(String userId) =>
       _insertIgnoringDuplicate('blocks', blockRow(_requireUserId(), userId));
+
+  /// 共感の定型文(`GET /rest/v1/reaction_types`。未ログインでも読める)。
+  @override
+  Future<List<ReactionType>> fetchReactionTypes() async {
+    final rows = await _client
+        .from('reaction_types')
+        .select('id,code,label,sort_order')
+        .eq('is_active', true)
+        .order('sort_order');
+    return [for (final row in rows) reactionTypeFromRow(row)];
+  }
+
+  /// 自分の共感(`GET /rest/v1/reactions`。自分の行だけが読める)。
+  @override
+  Future<Map<String, int>> fetchMyReactions() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return {};
+    final rows = await _client
+        .from('reactions')
+        .select('post_id,reaction_type_id')
+        .eq('user_id', userId)
+        .order('updated_at', ascending: false)
+        .limit(1000);
+    return {
+      for (final row in rows)
+        row['post_id'] as String: (row['reaction_type_id'] as num).toInt(),
+    };
+  }
+
+  /// 共感する(`PUT /functions/v1/posts/{id}/reaction`)。
+  @override
+  Future<void> setReaction({
+    required String postId,
+    required int reactionTypeId,
+  }) async {
+    try {
+      await _client.functions.invoke(
+        'posts/$postId/reaction',
+        method: HttpMethod.put,
+        body: {'reaction_type_id': reactionTypeId},
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// 共感の取消(`DELETE /functions/v1/posts/{id}/reaction`)。
+  @override
+  Future<void> removeReaction(String postId) async {
+    try {
+      await _client.functions.invoke(
+        'posts/$postId/reaction',
+        method: HttpMethod.delete,
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// 自分の投稿への共感の件数(`POST /rest/v1/rpc/get_post_reaction_count`)。
+  @override
+  Future<int> fetchReactionCount(String postId) async {
+    final result = await _client.rpc(
+      'get_post_reaction_count',
+      params: {'p_post_id': postId},
+    );
+    return (result as num?)?.toInt() ?? 0;
+  }
+
+  /// `reaction_types`の行を、定型文にする。
+  static ReactionType reactionTypeFromRow(Map<String, dynamic> row) =>
+      ReactionType(
+        id: (row['id'] as num).toInt(),
+        code: row['code'] as String? ?? '',
+        label: row['label'] as String? ?? '',
+      );
 
   /// ブロック中の相手(`GET /rest/v1/my_blocks`。自分がブロックした行だけが返る)。
   @override

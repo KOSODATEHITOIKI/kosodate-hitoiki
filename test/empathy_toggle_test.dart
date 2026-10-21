@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/data/mock/mock_post_repository.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
-import 'package:kosodate_hitoiki/presentation/providers/mock_reaction_providers.dart';
+import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
+import 'package:kosodate_hitoiki/presentation/providers/reaction_providers.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/post_card.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 
@@ -33,18 +34,20 @@ void main() {
     await tester.tap(find.text('わかる'));
     await tester.pumpAndSettle();
     expect(find.text('わかる ✓'), findsOneWidget);
-    expect(container.read(mockEmpathyProvider), {'p2'});
+    expect(container.read(myReactionsProvider), {'p2': 1});
     await tester.tap(find.text('投稿の詳細を見る'));
     await tester.pumpAndSettle();
     expect(find.text('わかる ✓'), findsOneWidget);
     await tester.tap(find.text('わかる ✓'));
     await tester.pumpAndSettle();
-    expect(container.read(mockEmpathyProvider), isEmpty);
+    expect(container.read(myReactionsProvider), isEmpty);
     await tester.tap(find.text('わかる'));
     await tester.pumpAndSettle();
+    // 利用者が変わると、アプリがリポジトリを作り直す(lib/app.dart)。前の利用者の共感は残らない。
     container.read(login.notifier).state = false;
+    container.invalidate(postRepositoryProvider);
     await tester.pumpAndSettle();
-    expect(container.read(mockEmpathyProvider), isEmpty);
+    expect(container.read(myReactionsProvider), isEmpty);
     expect(find.text('わかる ✓'), findsNothing);
     expect(tester.takeException(), isNull);
   });

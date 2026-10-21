@@ -180,4 +180,13 @@ class AppReactions {
   static const listening = '$_base/reaction-listening.svg';
   static const gentleCheer = '$_base/reaction-gentle-cheer.png';
   static const applause = '$_base/reaction-applause.svg';
+
+  /// 定型文のcodeに対応するアイコン。未知のcodeは、共感(わかる)のアイコン。
+  static String forCode(String code) => switch (code) {
+    'take_a_break' => takeABreak,
+    'listening' => listening,
+    'gentle_cheer' => gentleCheer,
+    'applause' => applause,
+    _ => empathy,
+  };
 }
