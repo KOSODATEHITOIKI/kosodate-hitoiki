@@ -45,4 +45,9 @@ class AuthRepository {
   }
 
   Future<void> signOut() => _client.auth.signOut();
+
+  /// この端末のログインだけを外す。サーバーへ問い合わせないので、アカウントを削除した
+  /// あと(サーバー側のセッションがもうない)でも、確実に端末のログイン状態を消せる。
+  Future<void> signOutLocal() =>
+      _client.auth.signOut(scope: SignOutScope.local);
 }
