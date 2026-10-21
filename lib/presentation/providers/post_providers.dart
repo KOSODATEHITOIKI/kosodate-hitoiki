@@ -10,6 +10,11 @@ final postRepositoryProvider = Provider<PostRepository>(
   (ref) => MockPostRepository(),
 );
 
+/// 画面にサンプル投稿の注記を出すか。
+final postsAreSampleProvider = Provider<bool>(
+  (ref) => ref.watch(postRepositoryProvider).isSample,
+);
+
 /// ホームの投稿一覧。
 final feedPostsProvider = FutureProvider<List<Post>>(
   (ref) => ref.watch(postRepositoryProvider).fetchFeed(),

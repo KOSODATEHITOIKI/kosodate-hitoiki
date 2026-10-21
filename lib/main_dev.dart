@@ -5,6 +5,9 @@ import 'app.dart';
 import 'core/config/flavor.dart';
 import 'core/config/supabase_config.dart';
 import 'core/widgets/startup_error_app.dart';
+import 'data/datasources/supabase_client_provider.dart';
+import 'data/repositories/supabase_post_repository.dart';
+import 'presentation/providers/post_providers.dart';
 
 /// dev環境のエントリーポイント
 Future<void> main() async {
@@ -18,5 +21,15 @@ Future<void> main() async {
     return;
   }
 
-  runApp(const ProviderScope(child: App()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        // 投稿の取得はSupabaseに接続する(テストは既定のモックのまま)。
+        postRepositoryProvider.overrideWith(
+          (ref) => SupabasePostRepository(ref.watch(supabaseClientProvider)),
+        ),
+      ],
+      child: const App(),
+    ),
+  );
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/post.dart';
+import '../providers/post_providers.dart';
 import 'comfort_page.dart';
 import 'post_card.dart';
 
@@ -23,11 +24,13 @@ class MockPostList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const Text(
-        'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
-        style: TextStyle(fontSize: 11, height: 1.6),
-      ),
-      const SizedBox(height: 12),
+      if (ref.watch(postsAreSampleProvider)) ...[
+        const Text(
+          'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
+          style: TextStyle(fontSize: 11, height: 1.6),
+        ),
+        const SizedBox(height: 12),
+      ],
       posts.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => Column(

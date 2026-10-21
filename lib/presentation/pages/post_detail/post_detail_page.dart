@@ -102,9 +102,11 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'サンプル投稿です。コメント・共感は準備中です。',
-                    style: TextStyle(fontSize: 11, height: 1.6),
+                  Text(
+                    ref.watch(postsAreSampleProvider)
+                        ? 'サンプル投稿です。コメント・共感は準備中です。'
+                        : 'コメント・共感は準備中です。',
+                    style: const TextStyle(fontSize: 11, height: 1.6),
                   ),
                   const SizedBox(height: 12),
                   PostCard(
