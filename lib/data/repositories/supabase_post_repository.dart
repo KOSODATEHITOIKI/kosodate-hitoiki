@@ -12,7 +12,7 @@ import '../../domain/repositories/post_repository.dart';
 /// 非表示・ミュートが適用される(kosodate-hitoiki-backend docs/API契約.md 3・6節)。
 ///
 /// 接続の段階(バックエンド docs/Flutter結合ガイド.md 2節):
-/// 段2 = 一覧・検索、段3 = 投稿の作成・編集・削除、段4 = 保存・非表示・ブロック(ここ)。
+/// 段2 = 一覧・検索、段3 = 投稿の作成・編集・削除、段4 = 保存・非表示・ブロック、段6 = 自分の投稿(ここ)。
 /// 共感・定型文は、定型文のマスタが未決定のため未接続。自分の投稿の一覧は段6。
 class SupabasePostRepository implements PostRepository {
   SupabasePostRepository(this._client);
@@ -153,8 +153,55 @@ class SupabasePostRepository implements PostRepository {
 
   // 自分の投稿・保存した投稿は、投稿の作成(段3)・保存(段4)・マイページ(段6)の
   // 接続まで、空を返す(サンプルを見せない)。
+  /// 自分の投稿(新しい順)。通報による一時非表示で運営が確認中の投稿も含み、
+  /// `under_review`が`true`のものは「確認中」と表示する(本人にだけ見える。API契約7節)。
   @override
-  Future<List<Post>> fetchMyPosts() async => const [];
+  Future<List<Post>> fetchMyPosts() async {
+    final myId = _client.auth.currentUser?.id;
+    if (myId == null) return const [];
+    final rows = await _client
+        .from('my_posts')
+        .select()
+        .order('created_at', ascending: false)
+        .limit(pageSize);
+    final me = await _client
+        .from('public_profiles')
+        .select('nickname,icon_key')
+        .eq('id', myId)
+        .maybeSingle();
+    final saved = await _savedIds([
+      for (final row in rows) row['id'] as String,
+    ]);
+    return [
+      for (final row in rows)
+        myPostFromRow(
+          row,
+          myUserId: myId,
+          nickname: me?['nickname'] as String? ?? '',
+          iconKey: me?['icon_key'] as String?,
+          isSaved: saved.contains(row['id']),
+        ),
+    ];
+  }
+
+  /// `my_posts`の行を投稿にする。投稿者は自分なので、ニックネーム・アイコンは別に渡す。
+  static Post myPostFromRow(
+    Map<String, dynamic> row, {
+    required String myUserId,
+    required String nickname,
+    String? iconKey,
+    bool isSaved = false,
+  }) => postFromRow(
+    {
+      ...row,
+      'author_id': myUserId,
+      'author_nickname': nickname,
+      'author_icon_key': iconKey,
+    },
+    myUserId: myUserId,
+    isSaved: isSaved,
+    underReview: row['under_review'] == true,
+  );
 
   /// 保存した投稿(新しく保存した順)。見えなくなった投稿(削除・一時非表示・ブロックなど)は
   /// 出ない(保存自体は残る)。ログイン必須。
@@ -235,6 +282,7 @@ class SupabasePostRepository implements PostRepository {
     Map<String, dynamic> row, {
     String? myUserId,
     bool isSaved = false,
+    bool underReview = false,
   }) {
     final authorId = row['author_id'] as String?;
     return Post(
@@ -252,6 +300,7 @@ class SupabasePostRepository implements PostRepository {
       commentCount: (row['comment_count'] as num?)?.toInt() ?? 0,
       isMine: myUserId != null && authorId == myUserId,
       isSaved: isSaved,
+      underReview: underReview,
       commentsOpen: row['comment_acceptance'] != 'closed',
     );
   }
