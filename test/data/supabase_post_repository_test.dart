@@ -3,6 +3,7 @@ import 'package:kosodate_hitoiki/core/constants/app_icons.dart';
 import 'package:kosodate_hitoiki/data/api/idempotency_key.dart';
 import 'package:kosodate_hitoiki/data/repositories/supabase_post_repository.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   group('searchParams', () {
@@ -177,6 +178,49 @@ void main() {
       expect(
         SupabasePostRepository.editResultFromResponse(null).editedAt,
         isNull,
+      );
+    });
+  });
+
+  group('保存・重複', () {
+    test('保存しているかは、渡した値(isSaved)で決まる', () {
+      final row = {
+        'id': 'p-1',
+        'author_id': null,
+        'post_type': 'guchi',
+        'body': 'つかれた',
+        'reaction_mode': 'quiet_support',
+        'created_at': '2026-10-21T01:02:03Z',
+        'comment_count': 0,
+        'author_nickname': 'はな',
+        'author_icon_key': null,
+      };
+      expect(SupabasePostRepository.postFromRow(row).isSaved, isFalse);
+      expect(
+        SupabasePostRepository.postFromRow(row, isSaved: true).isSaved,
+        isTrue,
+      );
+    });
+
+    test('一意制約違反(23505・409)は、重ねた操作として成功扱いにする', () {
+      expect(
+        SupabasePostRepository.isDuplicate(
+          const PostgrestException(message: 'duplicate', code: '23505'),
+        ),
+        isTrue,
+      );
+      expect(
+        SupabasePostRepository.isDuplicate(
+          const PostgrestException(message: 'conflict', code: '409'),
+        ),
+        isTrue,
+      );
+      // 見えない投稿・存在しない投稿(42501)は、成功扱いにしない。
+      expect(
+        SupabasePostRepository.isDuplicate(
+          const PostgrestException(message: 'denied', code: '42501'),
+        ),
+        isFalse,
       );
     });
   });

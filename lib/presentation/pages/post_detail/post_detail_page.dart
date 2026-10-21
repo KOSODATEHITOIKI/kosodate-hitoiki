@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/post.dart';
+import '../../../domain/repositories/post_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/post_card.dart';
@@ -207,19 +208,29 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'サンプル投稿の操作',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  Text(
+                    menuRef.watch(postsAreSampleProvider)
+                        ? 'サンプル投稿の操作'
+                        : '投稿の操作',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '保存はモック内の変更です。その他の実処理は準備中です。',
-                    style: TextStyle(fontSize: 12, height: 1.6),
-                  ),
+                  if (menuRef.watch(postsAreSampleProvider)) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      '保存はモック内の変更です。その他の実処理は準備中です。',
+                      style: TextStyle(fontSize: 12, height: 1.6),
+                    ),
+                  ],
                   for (final option in [
                     ('save', current.isSaved ? '保存を解除' : '保存する'),
-                    ('hide', 'この投稿を非表示'),
-                    ('block', '投稿者をブロック'),
+                    // 自分の投稿は、非表示にもブロックにもしない。
+                    if (!current.isMine) ...[
+                      ('hide', 'この投稿を非表示'),
+                      ('block', '投稿者をブロック'),
+                    ],
                     ('report', '通報する'),
                     if (loggedIn && current.isMine) ...[
                       ('edit', '投稿を編集'),
@@ -269,9 +280,23 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       case 'save':
         await togglePostSaved(context, ref, post);
       case 'hide':
-        await _notice('非表示は準備中です', 'この投稿はまだ非表示になりません。非表示機能の接続を準備しています。');
+        await _hideOrBlock(
+          title: 'この投稿を非表示にしますか？',
+          message: 'この投稿は、あなたの画面にだけ表示されなくなります。相手には知らせません。',
+          action: 'この投稿を非表示',
+          done: '投稿を非表示にしました',
+          run: (repository) => repository.hidePost(current.id),
+        );
       case 'block':
-        await _notice('ブロックは準備中です', '投稿者はまだブロックされません。ブロック機能の接続を準備しています。');
+        if (current.authorId.isEmpty) return;
+        await _hideOrBlock(
+          title: '投稿者をブロックしますか？',
+          message:
+              '相手の投稿・コメントが、あなたに表示されなくなります。相手は、あなたへのコメント・返信・共感ができなくなります。相手には知らせません。',
+          action: 'ブロックする',
+          done: '投稿者をブロックしました',
+          run: (repository) => repository.blockUser(current.authorId),
+        );
       case 'edit':
         if (!current.isMine) return;
         // 編集できたら、新しい本文が返る。
@@ -306,6 +331,52 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
           setState(() => _commentsClosed = !_commentsClosed);
         }
     }
+  }
+
+  /// 投稿の非表示・投稿者のブロック。確認してから実行し、一覧を取り直して、詳細を閉じる。
+  /// 失敗したときは、案内して、詳細は閉じない。
+  Future<void> _hideOrBlock({
+    required String title,
+    required String message,
+    required String action,
+    required String done,
+    required Future<void> Function(PostRepository repository) run,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('やめる'),
+          ),
+          FilledButton(
+            key: const ValueKey('post-action-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(action),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await run(ref.read(postRepositoryProvider));
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(postFailureMessage(error))),
+      );
+      return;
+    }
+    ref
+      ..invalidate(feedPostsProvider)
+      ..invalidate(searchResultsProvider)
+      ..invalidate(myPostsProvider)
+      ..invalidate(savedPostsProvider);
+    messenger.showSnackBar(SnackBar(content: Text(done)));
+    if (mounted) Navigator.of(context).pop();
   }
 
   /// 投稿の削除。取り消せないので、確認してから削除する。
@@ -346,20 +417,6 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     messenger.showSnackBar(const SnackBar(content: Text('投稿を削除しました')));
     if (mounted) Navigator.of(context).pop();
   }
-
-  Future<void> _notice(String title, String message) => showDialog<void>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('戻る'),
-        ),
-      ],
-    ),
-  );
 
   Future<bool> _previewConfirmation(String title, String message) async =>
       await showDialog<bool>(
