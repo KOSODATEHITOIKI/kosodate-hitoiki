@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../api/api_exception.dart';
+import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
 import '../../domain/repositories/post_repository.dart';
 
@@ -297,6 +298,34 @@ class SupabasePostRepository implements PostRepository {
   @override
   Future<void> blockUser(String userId) =>
       _insertIgnoringDuplicate('blocks', blockRow(_requireUserId(), userId));
+
+  /// ブロック中の相手(`GET /rest/v1/my_blocks`。自分がブロックした行だけが返る)。
+  @override
+  Future<List<BlockedUser>> fetchBlockedUsers() async {
+    final rows = await _client
+        .from('my_blocks')
+        .select()
+        .order('created_at', ascending: false);
+    return [for (final row in rows) blockedUserFromRow(row)];
+  }
+
+  /// ブロックの解除(`DELETE /rest/v1/blocks?blocked_id=eq.<id>`。自分の行だけが対象で、
+  /// ブロックしていなくてもエラーにならない)。
+  @override
+  Future<void> unblockUser(String userId) async {
+    await _client.from('blocks').delete().eq('blocked_id', userId);
+  }
+
+  /// `my_blocks`の行を、ブロック中の相手にする。
+  static BlockedUser blockedUserFromRow(Map<String, dynamic> row) =>
+      BlockedUser(
+        id: row['blocked_id'] as String,
+        nickname: row['blocked_nickname'] as String? ?? '',
+        avatarAsset: AppAvatars.forRow(
+          iconKey: row['blocked_icon_key'] as String?,
+          avatarPath: row['blocked_avatar_path'] as String?,
+        ),
+      );
 
   String _requireUserId() {
     final id = _client.auth.currentUser?.id;

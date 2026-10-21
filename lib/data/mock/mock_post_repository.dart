@@ -1,4 +1,5 @@
 import '../../core/constants/app_icons.dart';
+import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
 import '../../domain/repositories/post_repository.dart';
 
@@ -197,6 +198,23 @@ class MockPostRepository implements PostRepository {
   @override
   Future<void> blockUser(String userId) async {
     _posts.removeWhere((post) => post.authorId == userId);
+  }
+
+  /// サンプルのブロック中の相手。解除すると、この画面の間だけ取り除く。
+  final _blocked = [
+    const BlockedUser(
+      id: 'sample-blocked-1',
+      nickname: 'あおぞら',
+      avatarAsset: AppAvatars.defaultBlueFlowers,
+    ),
+  ];
+
+  @override
+  Future<List<BlockedUser>> fetchBlockedUsers() async => List.of(_blocked);
+
+  @override
+  Future<void> unblockUser(String userId) async {
+    _blocked.removeWhere((user) => user.id == userId);
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/home/home_page.dart';
@@ -31,6 +32,12 @@ class _RealLikeRepository implements PostRepository {
     required ResponseMode mode,
     bool? commentsOpen,
   }) async {}
+
+  @override
+  Future<List<BlockedUser>> fetchBlockedUsers() async => const [];
+
+  @override
+  Future<void> unblockUser(String userId) async {}
 
   @override
   Future<List<Post>> fetchMyPosts() async => const [];

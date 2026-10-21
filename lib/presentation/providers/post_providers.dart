@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/mock/mock_post_repository.dart';
+import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
 import '../../domain/repositories/post_repository.dart';
 
@@ -56,4 +57,9 @@ final myPostsProvider = FutureProvider<List<Post>>(
 /// マイページ: 保存した投稿。
 final savedPostsProvider = FutureProvider<List<Post>>(
   (ref) => ref.watch(postRepositoryProvider).fetchSavedPosts(),
+);
+
+/// 設定: ブロック中の相手。
+final blockedUsersProvider = FutureProvider<List<BlockedUser>>(
+  (ref) => ref.watch(postRepositoryProvider).fetchBlockedUsers(),
 );
