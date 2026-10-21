@@ -18,8 +18,8 @@ import 'profile_creation.dart';
 import 'profile_setup_page.dart';
 
 /// S-10。メール+パスワードの登録・ログインはSupabase Authに接続済み。
-/// Google・Appleとパスワード再設定は、アプリへ戻るためのディープリンクの
-/// 設定が済むまで未接続(バックエンド docs/Flutter結合ガイド.md 4節)。
+/// Googleとパスワード再設定は、アプリへ戻るためのディープリンクの
+/// 設定が済むまで未接続(バックエンド docs/Flutter結合ガイド.md 4節)。Appleは、フェーズ2で追加する。
 enum AuthMode { login, register, reset }
 
 class AuthPage extends ConsumerStatefulWidget {
@@ -503,7 +503,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   _AuthHeader(title: _title, mode: _mode),
                   const SizedBox(height: 24),
                   if (_mode != AuthMode.reset) ...[
-                    for (final provider in ['Apple', 'Google']) ...[
+                    // Appleでのログインは、フェーズ2で追加する(それまでは出さない)。
+                    for (final provider in ['Google']) ...[
                       OutlinedButton.icon(
                         onPressed: () =>
                             _notice('$providerでの認証は準備中です', 'この画面では認証は行われません。'),
@@ -513,12 +514,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           minimumSize: const Size.fromHeight(52),
                           side: const BorderSide(color: AppColors.divider),
                         ),
-                        icon: Icon(
-                          provider == 'Apple'
-                              ? Icons.apple
-                              : Icons.g_mobiledata,
-                          size: provider == 'Apple' ? 20 : 26,
-                        ),
+                        icon: const Icon(Icons.g_mobiledata, size: 26),
                         label: Text('$providerで続ける'),
                       ),
                       const SizedBox(height: 12),
