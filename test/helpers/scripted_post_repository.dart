@@ -80,6 +80,12 @@ class ScriptedPostRepository implements PostRepository {
   Future<List<Post>> search({required String query, PostType? type}) async =>
       const [];
 
+  /// ID指定の取得で返す投稿(なければnull)。
+  final fetchedPosts = <String, Post>{};
+
+  @override
+  Future<Post?> fetchPost(String postId) async => fetchedPosts[postId];
+
   @override
   Future<List<Post>> fetchMyPosts() async => myPosts;
 
