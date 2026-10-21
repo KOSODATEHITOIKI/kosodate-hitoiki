@@ -93,6 +93,16 @@ void main() {
     expect(call.reactions, isNull);
   });
 
+  testWidgets('送れたら、読み込み結果を古いままにしない(開き直したとき、変更が出る)', (tester) async {
+    final repository = ScriptedNotificationRepository();
+    await pumpSettings(tester, repository);
+    expect(repository.settingsFetchCount, 1);
+    await tester.tap(_switchOf('返信'));
+    await tester.pumpAndSettle();
+
+    expect(repository.settingsFetchCount, 2);
+  });
+
   testWidgets('送れなかったときは、元に戻して、案内する', (tester) async {
     final repository = ScriptedNotificationRepository(
       settingsError: Exception('network'),
