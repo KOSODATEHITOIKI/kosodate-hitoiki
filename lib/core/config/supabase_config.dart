@@ -20,6 +20,11 @@ class SupabaseConfig {
     Flavor.prod => _prodPlaceholderUrl,
   };
 
+  /// アップロードされたアカウント画像の公開URL(Storageの`avatars`バケット)。
+  /// [avatarPath]はAPIの`avatar_path`(`<user_id>/<id>.png`)。
+  static String avatarUrl(String avatarPath) =>
+      '$_url/storage/v1/object/public/avatars/$avatarPath';
+
   static String get _publishableKey => switch (AppConfig.flavor) {
     Flavor.dev => 'sb_publishable_e9JHW9PnR1fb3qNVQVkwsQ_30-GHwsk',
     Flavor.prod => 'your-publishable-key',

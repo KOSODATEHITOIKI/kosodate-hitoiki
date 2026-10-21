@@ -77,22 +77,25 @@ class SupabaseProfileRepository implements ProfileRepository {
     final row = mine
         ? await _client
               .from('profiles')
-              .select('id,nickname,bio,child_age_range,icon_key')
+              .select('id,nickname,bio,child_age_range,icon_key,avatar_path')
               .eq('id', userId)
               .maybeSingle()
         : await _client
               .from('public_profiles')
-              .select('id,nickname,icon_key')
+              .select('id,nickname,icon_key,avatar_path')
               .eq('id', userId)
               .maybeSingle();
     return row == null ? null : profileFromRow(row);
   }
 
-  /// APIの行をプロフィールにする。アップロード画像(`avatar_path`)は、段8で扱う。
+  /// APIの行をプロフィールにする。アップロード画像(`avatar_path`)があれば、その公開URLを表示に使う。
   static UserProfile profileFromRow(Map<String, dynamic> row) => UserProfile(
     id: row['id'] as String,
     nickname: row['nickname'] as String? ?? '',
-    avatarAsset: AppAvatars.forIconKey(row['icon_key'] as String?),
+    avatarAsset: AppAvatars.forRow(
+      iconKey: row['icon_key'] as String?,
+      avatarPath: row['avatar_path'] as String?,
+    ),
     bio: row['bio'] as String? ?? '',
     childAgeBand: row['child_age_range'] as String?,
   );

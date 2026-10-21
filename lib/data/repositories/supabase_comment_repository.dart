@@ -115,8 +115,9 @@ class SupabaseCommentRepository implements CommentRepository {
       id: row['id'] as String,
       authorId: authorId ?? '',
       authorName: row['author_nickname'] as String? ?? '',
-      authorAvatarAsset: AppAvatars.forIconKey(
-        row['author_icon_key'] as String?,
+      authorAvatarAsset: AppAvatars.forRow(
+        iconKey: row['author_icon_key'] as String?,
+        avatarPath: row['author_avatar_path'] as String?,
       ),
       createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
       parentId: row['parent_comment_id'] as String?,

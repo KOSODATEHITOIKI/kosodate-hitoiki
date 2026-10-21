@@ -2,6 +2,8 @@
 /// 表示には`AppAsset`を使う(.svgは`flutter_svg`、重い画像は.png)。
 library;
 
+import '../config/supabase_config.dart';
+
 /// アイコン(24×24、線幅2)。
 class AppIcons {
   AppIcons._();
@@ -145,6 +147,13 @@ class AppAvatars {
     defaultBlueFlowers => 'blue_flowers',
     _ => 'sprout',
   };
+
+  /// 表示するアカウント画像。アップロード画像(`avatar_path`)があれば、その公開URL。
+  /// なければ、イラスト(`icon_key`)に対応する同梱の画像。
+  static String forRow({String? iconKey, String? avatarPath}) =>
+      avatarPath == null || avatarPath.isEmpty
+      ? forIconKey(iconKey)
+      : SupabaseConfig.avatarUrl(avatarPath);
 
   /// プロフィールの`icon_key`に対応するアカウント画像。
   /// icon_keyのマスタは未決定(バックエンド 未決事項)のため、いまは画像のファイル名に
