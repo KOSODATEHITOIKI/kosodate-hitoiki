@@ -4,6 +4,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../widgets/comfort_page.dart';
@@ -72,6 +73,16 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     super.dispose();
   }
 
+  /// 自分のプロフィールと、投稿・コメントに出る名前・アイコンを、取り直す。
+  void _refreshCaches() {
+    ref
+      ..invalidate(myProfileProvider)
+      ..invalidate(feedPostsProvider)
+      ..invalidate(searchResultsProvider)
+      ..invalidate(myPostsProvider)
+      ..invalidate(savedPostsProvider);
+  }
+
   Future<void> _save() async {
     final length = _nickname.text.trim().characters.length;
     setState(
@@ -127,7 +138,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
           return;
         }
         // ここまでは保存できた。次の項目が失敗しても、ニックネームは二重に送らない。
+        // また、ここで終わっても表示が古いまま残らないよう、すぐに取り直す。
         _origNickname = nickname;
+        _refreshCaches();
       }
       if (bioChanged || iconChanged) {
         if (!mounted) return;
@@ -145,13 +158,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         }
       }
       if (!mounted) return;
-      // 自分のプロフィールと、投稿に出る名前・アイコンを、取り直す。
-      ref
-        ..invalidate(myProfileProvider)
-        ..invalidate(feedPostsProvider)
-        ..invalidate(searchResultsProvider)
-        ..invalidate(myPostsProvider)
-        ..invalidate(savedPostsProvider);
+      _refreshCaches();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('プロフィールを保存しました')));
@@ -164,6 +171,23 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     final sample = ref.watch(profileIsSampleProvider);
+    // 利用者が切り替わったら、この画面(と、上に乗った確認ダイアログ)を閉じる。
+    // 閉じないと、前の利用者の入力を、切り替え後のアカウントに保存してしまう。
+    ref.listen<String?>(currentUserIdProvider, (previous, next) {
+      if (previous == next) return;
+      final navigator = Navigator.of(context);
+      final myRoute = ModalRoute.of(context);
+      if (myRoute != null) {
+        navigator.popUntil((route) => route == myRoute);
+      }
+      if (navigator.canPop()) navigator.pop();
+    });
+    // いまのプロフィールを読み込み終えるまでは、編集も保存もできない(入力が、読み込みで
+    // 上書きされて消えるのを防ぐ)。読み込めなかったときは、再読み込みを案内する。
+    final profile = ref.watch(myProfileProvider);
+    final loading = profile.isLoading && !profile.hasValue;
+    final failed = profile.hasError && !profile.hasValue;
+    final editable = !_busy && !loading && !failed;
     return Scaffold(
       appBar: AppBar(title: const Text('プロフィール編集')),
       body: Form(
@@ -172,6 +196,34 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
           title: 'プロフィール',
           message: 'あなたのことを、ひとこと。',
           children: [
+            if (loading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Text(
+                  'いまのプロフィールを読み込んでいます…',
+                  key: ValueKey('profile-loading'),
+                  style: TextStyle(fontSize: 13, height: 1.7),
+                ),
+              ),
+            if (failed)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'プロフィールを読み込めませんでした。読み込めるまで、編集できません。',
+                      key: ValueKey('profile-load-failed'),
+                      style: TextStyle(fontSize: 13, height: 1.7),
+                    ),
+                    TextButton(
+                      key: const ValueKey('profile-retry'),
+                      onPressed: () => ref.invalidate(myProfileProvider),
+                      child: const Text('再読み込み'),
+                    ),
+                  ],
+                ),
+              ),
             _section(
               'アイコンを選ぶ',
               Column(
@@ -200,7 +252,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                           child: Tooltip(
                             message: '${item.$2}のアイコン',
                             child: InkWell(
-                              onTap: _busy
+                              onTap: !editable
                                   ? null
                                   : () => setState(() => _avatar = item.$1),
                               borderRadius: BorderRadius.circular(40),
@@ -240,7 +292,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                   TextFormField(
                     key: const ValueKey('profile-nickname'),
                     controller: _nickname,
-                    enabled: !_busy,
+                    enabled: editable,
                     forceErrorText: _nameError,
                     onChanged: (_) {
                       if (_nameError != null) setState(() => _nameError = null);
@@ -269,7 +321,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
               TextFormField(
                 key: const ValueKey('profile-bio'),
                 controller: _bio,
-                enabled: !_busy,
+                enabled: editable,
                 maxLength: 100,
                 minLines: 3,
                 maxLines: 6,
@@ -340,7 +392,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
             const SizedBox(height: 24),
             FilledButton(
               key: const ValueKey('profile-save'),
-              onPressed: _busy ? null : _save,
+              onPressed: editable ? _save : null,
               child: Text(_busy ? '保存しています…' : '保存する'),
             ),
             if (sample) ...[
