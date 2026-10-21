@@ -21,7 +21,7 @@ class OtherProfilePage extends ConsumerWidget {
       appBar: AppBar(title: const Text('プロフィール')),
       body: !loggedIn
           ? ComfortPage(
-              title: 'ログインして、ひと息',
+              title: 'ログインして、\nひと息',
               message: 'プロフィールを見るには、\n登録・ログインが必要です。',
               children: [
                 FilledButton(

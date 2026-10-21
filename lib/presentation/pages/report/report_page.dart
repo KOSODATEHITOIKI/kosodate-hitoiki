@@ -99,7 +99,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
       appBar: AppBar(title: const Text('通報する')),
       body: !loggedIn
           ? ComfortPage(
-              title: 'ログインして、ひと息',
+              title: 'ログインして、\nひと息',
               message: '通報するには、\n登録・ログインが必要です。',
               children: [
                 FilledButton(
