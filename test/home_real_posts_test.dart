@@ -26,6 +26,13 @@ class _RealLikeRepository implements PostRepository {
   Future<Post?> fetchPost(String postId) async => null;
 
   @override
+  Future<void> updateReactionMode({
+    required String postId,
+    required ResponseMode mode,
+    bool? commentsOpen,
+  }) async {}
+
+  @override
   Future<List<Post>> fetchMyPosts() async => const [];
 
   @override

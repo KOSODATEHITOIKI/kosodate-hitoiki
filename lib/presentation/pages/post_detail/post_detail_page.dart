@@ -32,7 +32,11 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
   final _commentsKey = GlobalKey();
   Post get post => widget.post;
   ResponseMode? _previewMode;
-  bool _commentsClosed = false;
+
+  /// 受付状態の、画面内での変更(サンプルのプレビュー、または変更できた直後)。
+  /// nullなら、投稿が持っている状態に従う。
+  bool? _closedOverride;
+  bool _changingMode = false;
 
   /// 編集できたあとの本文。一覧に載っていない古い投稿でも、詳細にすぐ反映する。
   String? _editedBody;
@@ -65,7 +69,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       if (!next) {
         setState(() {
           _previewMode = null;
-          _commentsClosed = false;
+          _closedOverride = null;
         });
       }
     });
@@ -74,6 +78,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     final current =
         (items?.where((item) => item.id == post.id).firstOrNull ?? post)
             .copyWith(responseMode: _previewMode, body: _editedBody);
+    final commentsClosed = _closedOverride ?? !current.commentsOpen;
     return Scaffold(
       appBar: AppBar(
         title: const Text('投稿の詳細'),
@@ -178,7 +183,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                           const SizedBox(height: 12),
                           CommentThread(
                             postId: post.id,
-                            accepting: !_commentsClosed && current.commentsOpen,
+                            accepting: !commentsClosed,
                           ),
                         ],
                       ],
@@ -240,7 +245,9 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                       if (current.responseMode == ResponseMode.advice)
                         (
                           'comments',
-                          _commentsClosed ? 'コメント受付を再開' : 'コメント受付を終了',
+                          _closedOverride ?? !current.commentsOpen
+                              ? 'コメント受付を再開'
+                              : 'コメント受付を終了',
                         ),
                     ],
                   ])
@@ -314,23 +321,113 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
         await _confirmDelete(current);
       case 'mode':
         if (!current.isMine) return;
-        final accepted = await _previewConfirmation(
-          '話を聞きたいに変更',
-          'この画面のサンプルだけでコメント入力を開きます。変更は保存されません。',
-        );
-        if (mounted && accepted && ref.read(isLoggedInProvider)) {
-          setState(() => _previewMode = ResponseMode.advice);
+        if (ref.read(postsAreSampleProvider)) {
+          final accepted = await _previewConfirmation(
+            '話を聞きたいに変更',
+            'この画面のサンプルだけでコメント入力を開きます。変更は保存されません。',
+          );
+          if (mounted && accepted && ref.read(isLoggedInProvider)) {
+            setState(() => _previewMode = ResponseMode.advice);
+          }
+          return;
         }
+        await _changeMode(
+          title: '話を聞きたいに変更しますか？',
+          message: 'コメントを受け付けるようになります。あとから、受付を終了することもできます。',
+          action: '変更する',
+          done: '話を聞きたいに変更しました',
+          mode: ResponseMode.advice,
+          closedAfter: false,
+        );
       case 'comments':
         if (!current.isMine) return;
-        final accepted = await _previewConfirmation(
-          _commentsClosed ? 'コメント受付を再開' : 'コメント受付を終了',
-          'この画面のサンプルだけで受付状態を変更します。既存コメントは表示したままです。変更は保存されません。',
-        );
-        if (mounted && accepted && ref.read(isLoggedInProvider)) {
-          setState(() => _commentsClosed = !_commentsClosed);
+        final closed = _closedOverride ?? !current.commentsOpen;
+        if (ref.read(postsAreSampleProvider)) {
+          final accepted = await _previewConfirmation(
+            closed ? 'コメント受付を再開' : 'コメント受付を終了',
+            'この画面のサンプルだけで受付状態を変更します。既存コメントは表示したままです。変更は保存されません。',
+          );
+          if (mounted && accepted && ref.read(isLoggedInProvider)) {
+            setState(() => _closedOverride = !closed);
+          }
+          return;
         }
+        await _changeMode(
+          title: closed ? 'コメントの受付を再開しますか？' : 'コメントの受付を終了しますか？',
+          message: closed
+              ? '新しいコメントを、また受け付けます。'
+              : '新しいコメントは受け付けなくなります。すでについたコメントは、表示したままです。',
+          action: closed ? '再開する' : '終了する',
+          done: closed ? 'コメントの受付を再開しました' : 'コメントの受付を終了しました',
+          // 受付状態を変えられるのは「話を聞きたい」の投稿だけ。反応モードも添えて送る。
+          mode: ResponseMode.advice,
+          commentsOpen: closed,
+          closedAfter: !closed,
+        );
     }
+  }
+
+  /// 反応モード・コメント受付状態を変える。確認してから送り、変えられたら表示に反映して、
+  /// 一覧を取り直す。失敗したときは、案内して、表示は変えない。
+  Future<void> _changeMode({
+    required String title,
+    required String message,
+    required String action,
+    required String done,
+    required ResponseMode mode,
+    bool? commentsOpen,
+    required bool closedAfter,
+  }) async {
+    if (_changingMode) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('やめる'),
+          ),
+          FilledButton(
+            key: const ValueKey('post-action-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(action),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final container = ProviderScope.containerOf(context);
+    _changingMode = true;
+    try {
+      await ref
+          .read(postRepositoryProvider)
+          .updateReactionMode(
+            postId: post.id,
+            mode: mode,
+            commentsOpen: commentsOpen,
+          );
+    } catch (error) {
+      _changingMode = false;
+      messenger.showSnackBar(
+        SnackBar(content: Text(postFailureMessage(error))),
+      );
+      return;
+    }
+    _changingMode = false;
+    container
+      ..invalidate(feedPostsProvider)
+      ..invalidate(searchResultsProvider)
+      ..invalidate(myPostsProvider)
+      ..invalidate(savedPostsProvider);
+    messenger.showSnackBar(SnackBar(content: Text(done)));
+    if (!mounted) return;
+    setState(() {
+      _previewMode = mode;
+      _closedOverride = closedAfter;
+    });
   }
 
   /// 投稿の非表示・投稿者のブロック。確認してから実行し、一覧を取り直して、詳細を閉じる。

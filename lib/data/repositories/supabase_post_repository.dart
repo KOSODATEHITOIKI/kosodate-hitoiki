@@ -110,6 +110,36 @@ class SupabasePostRepository implements PostRepository {
     }
   }
 
+  /// 反応モード・コメント受付状態の変更(`PATCH /functions/v1/posts/{id}/reaction-mode`)。
+  @override
+  Future<void> updateReactionMode({
+    required String postId,
+    required ResponseMode mode,
+    bool? commentsOpen,
+  }) async {
+    try {
+      await _client.functions.invoke(
+        'posts/$postId/reaction-mode',
+        method: HttpMethod.patch,
+        body: reactionModeBody(mode: mode, commentsOpen: commentsOpen),
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// 反応モード変更のリクエスト本文。`reaction_mode`は、受付状態だけを変えるときも必要
+  /// (サーバーが検証する)。`comment_acceptance`は、指定したときだけ入れる。
+  static Map<String, dynamic> reactionModeBody({
+    required ResponseMode mode,
+    bool? commentsOpen,
+  }) => {
+    'reaction_mode': reactionModeCode(mode),
+    'comment_acceptance': ?(commentsOpen == null
+        ? null
+        : (commentsOpen ? 'open' : 'closed')),
+  };
+
   /// 投稿の削除(`DELETE /functions/v1/posts/{id}`)。
   @override
   Future<void> deletePost(String postId) async {

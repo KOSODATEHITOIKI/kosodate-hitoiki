@@ -44,6 +44,17 @@ abstract class PostRepository {
   /// 投稿を削除する(本人のみ)。コメント・返信・共感・保存・通知も一緒に消える。
   Future<void> deletePost(String postId);
 
+  /// 反応モード・コメント受付状態を変える(本人のみ)。[mode]は変更後の(受付状態だけ
+  /// 変えるときは、今の)反応モードで、サーバーは常に必要とする。「ただ聞いてほしい」⇄
+  /// 「話を聞きたい」の相互変更ができる。[commentsOpen]は「話を聞きたい」のときだけ
+  /// 指定でき(省略すると今の状態を保つ。「話を聞きたい」へ変えた直後は受付中)、
+  /// 「ただ聞いてほしい」には指定できない(`ApiException`)。
+  Future<void> updateReactionMode({
+    required String postId,
+    required ResponseMode mode,
+    bool? commentsOpen,
+  });
+
   /// 投稿を、自分の画面にだけ表示しないようにする(非表示)。相手には知らせない。
   /// 同じ投稿を重ねて非表示にしても、エラーにならない。
   Future<void> hidePost(String postId);
