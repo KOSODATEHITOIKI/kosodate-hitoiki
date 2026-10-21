@@ -21,7 +21,7 @@ Future<void> choose(WidgetTester tester, String label) async {
 }
 
 void main() {
-  testWidgets('サンプル投稿の受付変更・編集の初期値・削除は未実行', (tester) async {
+  testWidgets('サンプル投稿の受付変更・編集の初期値・削除の確認(やめると消えない)', (tester) async {
     tester.view.physicalSize = const Size(320, 700);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -62,9 +62,10 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     await choose(tester, '投稿を削除');
-    expect(find.textContaining('現在は削除されません。'), findsOneWidget);
-    await tester.tap(find.text('戻る'));
+    expect(find.text('投稿を削除しますか？'), findsOneWidget);
+    await tester.tap(find.text('やめる'));
     await tester.pumpAndSettle();
+    // やめたときは、何も消えない。
     expect(find.text(post.body), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

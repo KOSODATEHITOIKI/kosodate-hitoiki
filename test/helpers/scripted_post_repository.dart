@@ -1,15 +1,28 @@
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 
-/// 投稿作成の呼び出しを記録し、決めた順に結果(成功・失敗)を返す偽のリポジトリ。
+/// 投稿の作成・編集・削除の呼び出しを記録し、決めた順に結果(成功・失敗)を返す偽のリポジトリ。
 class ScriptedPostRepository implements PostRepository {
-  ScriptedPostRepository(this.script, {this.sample = false});
+  ScriptedPostRepository(
+    this.script, {
+    this.sample = false,
+    List<Object>? editScript,
+    this.deleteError,
+  }) : editScript = editScript ?? [];
 
-  /// 呼び出しごとに1つ使う。[CreatedPost]なら成功、`Future<CreatedPost> Function()`なら
+  /// 作成の呼び出しごとに1つ使う。[CreatedPost]なら成功、`Future Function()`なら
   /// その結果を待つ(送信中の状態を作る)、それ以外は投げる。
   final List<Object> script;
   final bool sample;
   final calls = <CreateCall>[];
+
+  /// 編集の呼び出しごとに1つ使う。[EditResult]なら成功、それ以外は投げる。
+  final List<Object> editScript;
+  final editCalls = <EditCall>[];
+
+  /// 削除で投げるエラー(nullなら成功)。
+  final Object? deleteError;
+  final deleteCalls = <String>[];
 
   @override
   bool get isSample => sample;
@@ -30,6 +43,24 @@ class ScriptedPostRepository implements PostRepository {
   }
 
   @override
+  Future<EditResult> editPost({
+    required String postId,
+    required String body,
+    bool confirmed = false,
+  }) async {
+    editCalls.add(EditCall(postId, body, confirmed));
+    final next = editScript.removeAt(0);
+    if (next is EditResult) return next;
+    throw next;
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    deleteCalls.add(postId);
+    if (deleteError != null) throw deleteError!;
+  }
+
+  @override
   Future<List<Post>> fetchFeed() async => const [];
 
   @override
@@ -44,6 +75,13 @@ class ScriptedPostRepository implements PostRepository {
 
   @override
   Future<void> toggleSaved(String postId) async {}
+}
+
+class EditCall {
+  EditCall(this.postId, this.body, this.confirmed);
+  final String postId;
+  final String body;
+  final bool confirmed;
 }
 
 class CreateCall {

@@ -34,6 +34,12 @@ String postFailureMessage(Object error) {
     if (reason == 'restricted') {
       return '現在、投稿やコメントができません。';
     }
+    if (error.code == 'NOT_FOUND') {
+      return '見つかりませんでした。すでに削除されているかもしれません。';
+    }
+    if (error.code == 'FORBIDDEN' && reason == null) {
+      return 'この操作はできません。';
+    }
     if (reason == 'unavailable') {
       return '送れませんでした。しばらくしてから、もう一度お試しください。';
     }

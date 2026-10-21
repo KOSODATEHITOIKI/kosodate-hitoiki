@@ -121,14 +121,19 @@ class _ComposePageState extends ConsumerState<ComposePage> {
               : ResponseMode.advice,
           topic: _topic,
           editing: widget.initialPost != null,
+          postId: widget.initialPost?.id,
         ),
       ),
     );
-    // 投稿できたら、下書きを空にして、ホームへ戻る。
-    if (posted == true && mounted) {
-      setState(_resetDraft);
-      ref.read(bottomNavIndexProvider.notifier).state = 0;
+    if (posted != true || !mounted) return;
+    if (widget.initialPost != null) {
+      // 編集できたら、新しい本文を持って、詳細へ戻る。
+      Navigator.of(context).pop(_body.text.trim());
+      return;
     }
+    // 投稿できたら、下書きを空にして、ホームへ戻る。
+    setState(_resetDraft);
+    ref.read(bottomNavIndexProvider.notifier).state = 0;
   }
 
   @override
@@ -147,6 +152,14 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     message: 'ここなら、気持ちを書けるよ。\nどんな気持ちも、受けとめます。',
     messageFontSize: 13,
     children: [
+      if (widget.initialPost != null) ...[
+        const Text(
+          '編集できるのは、本文だけです。種類と反応の希望は、変えられません。',
+          key: ValueKey('compose-edit-note'),
+          style: TextStyle(fontSize: 12, height: 1.7),
+        ),
+        const SizedBox(height: 12),
+      ],
       _section(
         '投稿の種類',
         Wrap(
@@ -159,7 +172,9 @@ class _ComposePageState extends ConsumerState<ComposePage> {
                 labelStyle: const TextStyle(fontSize: 12),
                 labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                 selected: _postType == type,
-                onSelected: (_) => setState(() => _postType = type),
+                onSelected: widget.initialPost != null
+                    ? null
+                    : (_) => setState(() => _postType = type),
                 showCheckmark: false,
                 selectedColor: AppColors.secondary,
                 backgroundColor: AppColors.background,
@@ -301,7 +316,9 @@ class _ComposePageState extends ConsumerState<ComposePage> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => setState(() => _mode = value),
+          onTap: widget.initialPost != null
+              ? null
+              : () => setState(() => _mode = value),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(

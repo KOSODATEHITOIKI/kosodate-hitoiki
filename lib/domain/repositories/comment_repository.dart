@@ -1,4 +1,5 @@
 import '../models/comment.dart';
+import '../models/post.dart' show EditResult;
 
 /// コメント・返信の取得と作成の抽象。バックエンド接続時はSupabase実装に差し替える。
 abstract class CommentRepository {
@@ -18,4 +19,14 @@ abstract class CommentRepository {
     String? parentId,
     bool confirmed = false,
   });
+
+  /// コメント・返信の本文を編集する(本人のみ。受付終了後も可)。送信前チェックを通る。
+  Future<EditResult> editComment({
+    required String commentId,
+    required String body,
+    bool confirmed = false,
+  });
+
+  /// コメント・返信を削除する(本人のみ)。本文は消えて「削除済み」になり、返信は残る。
+  Future<void> deleteComment(String commentId);
 }

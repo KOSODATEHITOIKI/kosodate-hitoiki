@@ -29,6 +29,17 @@ abstract class PostRepository {
     bool confirmed = false,
   });
 
+  /// 投稿の本文を編集する(本人のみ。種類・反応モードは変えられない)。送信前チェックは
+  /// 作成と同じで、確認が必要なときは[confirmed]をtrueにして再送する。
+  Future<EditResult> editPost({
+    required String postId,
+    required String body,
+    bool confirmed = false,
+  });
+
+  /// 投稿を削除する(本人のみ)。コメント・返信・共感・保存・通知も一緒に消える。
+  Future<void> deletePost(String postId);
+
   /// 投稿の保存/保存解除を切り替える。
   Future<void> toggleSaved(String postId);
 }

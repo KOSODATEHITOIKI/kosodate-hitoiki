@@ -154,4 +154,30 @@ void main() {
     );
     expect(keys.every(pattern.hasMatch), isTrue);
   });
+
+  group('編集APIの応答', () {
+    test('edited_at と support_notice を読む', () {
+      final result = SupabasePostRepository.editResultFromResponse({
+        'id': 'p-1',
+        'edited_at': '2026-10-21T01:02:03Z',
+        'support_notice': true,
+      });
+      expect(result.editedAt!.toUtc(), DateTime.utc(2026, 10, 21, 1, 2, 3));
+      expect(result.supportNotice, isTrue);
+    });
+
+    test('本文が変わらなかったとき(edited_at が null)や、応答が空でも壊れない', () {
+      final unchanged = SupabasePostRepository.editResultFromResponse({
+        'id': 'p-1',
+        'edited_at': null,
+        'support_notice': false,
+      });
+      expect(unchanged.editedAt, isNull);
+      expect(unchanged.supportNotice, isFalse);
+      expect(
+        SupabasePostRepository.editResultFromResponse(null).editedAt,
+        isNull,
+      );
+    });
+  });
 }

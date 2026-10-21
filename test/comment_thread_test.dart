@@ -7,6 +7,7 @@ import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/data/api/api_exception.dart';
 import 'package:kosodate_hitoiki/data/mock/mock_post_repository.dart';
 import 'package:kosodate_hitoiki/domain/models/comment.dart';
+import 'package:kosodate_hitoiki/domain/models/post.dart' show EditResult;
 import 'package:kosodate_hitoiki/presentation/pages/post_detail/post_detail_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/support/support_resources_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
@@ -327,5 +328,155 @@ void main() {
     expect(find.text('コメントの受付は終了しています。'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
     expect(find.text('はなさんに返信'), findsNothing);
+  });
+
+  group('自分のコメントの編集・削除', () {
+    final mine = comment('c1', 'わたし', '直す前', isMine: true);
+
+    testWidgets('編集・削除は、自分のコメントにだけ出る(他人・削除済みには出ない)', (tester) async {
+      final repository = ScriptedCommentRepository(
+        comments: [
+          mine,
+          comment('c2', 'はな', '他人のコメント'),
+          comment('c3', 'ゆき', null, isDeleted: true, isMine: true),
+        ],
+      );
+      await pumpThread(tester, repository);
+      expect(find.byKey(const ValueKey('comment-edit-c1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('comment-delete-c1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('comment-edit-c2')), findsNothing);
+      expect(find.byKey(const ValueKey('comment-edit-c3')), findsNothing);
+      // 自分のコメントには、通報を出さない。
+      expect(find.byTooltip('わたしさんのコメントを通報'), findsNothing);
+    });
+
+    testWidgets('編集: 今の本文が入った状態で開き、保存するとAPIを呼ぶ', (tester) async {
+      final repository = ScriptedCommentRepository(
+        comments: [mine],
+        editScript: [EditResult(editedAt: DateTime(2026, 10, 21, 10))],
+      );
+      await pumpThread(tester, repository);
+      await tapKey(tester, 'comment-edit-c1');
+
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('comment-edit-field')))
+            .controller!
+            .text,
+        '直す前',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('comment-edit-field')),
+        '直した後',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('comment-edit-save')));
+      await tester.pumpAndSettle();
+
+      expect(repository.editCalls, hasLength(1));
+      expect(repository.editCalls.single.id, 'c1');
+      expect(repository.editCalls.single.body, '直した後');
+      expect(repository.editCalls.single.confirmed, isFalse);
+      expect(find.byKey(const ValueKey('comment-edit-field')), findsNothing);
+    });
+
+    testWidgets('編集: 確認が必要なときは「そのまま保存」で confirmed:true で再送する', (tester) async {
+      final repository = ScriptedCommentRepository(
+        comments: [mine],
+        editScript: [
+          const ApiException(
+            code: 'MODERATION_CONFIRM_REQUIRED',
+            message: '強い言葉が含まれています。',
+            status: 409,
+          ),
+          EditResult(editedAt: DateTime(2026, 10, 21, 10)),
+        ],
+      );
+      await pumpThread(tester, repository);
+      await tapKey(tester, 'comment-edit-c1');
+      await tester.tap(find.byKey(const ValueKey('comment-edit-save')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('強い言葉が含まれています。'), findsOneWidget);
+      expect(find.text('そのまま保存'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('comment-edit-save')));
+      await tester.pumpAndSettle();
+      expect(repository.editCalls, hasLength(2));
+      expect(repository.editCalls[1].confirmed, isTrue);
+      expect(find.byKey(const ValueKey('comment-edit-field')), findsNothing);
+    });
+
+    testWidgets('編集: 送信不可のときは理由を出し、保存ボタンはない', (tester) async {
+      final repository = ScriptedCommentRepository(
+        comments: [mine],
+        editScript: [
+          const ApiException(
+            code: 'MODERATION_REJECTED',
+            message: '',
+            status: 422,
+            details: {
+              'reasons': ['pii_phone'],
+            },
+          ),
+        ],
+      );
+      await pumpThread(tester, repository);
+      await tapKey(tester, 'comment-edit-c1');
+      await tester.tap(find.byKey(const ValueKey('comment-edit-save')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('comment-edit-rejected')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('comment-edit-save')), findsNothing);
+      await tester.tap(find.text('キャンセル'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('comment-edit-field')), findsNothing);
+    });
+
+    testWidgets('編集は、受付を終了した投稿でもできる', (tester) async {
+      final repository = ScriptedCommentRepository(
+        comments: [mine],
+        editScript: [EditResult()],
+      );
+      await pumpThread(tester, repository, accepting: false);
+      await tapKey(tester, 'comment-edit-c1');
+      await tester.tap(find.byKey(const ValueKey('comment-edit-save')));
+      await tester.pumpAndSettle();
+      expect(repository.editCalls, hasLength(1));
+    });
+
+    testWidgets('削除: 確認して削除すると、APIを呼ぶ。やめると呼ばない', (tester) async {
+      final repository = ScriptedCommentRepository(comments: [mine]);
+      await pumpThread(tester, repository);
+      await tapKey(tester, 'comment-delete-c1');
+      expect(find.text('コメントを削除しますか？'), findsOneWidget);
+      expect(find.textContaining('返信は残ります'), findsOneWidget);
+      await tester.tap(find.text('やめる'));
+      await tester.pumpAndSettle();
+      expect(repository.deleteCalls, isEmpty);
+
+      await tapKey(tester, 'comment-delete-c1');
+      await tester.tap(find.byKey(const ValueKey('comment-delete-confirm')));
+      await tester.pumpAndSettle();
+      expect(repository.deleteCalls, ['c1']);
+    });
+
+    testWidgets('削除の失敗は案内する', (tester) async {
+      final repository = ScriptedCommentRepository(
+        comments: [mine],
+        deleteError: const ApiException(
+          code: 'FORBIDDEN',
+          message: '',
+          status: 403,
+        ),
+      );
+      await pumpThread(tester, repository);
+      await tapKey(tester, 'comment-delete-c1');
+      await tester.tap(find.byKey(const ValueKey('comment-delete-confirm')));
+      await tester.pumpAndSettle();
+      expect(find.text('この操作はできません。'), findsOneWidget);
+    });
   });
 }
