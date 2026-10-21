@@ -5,7 +5,6 @@ import 'package:kosodate_hitoiki/core/constants/app_icons.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/models/user_profile.dart';
-import 'package:kosodate_hitoiki/domain/repositories/profile_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/mypage/mypage_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/profile/profile_edit_page.dart';
@@ -15,16 +14,7 @@ import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
 import 'package:kosodate_hitoiki/presentation/providers/profile_providers.dart';
 
 import 'helpers/scripted_post_repository.dart';
-
-class _FakeProfileRepository implements ProfileRepository {
-  @override
-  Future<UserProfile?> fetchProfile(String userId) async => const UserProfile(
-    id: 'me',
-    nickname: 'こもれび',
-    avatarAsset: AppAvatars.defaultTulip,
-    bio: '子育ての気持ちを、少しずつ。',
-  );
-}
+import 'helpers/scripted_profile_repository.dart';
 
 Post _post(String id, String body, {bool underReview = false}) => Post(
   id: id,
@@ -60,7 +50,16 @@ Future<void> pumpMyPage(
         postRepositoryProvider.overrideWithValue(
           posts ?? ScriptedPostRepository([]),
         ),
-        profileRepositoryProvider.overrideWithValue(_FakeProfileRepository()),
+        profileRepositoryProvider.overrideWithValue(
+          ScriptedProfileRepository(
+            profile: const UserProfile(
+              id: 'me',
+              nickname: 'こもれび',
+              avatarAsset: AppAvatars.defaultTulip,
+              bio: '子育ての気持ちを、少しずつ。',
+            ),
+          ),
+        ),
       ],
       child: MaterialApp(
         theme: AppTheme.light,

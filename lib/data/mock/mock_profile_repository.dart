@@ -33,6 +33,24 @@ class MockProfileRepository implements ProfileRepository {
   ];
 
   @override
+  bool get isSample => true;
+
+  /// サンプルでは、保存しない(画面確認用)。
+  @override
+  Future<void> updateProfile({
+    String? bio,
+    String? iconKey,
+    String? childAgeRange,
+    bool confirmed = false,
+  }) async {}
+
+  @override
+  Future<void> changeNickname({
+    required String nickname,
+    bool confirmed = false,
+  }) async {}
+
+  @override
   Future<UserProfile?> fetchProfile(String userId) async =>
       _profiles.where((profile) => profile.id == userId).firstOrNull;
 }

@@ -34,6 +34,9 @@ String postFailureMessage(Object error) {
     if (reason == 'restricted') {
       return '現在、投稿やコメントができません。';
     }
+    if (error.code == 'CONFLICT') {
+      return 'このニックネームは使えません。別のニックネームにしてください。';
+    }
     if (reason == 'not_allowed') {
       return '自分の投稿・コメントは、通報できません。';
     }

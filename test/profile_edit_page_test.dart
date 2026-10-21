@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/presentation/pages/profile/profile_edit_page.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 
 void main() {
   for (final scale in [1.0, 2.0]) {
@@ -11,15 +13,18 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(scale)),
-            child: child!,
+        ProviderScope(
+          overrides: [currentUserIdProvider.overrideWithValue(null)],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!,
+            ),
+            home: const ProfileEditPage(),
           ),
-          home: const ProfileEditPage(),
         ),
       );
       final name = find.byKey(const ValueKey('profile-nickname'));
@@ -78,7 +83,13 @@ void main() {
   }
   testWidgets('短い名前を拒否し、有効な入力は未保存の案内後も保持する', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(theme: AppTheme.light, home: const ProfileEditPage()),
+      ProviderScope(
+        overrides: [currentUserIdProvider.overrideWithValue(null)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const ProfileEditPage(),
+        ),
+      ),
     );
     final name = find.byKey(const ValueKey('profile-nickname'));
     final save = find.byKey(const ValueKey('profile-save'));

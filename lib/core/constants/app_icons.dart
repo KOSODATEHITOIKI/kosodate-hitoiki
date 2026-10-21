@@ -136,6 +136,16 @@ class AppAvatars {
   static const defaultTulip = '$_base/avatar-tulip.png';
   static const defaultBlueFlowers = '$_base/avatar-blue-flowers.png';
 
+  /// アカウント画像から、プロフィールの`icon_key`を求める([forIconKey]の逆)。
+  static String keyFor(String asset) => switch (asset) {
+    defaultSun => 'sun',
+    defaultLittleBird => 'little_bird',
+    defaultYellowFlower => 'yellow_flower',
+    defaultTulip => 'tulip',
+    defaultBlueFlowers => 'blue_flowers',
+    _ => 'sprout',
+  };
+
   /// プロフィールの`icon_key`に対応するアカウント画像。
   /// icon_keyのマスタは未決定(バックエンド 未決事項)のため、いまは画像のファイル名に
   /// 合わせた仮のkeyを使う。未設定・未知のkeyは既定(芽)にする。
@@ -145,6 +155,7 @@ class AppAvatars {
     'yellow_flower' => defaultYellowFlower,
     'tulip' => defaultTulip,
     'blue_flowers' => defaultBlueFlowers,
+    'sprout' => defaultSprout,
     _ => defaultSprout,
   };
 }

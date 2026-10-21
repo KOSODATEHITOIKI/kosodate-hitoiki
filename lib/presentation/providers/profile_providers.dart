@@ -8,6 +8,11 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
   (ref) => MockProfileRepository(),
 );
 
+/// プロフィールがサンプルか。trueの間、保存せず「準備中」と案内する。
+final profileIsSampleProvider = Provider<bool>(
+  (ref) => ref.watch(profileRepositoryProvider).isSample,
+);
+
 /// 自分のプロフィール(マイページ用)。ゲストは`null`。
 final myProfileProvider = FutureProvider<UserProfile?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
