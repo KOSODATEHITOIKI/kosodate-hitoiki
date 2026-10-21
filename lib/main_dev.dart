@@ -9,7 +9,9 @@ import 'data/datasources/supabase_client_provider.dart';
 import 'data/repositories/supabase_account_repository.dart';
 import 'data/repositories/supabase_comment_repository.dart';
 import 'presentation/providers/account_providers.dart';
+import 'data/repositories/supabase_notification_repository.dart';
 import 'data/repositories/supabase_post_repository.dart';
+import 'presentation/providers/notification_providers.dart';
 import 'data/repositories/supabase_profile_repository.dart';
 import 'presentation/providers/profile_providers.dart';
 import 'data/repositories/supabase_report_repository.dart';
@@ -41,6 +43,10 @@ Future<void> main() async {
         ),
         reportRepositoryProvider.overrideWith(
           (ref) => SupabaseReportRepository(ref.watch(supabaseClientProvider)),
+        ),
+        notificationRepositoryProvider.overrideWith(
+          (ref) =>
+              SupabaseNotificationRepository(ref.watch(supabaseClientProvider)),
         ),
         accountRepositoryProvider.overrideWith(
           (ref) => SupabaseAccountRepository(ref.watch(supabaseClientProvider)),

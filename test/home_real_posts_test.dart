@@ -23,6 +23,9 @@ class _RealLikeRepository implements PostRepository {
       posts;
 
   @override
+  Future<Post?> fetchPost(String postId) async => null;
+
+  @override
   Future<List<Post>> fetchMyPosts() async => const [];
 
   @override

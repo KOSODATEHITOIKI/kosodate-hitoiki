@@ -153,6 +153,24 @@ class SupabasePostRepository implements PostRepository {
 
   // 自分の投稿・保存した投稿は、投稿の作成(段3)・保存(段4)・マイページ(段6)の
   // 接続まで、空を返す(サンプルを見せない)。
+  /// 投稿1件(`member_posts`をID指定)。ブロック・自分だけの非表示・一時非表示・削除済み・
+  /// 存在しない投稿は、どれも`null`(存在を知る手がかりにしない)。ログイン必須。
+  @override
+  Future<Post?> fetchPost(String postId) async {
+    final row = await _client
+        .from('member_posts')
+        .select()
+        .eq('id', postId)
+        .maybeSingle();
+    if (row == null) return null;
+    final saved = await _savedIds([postId]);
+    return postFromRow(
+      row,
+      myUserId: _client.auth.currentUser?.id,
+      isSaved: saved.contains(postId),
+    );
+  }
+
   /// 自分の投稿(新しい順)。通報による一時非表示で運営が確認中の投稿も含み、
   /// `under_review`が`true`のものは「確認中」と表示する(本人にだけ見える。API契約7節)。
   @override

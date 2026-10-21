@@ -12,6 +12,10 @@ abstract class PostRepository {
   /// キーワード・投稿種類で絞り込んだ検索結果。
   Future<List<Post>> search({required String query, PostType? type});
 
+  /// 投稿1件(ID指定)。見えない投稿(削除・一時非表示・ブロックなど)や、存在しない投稿は
+  /// `null`(どちらも同じ。存在を知る手がかりにしない)。ログイン必須。
+  Future<Post?> fetchPost(String postId);
+
   /// 自分が投稿したもの。
   Future<List<Post>> fetchMyPosts();
 

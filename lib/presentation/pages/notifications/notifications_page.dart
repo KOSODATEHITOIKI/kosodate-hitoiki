@@ -4,14 +4,49 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
-import '../../../data/mock/mock_notifications.dart';
-import '../../widgets/comfort_page.dart';
+import '../../../domain/models/app_notification.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_providers.dart';
 import '../../providers/post_providers.dart';
+import '../../widgets/comfort_page.dart';
 import '../auth/auth_page.dart';
 import '../post_detail/post_detail_page.dart';
 
-/// S-06。通知取得・認証による表示分岐はIssue #11で接続する。
+/// お知らせの見出し。本文はサーバーが持たないので、種類から定型文で作る。
+String notificationTitle(AppNotification item) => switch (item.type) {
+  NotificationType.comment =>
+    item.actorName != null ? '${item.actorName}さんがコメントしました' : 'コメントが届きました',
+  NotificationType.reply =>
+    item.actorName != null ? '${item.actorName}さんから返信が届きました' : '返信が届きました',
+  NotificationType.reactionDigest => '共感が届きました',
+  NotificationType.moderation => '運営からのお知らせ',
+};
+
+/// お知らせの本文(定型文。コメント・返信の本文や、共感した人は出さない)。
+String notificationBody(AppNotification item) => switch (item.type) {
+  NotificationType.comment => 'あなたの投稿にコメントが届いています。',
+  NotificationType.reply => 'あなたのコメントに返信が届いています。',
+  NotificationType.reactionDigest => 'あなたの投稿に${item.reactionCount}件の共感が届いています。',
+  NotificationType.moderation => '運営から、お知らせがあります。利用ガイドもご確認ください。',
+};
+
+String _ageLabel(DateTime time) {
+  final diff = DateTime.now().difference(time);
+  if (diff.inMinutes < 1) return 'たった今';
+  if (diff.inHours < 1) return '${diff.inMinutes}分前';
+  if (diff.inDays < 1) return '${diff.inHours}時間前';
+  return '${diff.inDays}日前';
+}
+
+String _iconFor(NotificationType type) => switch (type) {
+  NotificationType.comment => AppIcons.comment,
+  NotificationType.reply => AppIcons.reply,
+  NotificationType.reactionDigest => AppDecorations.heartWarm,
+  NotificationType.moderation => AppIcons.noticeMegaphone,
+};
+
+/// S-06。お知らせの一覧・既読を、お知らせAPIに接続している。
+/// ゲストには、登録・ログインの案内を出す。
 class NotificationsPage extends ConsumerStatefulWidget {
   const NotificationsPage({super.key});
   @override
@@ -20,13 +55,37 @@ class NotificationsPage extends ConsumerStatefulWidget {
 
 class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   bool _unreadOnly = false;
-  final Set<String> _readIds = {
-    for (final item in mockNotifications)
-      if (item.initiallyRead) item.id,
-  };
 
-  void _open(MockNotification item) {
+  /// 既読にしたお知らせ。サーバーへの反映と一覧の取り直しを待たずに、すぐ既読の表示にする。
+  final Set<String> _readIds = {};
+
+  bool _isRead(AppNotification item) =>
+      item.isRead || _readIds.contains(item.id);
+
+  /// 既読にする。すぐ表示に反映し、サーバーに送る。送れなかったときは、未読に戻す。
+  Future<void> _markRead(AppNotification item) async {
+    if (_isRead(item)) return;
     setState(() => _readIds.add(item.id));
+    try {
+      await ref.read(notificationRepositoryProvider).markRead(item.id);
+    } catch (_) {
+      if (mounted) setState(() => _readIds.remove(item.id));
+    }
+  }
+
+  Future<void> _open(AppNotification item) async {
+    await _markRead(item);
+    if (!mounted) return;
+    final sample = ref.read(notificationsAreSampleProvider);
+    if (!sample && item.postId != null) {
+      await _openPost(item.postId!);
+      return;
+    }
+    // サンプル、または、投稿に結び付かないお知らせ(運営から)は、内容を表示する。
+    _showDialog(item, sample: sample);
+  }
+
+  void _showDialog(AppNotification item, {required bool sample}) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => Consumer(
@@ -43,18 +102,20 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
             );
           }
           return AlertDialog(
-            title: Text(item.title),
+            title: Text(notificationTitle(item)),
             content: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(item.body),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'サンプルのお知らせです。',
-                    style: TextStyle(fontSize: 12, height: 1.6),
-                  ),
+                  Text(notificationBody(item)),
+                  if (sample) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'サンプルのお知らせです。',
+                      style: TextStyle(fontSize: 12, height: 1.6),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -78,8 +139,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     );
   }
 
-  Widget _notificationCard(MockNotification item) {
-    final unread = !_readIds.contains(item.id);
+  Widget _notificationCard(AppNotification item) {
+    final unread = !_isRead(item);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -102,7 +163,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                     color: AppColors.surface,
                     shape: BoxShape.circle,
                   ),
-                  child: AppAsset(item.asset, excludeFromSemantics: true),
+                  child: AppAsset(
+                    _iconFor(item.type),
+                    excludeFromSemantics: true,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -110,7 +174,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.title,
+                        notificationTitle(item),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -135,14 +199,14 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                               ),
                             ),
                           Text(
-                            item.ageLabel,
+                            _ageLabel(item.createdAt),
                             style: const TextStyle(fontSize: 11),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        item.body,
+                        notificationBody(item),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 12.5, height: 1.7),
@@ -160,19 +224,37 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     );
   }
 
+  Widget _list(List<AppNotification> items) {
+    final visible = [
+      for (final item in items)
+        if (!_unreadOnly || !_isRead(item)) item,
+    ];
+    if (visible.isEmpty) {
+      return _unreadOnly
+          ? const ComfortNotice(
+              asset: AppIllustrations.emptyNotifications,
+              title: '未読のお知らせはありません',
+              message: '自分のペースで、ひと息。',
+            )
+          : const ComfortNotice(
+              asset: AppIllustrations.emptyNotifications,
+              title: 'お知らせは、まだありません',
+              message: '自分のペースで、ひと息。',
+            );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [for (final item in visible) _notificationCard(item)],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<bool>(isLoggedInProvider, (_, next) {
       if (!next) {
         setState(() {
           _unreadOnly = false;
-          _readIds
-            ..clear()
-            ..addAll(
-              mockNotifications
-                  .where((item) => item.initiallyRead)
-                  .map((item) => item.id),
-            );
+          _readIds.clear();
         });
       }
     });
@@ -193,6 +275,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
         ],
       );
     }
+    final notifications = ref.watch(notificationsProvider);
     return ComfortPage(
       title: 'お知らせ',
       titleImage: AppBrand.titleNotifications,
@@ -222,22 +305,30 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
-          'サンプルのお知らせです。既読状態はアプリ終了時にリセットされます。',
-          style: TextStyle(fontSize: 11, height: 1.6),
+        if (ref.watch(notificationsAreSampleProvider)) ...[
+          const Text(
+            'サンプルのお知らせです。既読状態はアプリ終了時にリセットされます。',
+            style: TextStyle(fontSize: 11, height: 1.6),
+          ),
+          const SizedBox(height: 12),
+        ],
+        notifications.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, _) => Column(
+            children: [
+              const Text('お知らせを読み込めませんでした。', style: TextStyle(fontSize: 14)),
+              TextButton(
+                key: const ValueKey('notifications-retry'),
+                onPressed: () => ref.invalidate(notificationsProvider),
+                child: const Text('再読み込み'),
+              ),
+            ],
+          ),
+          data: _list,
         ),
-        const SizedBox(height: 12),
-        if (_unreadOnly &&
-            mockNotifications.every((item) => _readIds.contains(item.id)))
-          const ComfortNotice(
-            asset: AppIllustrations.emptyNotifications,
-            title: '未読のお知らせはありません',
-            message: '自分のペースで、ひと息。',
-          )
-        else
-          for (final item in mockNotifications)
-            if (!_unreadOnly || !_readIds.contains(item.id))
-              _notificationCard(item),
       ],
     );
   }
@@ -246,11 +337,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     context,
   ).push<void>(MaterialPageRoute(builder: (_) => AuthPage(initialMode: mode)));
 
+  /// お知らせの投稿を、ID指定で取得して開く。見えない投稿(削除・ブロックなど)は、
+  /// 「見つかりません」と案内する。
   Future<void> _openPost(String postId) async {
     try {
-      final posts = await ref.read(feedPostsProvider.future);
+      final post = await ref.read(postRepositoryProvider).fetchPost(postId);
       if (!mounted || !ref.read(isLoggedInProvider)) return;
-      final post = posts.where((post) => post.id == postId).firstOrNull;
       if (post == null) {
         ScaffoldMessenger.of(
           context,

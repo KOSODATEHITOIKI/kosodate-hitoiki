@@ -106,6 +106,10 @@ class MockPostRepository implements PostRepository {
   }
 
   @override
+  Future<Post?> fetchPost(String postId) async =>
+      _posts.where((post) => post.id == postId).firstOrNull;
+
+  @override
   Future<List<Post>> fetchMyPosts() async {
     return _posts.where((post) => post.isMine).toList();
   }
