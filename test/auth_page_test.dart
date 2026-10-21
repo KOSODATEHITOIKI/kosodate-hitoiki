@@ -139,6 +139,31 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('何も入力せず入力欄をタップして離れただけでは、赤くしない', (tester) async {
+    await pumpAuth(tester, mode: AuthMode.register);
+    final errorColor = AppTheme.light.colorScheme.error;
+    bool anyRed() => tester
+        .widgetList<Text>(find.byType(Text))
+        .any((text) => text.style?.color == errorColor);
+
+    // ニックネーム → メール → パスワード と、順にタップして通り過ぎる。
+    for (final key in ['auth-nickname', 'auth-email', 'auth-password']) {
+      await tester.ensureVisible(find.byKey(ValueKey(key)));
+      await tester.tap(find.byKey(ValueKey(key)));
+      await tester.pumpAndSettle();
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    expect(anyRed(), isFalse);
+    expect(find.text('メールアドレスを入力してください。'), findsNothing);
+
+    // 何か入力して間違ったまま離れたときは、赤くする。
+    await tester.enterText(find.byKey(const ValueKey('auth-email')), 'abc');
+    await tester.tap(find.byKey(const ValueKey('auth-nickname')));
+    await tester.pumpAndSettle();
+    expect(anyRed(), isTrue);
+  });
+
   testWidgets('登録の入力欄: 入力の途中は赤くせず足りないことを案内し、離れて間違っていれば赤くする', (tester) async {
     await pumpAuth(tester, mode: AuthMode.register);
     final errorColor = AppTheme.light.colorScheme.error;

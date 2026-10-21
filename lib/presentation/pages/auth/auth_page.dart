@@ -41,6 +41,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   /// 入力欄を一度離れた(または送信を試した)項目。赤い表示は、この項目が
   /// まだ間違っているときだけ出す。入力の途中では出さない。
   final _touched = <String>{};
+
+  /// 登録・ログインを押したことがあるか。空欄を赤くするのは、押したあとだけ。
+  bool _submitted = false;
   final _nicknameFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
@@ -71,9 +74,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   /// 赤いエラー表示にするか。離れた後、または送信を試した後に、まだ間違っている項目。
-  AutovalidateMode _autovalidate(String field) => _touched.contains(field)
+  AutovalidateMode _autovalidate(String field) =>
+      _touched.contains(field) || _submitted
       ? AutovalidateMode.always
       : AutovalidateMode.disabled;
+
+  /// 空欄は、押すまでは赤くしない(タップして離れただけでは「間違い」ではない)。
+  /// 何か入力してあって間違っているときだけ、離れた時点で赤くする。
+  String? _check(String value, String? Function(String) problem) =>
+      value.isEmpty && !_submitted ? null : problem(value);
 
   @override
   void dispose() {
@@ -98,6 +107,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _error = null;
       _sentTo = null;
       _touched.clear();
+      _submitted = false;
     });
   }
 
@@ -118,7 +128,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   Future<void> _submit() async {
-    setState(() => _touched.addAll(['nickname', 'email', 'password']));
+    setState(() {
+      _submitted = true;
+      _touched.addAll(['nickname', 'email', 'password']);
+    });
     final valid = _form.currentState!.validate();
     if (!valid) return;
     FocusScope.of(context).unfocus();
@@ -335,7 +348,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         counterText: '',
                         prefixIcon: const Icon(Icons.person_outline),
                       ),
-                      validator: (value) => nicknameProblem(value ?? ''),
+                      validator: (value) =>
+                          _check(value ?? '', nicknameProblem),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -361,7 +375,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                 : null),
                       prefixIcon: const Icon(Icons.mail_outline),
                     ),
-                    validator: (value) => emailProblem(value ?? ''),
+                    validator: (value) => _check(value ?? '', emailProblem),
                   ),
                   const SizedBox(height: 16),
                   if (_mode != AuthMode.reset) ...[
@@ -387,7 +401,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           ),
                         ),
                       ),
-                      validator: (value) => passwordProblem(value ?? ''),
+                      validator: (value) =>
+                          _check(value ?? '', passwordProblem),
                     ),
                     const SizedBox(height: 12),
                   ],
