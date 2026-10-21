@@ -236,4 +236,81 @@ void main() {
     expect(repository.nicknameCalls, hasLength(1));
     expect(repository.fetchCount, 2);
   });
+
+  group('保存の応答を待つ間に、画面が閉じられたとき', () {
+    testWidgets('戻る操作で閉じても、例外にならず、保存できた変更は表示に反映する', (tester) async {
+      final gate = Completer<void>();
+      final repository = ScriptedProfileRepository(
+        profile: _me,
+        nicknameScript: [() => gate.future],
+      );
+      final closed = <bool>[];
+      await pumpEdit(tester, repository, closed: closed);
+      await typeInto(tester, 'profile-nickname', 'あたらしい名前');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        _field('profile-save'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(_field('profile-save'));
+      await tester.pump();
+      expect(repository.nicknameCalls, hasLength(1));
+      expect(repository.fetchCount, 1);
+
+      // 応答を待つ間に、戻る操作で画面を閉じる。
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileEditPage), findsNothing);
+
+      // 応答が来ても、破棄された画面の ref を使わず、例外にならない。
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      // 保存できたニックネームは、プロフィールの表示に反映するため、キャッシュが破棄されている
+      // (次に読むときに取り直す。破棄されていなければ、古い値のまま)。
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(Scaffold).first),
+      );
+      await container.read(myProfileProvider.future);
+      expect(repository.fetchCount, 2);
+      expect(closed, [true]);
+    });
+
+    testWidgets('利用者が切り替わって閉じても、例外にならない(切り替え後のアカウントには送らない)', (tester) async {
+      final user = StateProvider<String?>((ref) => 'user-a');
+      final gate = Completer<void>();
+      final repository = ScriptedProfileRepository(
+        profile: _me,
+        nicknameScript: [() => gate.future],
+        updateScript: [null],
+      );
+      await pumpEdit(tester, repository, user: user);
+      await typeInto(tester, 'profile-nickname', 'あたらしい名前');
+      await typeInto(tester, 'profile-bio', 'あたらしい自己紹介');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        _field('profile-save'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(_field('profile-save'));
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(ProfileEditPage)),
+      );
+      container.read(user.notifier).state = 'user-b';
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileEditPage), findsNothing);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      // 切り替え後のアカウントに、自己紹介の更新は送らない。
+      expect(repository.updateCalls, isEmpty);
+    });
+  });
 }
