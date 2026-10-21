@@ -99,7 +99,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
       appBar: AppBar(title: const Text('通報する')),
       body: !loggedIn
           ? ComfortPage(
-              title: 'ログインして、ひと息',
+              title: 'ログインして、\nひと息',
               message: '通報するには、\n登録・ログインが必要です。',
               children: [
                 FilledButton(
@@ -131,7 +131,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
                 const SizedBox(height: 16),
                 const Text(
                   '通報の理由を選んでください',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 RadioGroup<String>(

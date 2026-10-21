@@ -72,7 +72,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
                       Text(
                         'あなたのプロフィール',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -137,7 +137,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
       if (_savedPosts) ...[
         const Text(
           'あとで読みたい投稿',
-          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         const Text(

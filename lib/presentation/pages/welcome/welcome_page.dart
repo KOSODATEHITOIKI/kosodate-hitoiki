@@ -43,17 +43,17 @@ class WelcomePage extends StatelessWidget {
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 480),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 24, 12, 32),
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const _WelcomeHeader(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
-                                vertical: 20,
+                                vertical: 14,
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.white,
@@ -68,14 +68,14 @@ class WelcomePage extends StatelessWidget {
                                     description:
                                         '安心して気持ちを話せるように、個人が特定される情報は書かないでください。',
                                   ),
-                                  SizedBox(height: 24),
+                                  SizedBox(height: 12),
                                   _Guideline(
                                     asset: AppDecorations.heartWarm,
                                     background: AppColors.accentPink,
                                     title: '気持ちを否定しない',
                                     description: 'どんな気持ちも、否定せずに受けとめ合いましょう。',
                                   ),
-                                  SizedBox(height: 24),
+                                  SizedBox(height: 12),
                                   _Guideline(
                                     asset: AppDecorations.sunSimple,
                                     background: AppColors.surface,
@@ -85,7 +85,7 @@ class WelcomePage extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -107,10 +107,10 @@ class WelcomePage extends StatelessWidget {
                                     ),
                                     child: FilledButton(
                                       style: FilledButton.styleFrom(
-                                        minimumSize: const Size.fromHeight(60),
+                                        minimumSize: const Size.fromHeight(52),
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 24,
-                                          vertical: 16,
+                                          vertical: 12,
                                         ),
                                         shape: const StadiumBorder(),
                                       ),
@@ -125,7 +125,7 @@ class WelcomePage extends StatelessWidget {
                                               '登録してはじめる',
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                fontSize: 13.5,
+                                                fontSize: 12.5,
                                                 fontWeight: FontWeight.w700,
                                               ),
                                             ),
@@ -145,7 +145,7 @@ class WelcomePage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 12),
                                   FilledButton(
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.secondary,
@@ -162,12 +162,12 @@ class WelcomePage extends StatelessWidget {
                                       '登録せずに読む',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 13.5,
+                                        fontSize: 12.5,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 4),
                                   Center(
                                     child: TextButton(
                                       onPressed: () =>
@@ -178,7 +178,7 @@ class WelcomePage extends StatelessWidget {
                                       child: const Text(
                                         'ログイン',
                                         style: TextStyle(
-                                          fontSize: 13.5,
+                                          fontSize: 12.5,
                                           fontWeight: FontWeight.w700,
                                           decoration: TextDecoration.underline,
                                         ),
@@ -219,8 +219,8 @@ class _WelcomeHeader extends StatelessWidget {
             child: ExcludeSemantics(
               child: AppAsset(
                 AppDecorations.sunSmiling,
-                width: 230,
-                height: 230,
+                width: 190,
+                height: 190,
               ),
             ),
           ),
@@ -236,9 +236,9 @@ class _WelcomeHeader extends StatelessWidget {
                   image: true,
                   child: Image.asset(
                     AppBrand.logo,
-                    width: (MediaQuery.sizeOf(context).width * 0.42).clamp(
-                      134.0,
-                      180.0,
+                    width: (MediaQuery.sizeOf(context).width * 0.36).clamp(
+                      110.0,
+                      150.0,
                     ),
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
@@ -249,19 +249,19 @@ class _WelcomeHeader extends StatelessWidget {
                 const Text(
                   'ひと息',
                   style: TextStyle(
-                    fontSize: 27,
+                    fontSize: 24,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
                   ),
                 ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
               if (showDecoration)
                 Semantics(
                   label: '言いづらいことも、ここでひと息。',
                   image: true,
                   child: Image.asset(
                     AppBrand.tagline,
-                    height: 100,
+                    height: 64,
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
                     excludeFromSemantics: true,
@@ -271,15 +271,15 @@ class _WelcomeHeader extends StatelessWidget {
                 const Text(
                   '言いづらいことも、\nここでひと息。',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     height: 1.4,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Text(
                 '子育ての気持ちを、\n安心して書ける場所です。',
-                style: TextStyle(fontSize: 13.5, height: 1.65),
+                style: TextStyle(fontSize: 12.5, height: 1.6),
               ),
             ],
           ),
@@ -308,8 +308,8 @@ class _Guideline extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 54,
-          height: 54,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(color: background, shape: BoxShape.circle),
           child: AppAsset(asset, excludeFromSemantics: true),
         ),
@@ -321,7 +321,7 @@ class _Guideline extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   height: 1.5,
                 ),
@@ -330,8 +330,8 @@ class _Guideline extends StatelessWidget {
               Text(
                 description,
                 style: const TextStyle(
-                  fontSize: 13.5,
-                  height: 1.7,
+                  fontSize: 12.5,
+                  height: 1.6,
                   color: AppColors.textPrimary,
                 ),
               ),

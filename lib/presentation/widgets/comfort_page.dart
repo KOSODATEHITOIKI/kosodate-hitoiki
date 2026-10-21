@@ -158,9 +158,9 @@ class _ComfortHeader extends StatelessWidget {
                         child: Image.asset(
                           titleImage!,
                           width:
-                              (MediaQuery.sizeOf(context).width * 0.42).clamp(
-                                134.0,
-                                180.0,
+                              (MediaQuery.sizeOf(context).width * 0.36).clamp(
+                                110.0,
+                                150.0,
                               ) *
                               titleImageScale,
                           fit: BoxFit.contain,
@@ -176,8 +176,8 @@ class _ComfortHeader extends StatelessWidget {
                         header: true,
                         child: Image.asset(
                           AppBrand.logo,
-                          width: (MediaQuery.sizeOf(context).width * 0.42)
-                              .clamp(134.0, 180.0),
+                          width: (MediaQuery.sizeOf(context).width * 0.36)
+                              .clamp(110.0, 150.0),
                           fit: BoxFit.contain,
                           alignment: Alignment.centerLeft,
                           excludeFromSemantics: true,
@@ -189,7 +189,7 @@ class _ComfortHeader extends StatelessWidget {
                       child: Text(
                         title,
                         style: const TextStyle(
-                          fontSize: 27,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -217,7 +217,7 @@ class _ComfortHeader extends StatelessWidget {
               Text(
                 subtitle!,
                 style: const TextStyle(
-                  fontSize: 13.5,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -258,7 +258,7 @@ class ComfortNotice extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(

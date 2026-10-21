@@ -97,7 +97,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
                 children: [
                   const Text(
                     '投稿の内容',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -128,7 +128,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
           if (result.verdict == ModerationVerdict.block) ...[
             const Text(
               'この内容では送信できません。（表示サンプル）',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
@@ -139,7 +139,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
           if (result.supportMessageRequired) ...[
             const Text(
               'つらい気持ちを、ひとりで抱えなくて大丈夫です。',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             const Text(

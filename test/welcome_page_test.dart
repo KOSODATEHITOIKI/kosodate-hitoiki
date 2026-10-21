@@ -78,4 +78,30 @@ void main() {
       expect(tester.takeException(), isNull);
     }
   });
+
+  // 一般的なスマートフォンでは、スクロールせず1画面に収まる。
+  for (final size in [const Size(390, 844), const Size(360, 780)]) {
+    testWidgets(
+      '${size.width.toInt()}×${size.height.toInt()}ではスクロールせず1画面で見られる',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(
+          const ProviderScope(child: MaterialApp(home: WelcomePage())),
+        );
+        await tester.pumpAndSettle();
+
+        final scrollable = tester.state<ScrollableState>(
+          find.descendant(
+            of: find.byType(WelcomePage),
+            matching: find.byType(Scrollable),
+          ),
+        );
+        expect(scrollable.position.maxScrollExtent, 0);
+      },
+    );
+  }
 }

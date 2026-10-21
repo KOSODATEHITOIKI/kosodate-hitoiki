@@ -32,126 +32,111 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 投稿が増えても画面外のカードは構築しないよう、遅延構築のListViewにする。
+    final items = <Widget>[
+      const _HomeHeader(),
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
+          onPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(builder: (_) => const SupportResourcesPage()),
+          ),
+          icon: const Icon(Icons.support_agent, size: 18),
+          label: const Text('困ったときの相談先', style: TextStyle(fontSize: 12)),
+        ),
+      ),
+      const SizedBox(height: 24),
+      Center(
+        child: FilledButton.icon(
+          onPressed: widget.onCompose,
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: const StadiumBorder(),
+          ),
+          icon: AppAsset(
+            AppIcons.navCompose,
+            width: 24,
+            height: 24,
+            excludeFromSemantics: true,
+            colorFilter: const ColorFilter.mode(
+              AppColors.white,
+              BlendMode.srcIn,
+            ),
+          ),
+          label: const Text(
+            '気持ちを書く  ›',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+      const SizedBox(height: 24),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Row(
+          children: [
+            _illustration(AppDecorations.leavesSprout, 36),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text('話題を選ぶ', style: TextStyle(fontSize: 12.5)),
+            ),
+            IconButton(
+              tooltip: '話題の絞り込みは準備中です',
+              onPressed: () => ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('話題の絞り込みは準備中です'))),
+              icon: const Icon(Icons.keyboard_arrow_down),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (final type in ['すべて', 'ぐち', '相談', 'コツ・体験談'])
+            ChoiceChip(
+              label: Text(type, maxLines: 1, softWrap: false),
+              labelStyle: const TextStyle(fontSize: 12),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+              selected: _postType == type,
+              onSelected: (_) => setState(() => _postType = type),
+              showCheckmark: false,
+              selectedColor: AppColors.secondary,
+              backgroundColor: AppColors.white,
+              shape: const StadiumBorder(),
+              side: BorderSide(
+                color: _postType == type
+                    ? Colors.transparent
+                    : AppColors.divider,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            ),
+        ],
+      ),
+      const SizedBox(height: 24),
+      const Text(
+        'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
+        style: TextStyle(fontSize: 11, height: 1.6),
+      ),
+      const SizedBox(height: 12),
+      ..._buildFeed(),
+    ];
     return SafeArea(
       bottom: false,
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
-          child: ListView(
+          child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            children: [
-              const _HomeHeader(),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () => Navigator.of(context).push<void>(
-                    MaterialPageRoute(
-                      builder: (_) => const SupportResourcesPage(),
-                    ),
-                  ),
-                  icon: const Icon(Icons.support_agent, size: 18),
-                  label: const Text(
-                    '困ったときの相談先',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: FilledButton.icon(
-                  onPressed: widget.onCompose,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    shape: const StadiumBorder(),
-                  ),
-                  icon: AppAsset(
-                    AppIcons.navCompose,
-                    width: 24,
-                    height: 24,
-                    excludeFromSemantics: true,
-                    colorFilter: const ColorFilter.mode(
-                      AppColors.white,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  label: const Text(
-                    '気持ちを書く  ›',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.divider),
-                ),
-                child: Row(
-                  children: [
-                    _illustration(AppDecorations.leavesSprout, 36),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text('話題を選ぶ', style: TextStyle(fontSize: 13.5)),
-                    ),
-                    IconButton(
-                      tooltip: '話題の絞り込みは準備中です',
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('話題の絞り込みは準備中です')),
-                          ),
-                      icon: const Icon(Icons.keyboard_arrow_down),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (final type in ['すべて', 'ぐち', '相談', 'コツ・体験談'])
-                    ChoiceChip(
-                      label: Text(type, maxLines: 1, softWrap: false),
-                      labelStyle: const TextStyle(fontSize: 12),
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                      selected: _postType == type,
-                      onSelected: (_) => setState(() => _postType = type),
-                      showCheckmark: false,
-                      selectedColor: AppColors.secondary,
-                      backgroundColor: AppColors.white,
-                      shape: const StadiumBorder(),
-                      side: BorderSide(
-                        color: _postType == type
-                            ? Colors.transparent
-                            : AppColors.divider,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 4,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
-                style: TextStyle(fontSize: 11, height: 1.6),
-              ),
-              const SizedBox(height: 12),
-              ..._buildFeed(),
-            ],
+            itemCount: items.length,
+            itemBuilder: (context, index) => items[index],
           ),
         ),
       ),
@@ -202,7 +187,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         const SizedBox(height: 16),
         Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         const Text(
@@ -222,6 +207,10 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showDecoration = fitsDecoration(context);
+    final logoWidth = (MediaQuery.sizeOf(context).width * 0.36).clamp(
+      110.0,
+      150.0,
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -267,8 +256,12 @@ class _HomeHeader extends StatelessWidget {
                         header: true,
                         child: Image.asset(
                           AppBrand.logo,
-                          width: (MediaQuery.sizeOf(context).width * 0.42)
-                              .clamp(134.0, 180.0),
+                          width: logoWidth,
+                          // 原画像(1922px)を表示サイズでデコードして軽くする。
+                          cacheWidth:
+                              (logoWidth *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .ceil(),
                           fit: BoxFit.contain,
                           alignment: Alignment.centerLeft,
                           excludeFromSemantics: true,
@@ -280,7 +273,7 @@ class _HomeHeader extends StatelessWidget {
                       child: Text(
                         'ひと息',
                         style: TextStyle(
-                          fontSize: 27,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 2,
                         ),
@@ -292,12 +285,12 @@ class _HomeHeader extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               '今日も、おつかれさま。',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
             const Text(
               'がんばるあなたの気持ちに、\nここでひと息つけますように。',
-              style: TextStyle(fontSize: 13.5, height: 1.7),
+              style: TextStyle(fontSize: 12.5, height: 1.7),
             ),
           ],
         ),

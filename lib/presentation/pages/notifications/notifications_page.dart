@@ -178,7 +178,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     });
     if (!ref.watch(isLoggedInProvider)) {
       return ComfortPage(
-        title: 'ログインして、ひと息',
+        title: 'ログインして、\nひと息',
         message: 'お知らせを見るには、\n登録・ログインが必要です。',
         children: [
           FilledButton(
@@ -216,7 +216,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
             minimumSize: const Size(48, 52),
             side: const BorderSide(color: AppColors.divider),
             textStyle: const TextStyle(
-              fontSize: 13.5,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
             ),
           ),

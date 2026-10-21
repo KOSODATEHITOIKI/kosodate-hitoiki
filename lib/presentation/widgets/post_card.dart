@@ -61,8 +61,11 @@ class PostCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reacted = ref.watch(mockEmpathyProvider).contains(post.id);
-    final reaction = ref.watch(mockReactionsProvider)[post.id];
+    // 自分の投稿のリアクションだけを監視し、他の投稿への操作で再構築しない。
+    final reaction = ref.watch(
+      mockReactionsProvider.select((reactions) => reactions[post.id]),
+    );
+    final reacted = reaction == MockReaction.empathy;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -100,7 +103,7 @@ class PostCard extends ConsumerWidget {
                         child: Text(
                           post.authorName,
                           style: const TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -143,7 +146,7 @@ class PostCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(post.body, style: const TextStyle(fontSize: 14.5, height: 1.6)),
+          Text(post.body, style: const TextStyle(fontSize: 13.5, height: 1.6)),
           if (showOpenButton)
             TextButton(
               onPressed: () => Navigator.of(context).push<void>(

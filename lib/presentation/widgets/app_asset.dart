@@ -38,10 +38,13 @@ class AppAsset extends StatelessWidget {
         colorFilter: colorFilter,
       );
     }
+    // 表示サイズを超える解像度でデコードしない(メモリとデコード時間の節約)。
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     return Image.asset(
       asset,
       width: width,
       height: height,
+      cacheWidth: width == null ? null : (width! * pixelRatio).ceil(),
       excludeFromSemantics: excludeFromSemantics,
       semanticLabel: semanticsLabel,
       filterQuality: FilterQuality.medium,
