@@ -46,9 +46,10 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
   String? _message;
   String? _error;
 
-  /// 同じ送信の再送(通信の失敗など)では、同じキーを使う。確認を経て再送するときは、
-  /// 新しい送信として、新しいキーにする。
-  String _key = newIdempotencyKey();
+  /// 1回の「投稿する」操作につき、キーを1つだけ作り、確認後の再送や通信失敗の再送でも
+  /// 使い回す。409・422・503のときは保存もキーの消費もされないので、同じキーで再送してよい
+  /// (バックエンド確認済み)。キーを変えると、結果が不明なときに二重投稿になるおそれがある。
+  final String _key = newIdempotencyKey();
 
   Future<void> _submit() async {
     if (_busy) return;
@@ -114,14 +115,9 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
     }
   }
 
-  /// 確認表示のあと、「そのまま投稿する」。確認済みとして、新しい送信にする。
-  /// キーを新しくするのは、最初の確認のときだけ。確認後の送信が通信の失敗になって
-  /// 再試行するときは、同じキーのまま送る(サーバーで投稿済みでも重複しない)。
+  /// 確認表示のあと、「そのまま投稿する」。確認済みとして、同じキーで再送する。
   void _confirmAndSubmit() {
-    if (!_confirmed) {
-      _confirmed = true;
-      _key = newIdempotencyKey();
-    }
+    _confirmed = true;
     _submit();
   }
 
