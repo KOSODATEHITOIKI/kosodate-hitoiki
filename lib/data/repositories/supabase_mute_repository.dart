@@ -25,8 +25,10 @@ class SupabaseMuteRepository implements MuteRepository {
 
   @override
   Future<void> addWord(String word) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('ログインが必要です');
     try {
-      await _client.from('muted_words').insert({'word': word.trim()});
+      await _client.from('muted_words').insert(wordRow(userId, word));
     } on PostgrestException catch (error) {
       throw apiExceptionFor(error);
     }
@@ -36,6 +38,13 @@ class SupabaseMuteRepository implements MuteRepository {
   Future<void> removeWord(String word) async {
     await _client.from('muted_words').delete().eq('word', word);
   }
+
+  /// 追加する行。自分のIDが必要(表に既定値がなく、権限の条件が`user_id = auth.uid()`のため、
+  /// 付けないと「row-level security policyに違反」で拒否される)。前後の空白は除く。
+  static Map<String, dynamic> wordRow(String userId, String word) => {
+    'user_id': userId,
+    'word': word.trim(),
+  };
 
   /// PostgRESTの失敗を、画面で扱える失敗にする。上限超過は`54000`(`LIMIT_EXCEEDED`)、
   /// 重複は一意制約違反(`23505`・HTTP 409)。
