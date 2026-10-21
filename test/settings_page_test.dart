@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/presentation/pages/auth/legal_document_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/settings/settings_page.dart';
 
 void main() {
@@ -56,4 +57,30 @@ void main() {
     expect(find.byType(SettingsPage), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  for (final title in ['利用規約', 'プライバシーポリシー']) {
+    testWidgets('$titleを開いて読める(同意の操作は出さない)', (tester) async {
+      tester.view.physicalSize = const Size(390, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [isLoggedInProvider.overrideWithValue(false)],
+          child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+        ),
+      );
+      await tester.ensureVisible(find.text(title));
+      await tester.pumpAndSettle();
+      // 残る「準備中」は、お問い合わせだけ。
+      expect(find.text('準備中'), findsOneWidget);
+      await tester.tap(find.text(title));
+      await tester.pumpAndSettle();
+      expect(find.byType(LegalDocumentPage), findsOneWidget);
+      expect(find.byKey(const ValueKey('legal-done')), findsNothing);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsPage), findsOneWidget);
+    });
+  }
 }

@@ -10,6 +10,8 @@ import 'withdrawal_page.dart';
 import 'notification_settings_page.dart';
 import 'block_management_page.dart';
 import 'mute_management_page.dart';
+import '../auth/legal_document_page.dart';
+import '../auth/legal_documents.dart';
 import '../support/support_resources_page.dart';
 
 /// S-11。未接続の設定操作は案内だけを表示する。
@@ -138,6 +140,8 @@ class SettingsPage extends ConsumerWidget {
                           'ミュート管理',
                           'ブロック管理',
                           '困ったときの相談先',
+                          '利用規約',
+                          'プライバシーポリシー',
                         ].contains(group[index].$2)
                         ? null
                         : const Text('準備中', style: TextStyle(fontSize: 11)),
@@ -179,6 +183,18 @@ class SettingsPage extends ConsumerWidget {
                         Navigator.of(context).push<void>(
                           MaterialPageRoute(
                             builder: (_) => const SupportResourcesPage(),
+                          ),
+                        );
+                      } else if (group[index].$2 == '利用規約' ||
+                          group[index].$2 == 'プライバシーポリシー') {
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => LegalDocumentPage(
+                              readOnly: true,
+                              document: group[index].$2 == '利用規約'
+                                  ? LegalDocument.terms
+                                  : LegalDocument.privacy,
+                            ),
                           ),
                         );
                       } else {

@@ -7,8 +7,15 @@ import 'legal_documents.dart';
 /// 「同意する」を押せて、`true`を返して前の画面へ戻る。
 /// 途中で戻ったときは`null`を返す(チェックはつかない)。
 class LegalDocumentPage extends StatefulWidget {
-  const LegalDocumentPage({super.key, required this.document});
+  const LegalDocumentPage({
+    super.key,
+    required this.document,
+    this.readOnly = false,
+  });
   final LegalDocument document;
+
+  /// 読むだけ(設定から開く場合)。同意の操作を出さない。
+  final bool readOnly;
 
   @override
   State<LegalDocumentPage> createState() => _LegalDocumentPageState();
@@ -104,30 +111,31 @@ class _LegalDocumentPageState extends State<LegalDocumentPage> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (!_reachedEnd)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            '最後までスクロールすると、「同意する」を押せます。',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, height: 1.6),
+                if (!widget.readOnly)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!_reachedEnd)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              '最後までスクロールすると、「同意する」を押せます。',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12, height: 1.6),
+                            ),
                           ),
+                        FilledButton(
+                          key: const ValueKey('legal-done'),
+                          onPressed: _reachedEnd
+                              ? () => Navigator.of(context).pop(true)
+                              : null,
+                          child: const Text('同意する'),
                         ),
-                      FilledButton(
-                        key: const ValueKey('legal-done'),
-                        onPressed: _reachedEnd
-                            ? () => Navigator.of(context).pop(true)
-                            : null,
-                        child: const Text('同意する'),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
