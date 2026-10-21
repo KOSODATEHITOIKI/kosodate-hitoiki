@@ -184,7 +184,7 @@ class SupabasePostRepository implements PostRepository {
         .limit(pageSize);
     final me = await _client
         .from('public_profiles')
-        .select('nickname,icon_key')
+        .select('nickname,icon_key,avatar_path')
         .eq('id', myId)
         .maybeSingle();
     final saved = await _savedIds([
@@ -197,6 +197,7 @@ class SupabasePostRepository implements PostRepository {
           myUserId: myId,
           nickname: me?['nickname'] as String? ?? '',
           iconKey: me?['icon_key'] as String?,
+          avatarPath: me?['avatar_path'] as String?,
           isSaved: saved.contains(row['id']),
         ),
     ];
@@ -208,6 +209,7 @@ class SupabasePostRepository implements PostRepository {
     required String myUserId,
     required String nickname,
     String? iconKey,
+    String? avatarPath,
     bool isSaved = false,
   }) => postFromRow(
     {
@@ -215,6 +217,7 @@ class SupabasePostRepository implements PostRepository {
       'author_id': myUserId,
       'author_nickname': nickname,
       'author_icon_key': iconKey,
+      'author_avatar_path': avatarPath,
     },
     myUserId: myUserId,
     isSaved: isSaved,
@@ -339,8 +342,9 @@ class SupabasePostRepository implements PostRepository {
       id: row['id'] as String,
       authorId: authorId ?? '',
       authorName: row['author_nickname'] as String? ?? '',
-      authorAvatarAsset: AppAvatars.forIconKey(
-        row['author_icon_key'] as String?,
+      authorAvatarAsset: AppAvatars.forRow(
+        iconKey: row['author_icon_key'] as String?,
+        avatarPath: row['author_avatar_path'] as String?,
       ),
       createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
       type: postTypeFromCode(row['post_type'] as String?),

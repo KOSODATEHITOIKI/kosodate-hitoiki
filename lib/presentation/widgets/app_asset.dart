@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../core/constants/app_icons.dart';
+
 /// アプリ同梱の画像アセットを表示する。拡張子で描画方法を切り替える。
 ///
 /// - `.svg`: アイコンなど軽いベクター画像。`flutter_svg`で描画する。
@@ -28,6 +30,26 @@ class AppAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // アップロードされたアカウント画像(公開URL)。読めないときは、既定のイラストにする。
+    if (asset.startsWith('https://')) {
+      final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+      return Image.network(
+        asset,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        cacheWidth: width == null ? null : (width! * pixelRatio).ceil(),
+        excludeFromSemantics: excludeFromSemantics,
+        semanticLabel: semanticsLabel,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, _, _) => AppAsset(
+          AppAvatars.defaultSprout,
+          width: width,
+          height: height,
+          excludeFromSemantics: excludeFromSemantics,
+        ),
+      );
+    }
     if (asset.endsWith('.svg')) {
       return SvgPicture.asset(
         asset,
