@@ -4,7 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import 'legal_documents.dart';
 
 /// 利用規約・プライバシーポリシーを読む画面。最後までスクロールすると
-/// 「読みました」を押せて、`true`を返して前の画面へ戻る。
+/// 「同意する」を押せて、`true`を返して前の画面へ戻る。
 /// 途中で戻ったときは`null`を返す(チェックはつかない)。
 class LegalDocumentPage extends StatefulWidget {
   const LegalDocumentPage({super.key, required this.document});
@@ -113,7 +113,7 @@ class _LegalDocumentPageState extends State<LegalDocumentPage> {
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
                           child: Text(
-                            '最後までスクロールすると、「読みました」を押せます。',
+                            '最後までスクロールすると、「同意する」を押せます。',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontSize: 12, height: 1.6),
                           ),
@@ -123,7 +123,7 @@ class _LegalDocumentPageState extends State<LegalDocumentPage> {
                         onPressed: _reachedEnd
                             ? () => Navigator.of(context).pop(true)
                             : null,
-                        child: const Text('読みました(戻る)'),
+                        child: const Text('同意する'),
                       ),
                     ],
                   ),

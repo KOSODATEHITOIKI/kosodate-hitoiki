@@ -96,7 +96,7 @@ void main() {
     );
   }
 
-  /// 本文を開いて最後までスクロールし、「読みました」で戻る。
+  /// 本文を開いて最後までスクロールし、「同意する」で戻る。
   Future<void> readDocument(WidgetTester tester, Key consentKey) async {
     await tester.ensureVisible(find.byKey(consentKey));
     await tester.tap(find.byKey(consentKey));

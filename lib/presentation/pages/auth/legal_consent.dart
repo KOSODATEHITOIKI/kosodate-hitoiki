@@ -69,7 +69,7 @@ class _Row extends StatelessWidget {
     // 未読のときは、チェックを押すと本文が開く。読んだあとは、外すこともできる。
     onChanged: (value) => agreed ? onChanged(false) : _read(context),
     title: Text(
-      '${document.title}を読んで同意',
+      document.title,
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
     ),
   );
