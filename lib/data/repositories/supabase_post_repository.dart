@@ -249,18 +249,50 @@ class SupabasePostRepository implements PostRepository {
       await _client.from('saved_posts').delete().eq('post_id', postId);
       return;
     }
-    await _insertIgnoringDuplicate('saved_posts', {'post_id': postId});
+    await _insertIgnoringDuplicate(
+      'saved_posts',
+      savedRow(_requireUserId(), postId),
+    );
   }
 
   @override
   Future<void> hidePost(String postId) => _insertIgnoringDuplicate(
     'hidden_items',
-    {'target_type': 'post', 'target_id': postId},
+    hiddenRow(_requireUserId(), postId),
   );
 
   @override
   Future<void> blockUser(String userId) =>
-      _insertIgnoringDuplicate('blocks', {'blocked_id': userId});
+      _insertIgnoringDuplicate('blocks', blockRow(_requireUserId(), userId));
+
+  String _requireUserId() {
+    final id = _client.auth.currentUser?.id;
+    if (id == null) throw StateError('ログインが必要です');
+    return id;
+  }
+
+  // 保存・非表示・ブロックの行には、自分のIDが必要。表に既定値がなく、権限の条件が
+  // 「自分のID = auth.uid()」のため、付けないと「row-level security policyに違反」で
+  // 拒否される(API契約の例には書かれていないが、実際のサーバーで確認した)。
+
+  /// 保存の行。
+  static Map<String, dynamic> savedRow(String userId, String postId) => {
+    'user_id': userId,
+    'post_id': postId,
+  };
+
+  /// 投稿の非表示の行。
+  static Map<String, dynamic> hiddenRow(String userId, String postId) => {
+    'user_id': userId,
+    'target_type': 'post',
+    'target_id': postId,
+  };
+
+  /// ブロックの行。ブロックする側は`blocker_id`。
+  static Map<String, dynamic> blockRow(String blockerId, String blockedId) => {
+    'blocker_id': blockerId,
+    'blocked_id': blockedId,
+  };
 
   /// 追加する。すでにある(一意制約違反)ときは、何もしない(重ねても成功)。
   Future<void> _insertIgnoringDuplicate(

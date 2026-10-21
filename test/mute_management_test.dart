@@ -271,6 +271,13 @@ void main() {
     expect(words, ['ネタバレ']);
   });
 
+  test('追加する行には、自分のIDを付け、言葉の前後の空白は除く', () {
+    expect(SupabaseMuteRepository.wordRow('me', '  ネタバレ '), {
+      'user_id': 'me',
+      'word': 'ネタバレ',
+    });
+  });
+
   group('PostgRESTの失敗の変換', () {
     test('上限超過(54000)と重複(23505・409)を、画面で扱える失敗にする', () {
       expect(

@@ -224,4 +224,22 @@ void main() {
       );
     });
   });
+
+  group('追加する行には、自分のIDを付ける(付けないと、権限の条件で拒否される)', () {
+    test('保存・非表示は user_id、ブロックは blocker_id', () {
+      expect(SupabasePostRepository.savedRow('me', 'p-1'), {
+        'user_id': 'me',
+        'post_id': 'p-1',
+      });
+      expect(SupabasePostRepository.hiddenRow('me', 'p-1'), {
+        'user_id': 'me',
+        'target_type': 'post',
+        'target_id': 'p-1',
+      });
+      expect(SupabasePostRepository.blockRow('me', 'other'), {
+        'blocker_id': 'me',
+        'blocked_id': 'other',
+      });
+    });
+  });
 }
