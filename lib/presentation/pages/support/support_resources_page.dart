@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_icons.dart';
@@ -97,7 +97,7 @@ class SupportResourcesPage extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SvgPicture.asset(
+                      AppAsset(
                         item.$4,
                         width: 64,
                         height: 64,

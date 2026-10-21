@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_brand.dart';
@@ -68,7 +68,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                     shape: const StadiumBorder(),
                   ),
-                  icon: SvgPicture.asset(
+                  icon: AppAsset(
                     AppIcons.navCompose,
                     width: 24,
                     height: 24,
@@ -158,12 +158,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _illustration(String asset, double size) => SvgPicture.asset(
-    asset,
-    width: size,
-    height: size,
-    excludeFromSemantics: true,
-  );
+  Widget _illustration(String asset, double size) =>
+      AppAsset(asset, width: size, height: size, excludeFromSemantics: true);
 
   List<Widget> _buildFeed() {
     final feed = ref.watch(feedPostsProvider);
@@ -236,7 +232,7 @@ class _HomeHeader extends StatelessWidget {
             right: -40,
             child: ExcludeSemantics(
               child: IgnorePointer(
-                child: SvgPicture.asset(
+                child: AppAsset(
                   AppDecorations.cloudSoft,
                   width: 150,
                   height: 150,
@@ -248,7 +244,7 @@ class _HomeHeader extends StatelessWidget {
             top: -36,
             right: -50,
             child: ExcludeSemantics(
-              child: SvgPicture.asset(
+              child: AppAsset(
                 AppDecorations.sunSmiling,
                 width: 190,
                 height: 190,

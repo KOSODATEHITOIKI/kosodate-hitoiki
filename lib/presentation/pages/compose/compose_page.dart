@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
@@ -69,7 +69,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(
+              AppAsset(
                 AppDecorations.sunSmiling,
                 width: 96,
                 height: 96,
@@ -232,7 +232,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
       FilledButton.icon(
         key: const ValueKey('compose-submit'),
         onPressed: _body.text.trim().isEmpty ? null : _showPostingNotice,
-        icon: SvgPicture.asset(
+        icon: AppAsset(
           AppIcons.navCompose,
           width: 24,
           height: 24,

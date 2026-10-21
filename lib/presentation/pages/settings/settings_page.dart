@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
@@ -67,7 +67,7 @@ class SettingsPage extends StatelessWidget {
                       horizontal: 16,
                       vertical: 8,
                     ),
-                    leading: SvgPicture.asset(
+                    leading: AppAsset(
                       group[index].$1,
                       width: 28,
                       height: 28,
