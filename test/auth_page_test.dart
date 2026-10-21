@@ -157,7 +157,10 @@ void main() {
         tester.widget<Text>(find.text(text)).style?.color;
 
     // 条件が、最初から下に出ている。
-    expect(find.text('10文字以上で、英大文字・英小文字・数字を1文字ずつ以上入れてください。'), findsOneWidget);
+    expect(
+      find.text('10文字以上で、英大文字・英小文字・数字を、それぞれ1文字以上入れてください。'),
+      findsOneWidget,
+    );
 
     // 入力の途中は、足りないことを赤くせずに案内する。
     await tester.enterText(

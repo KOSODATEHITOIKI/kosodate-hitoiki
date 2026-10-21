@@ -13,5 +13,5 @@ class PasswordPolicy {
   static final digit = RegExp('[0-9]');
 
   /// 条件の説明(入力欄の下に常に出す)。
-  static const description = '$minLength文字以上で、英大文字・英小文字・数字を1文字ずつ以上入れてください。';
+  static const description = '$minLength文字以上で、英大文字・英小文字・数字を、それぞれ1文字以上入れてください。';
 }
