@@ -123,7 +123,7 @@ void main() {
     expect(find.byType(SupportResourcesPage), findsOneWidget);
   });
 
-  testWidgets('確認が必要なときは確認を出し、「そのまま投稿する」で confirmed:true・新しいキーで再送する', (
+  testWidgets('確認が必要なときは確認を出し、「そのまま投稿する」で confirmed:true・同じキーで再送する', (
     tester,
   ) async {
     final repository = ScriptedPostRepository([
@@ -146,11 +146,11 @@ void main() {
     expect(repository.calls, hasLength(2));
     expect(repository.calls[0].confirmed, isFalse);
     expect(repository.calls[1].confirmed, isTrue);
-    expect(repository.calls[1].key, isNot(repository.calls[0].key));
+    expect(repository.calls[1].key, repository.calls[0].key);
     expect(find.text('投稿しました。'), findsOneWidget);
   });
 
-  testWidgets('確認後の送信が通信の失敗になっても、再試行は同じキーで送る(二重投稿を防ぐ)', (tester) async {
+  testWidgets('1回の投稿操作では、確認・通信の失敗・再試行のすべてで同じキーを使う(二重投稿を防ぐ)', (tester) async {
     final repository = ScriptedPostRepository([
       const ApiException(
         code: 'MODERATION_CONFIRM_REQUIRED',
@@ -169,11 +169,10 @@ void main() {
     await tapKey(tester, 'compose-send'); // 再試行 → 成功
 
     expect(repository.calls, hasLength(4));
-    final confirmedKeys = repository.calls.skip(1).map((c) => c.key).toSet();
-    // 確認後の3回は、すべて同じキー。確認前のキーとは別。
-    expect(confirmedKeys, hasLength(1));
-    expect(confirmedKeys.single, isNot(repository.calls.first.key));
+    // 確認前の1回と、確認後の3回が、すべて同じキー。
+    expect(repository.calls.map((c) => c.key).toSet(), hasLength(1));
     expect(repository.calls.skip(1).every((c) => c.confirmed), isTrue);
+    expect(repository.calls.first.confirmed, isFalse);
     expect(find.text('投稿しました。'), findsOneWidget);
   });
 
