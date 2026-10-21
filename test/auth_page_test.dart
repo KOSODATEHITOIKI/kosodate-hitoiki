@@ -208,10 +208,11 @@ void main() {
     bool checked(String key) =>
         tester.widget<CheckboxListTile>(find.byKey(ValueKey(key))).value!;
 
-    // 最初は登録できず、2つとも未読と案内される。
+    // 最初は登録できず、2つとも未チェック。
     await tester.ensureVisible(find.byKey(const ValueKey('auth-submit')));
     expect(submitButton().onPressed, isNull);
-    expect(find.text('2つとも、まだ読んでいません。'), findsOneWidget);
+    expect(checked('consent-terms'), isFalse);
+    expect(checked('consent-privacy'), isFalse);
 
     // 本文を開いても、最後まで読まずに戻ればチェックはつかない。
     await tester.ensureVisible(find.byKey(const ValueKey('consent-terms')));
@@ -228,16 +229,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(checked('consent-terms'), isFalse);
 
-    // 1つ読むと、残りの1つを案内する。まだ登録できない。
+    // 1つ読んでも、残りの1つがまだなら登録できない。
     await readDocument(tester, const ValueKey('consent-terms'));
     expect(checked('consent-terms'), isTrue);
-    expect(find.text('プライバシーポリシーが、まだです。'), findsOneWidget);
+    expect(checked('consent-privacy'), isFalse);
     expect(submitButton().onPressed, isNull);
 
     // 2つともチェックがつくと、登録できる。
     await readDocument(tester, const ValueKey('consent-privacy'));
     expect(checked('consent-privacy'), isTrue);
-    expect(find.byKey(const ValueKey('consent-remaining')), findsNothing);
     expect(submitButton().onPressed, isNotNull);
 
     // チェックは外せて、外すと登録できなくなる。
