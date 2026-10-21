@@ -24,6 +24,8 @@ String authErrorMessage(Object error) {
         return '確認メールのリンクを開いてから、ログインしてください。';
       case 'weak_password':
         return 'パスワードが条件を満たしていません。${PasswordPolicy.description}';
+      case 'same_password':
+        return '今のパスワードと同じです。別のパスワードにしてください。';
       case 'over_email_send_rate_limit':
       case 'over_request_rate_limit':
         return 'しばらく時間をおいてから、もう一度お試しください。';
