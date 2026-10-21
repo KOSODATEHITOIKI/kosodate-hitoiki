@@ -8,6 +8,7 @@ import 'presentation/pages/welcome/welcome_page.dart';
 import 'presentation/widgets/main_navigation_shell.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/comment_providers.dart';
+import 'presentation/providers/profile_providers.dart';
 import 'presentation/providers/post_providers.dart';
 
 class App extends ConsumerWidget {
@@ -20,6 +21,7 @@ class App extends ConsumerWidget {
       if (previous != next) {
         ref.invalidate(postRepositoryProvider);
         ref.invalidate(commentRepositoryProvider);
+        ref.invalidate(profileRepositoryProvider);
       }
     });
     return MaterialApp(

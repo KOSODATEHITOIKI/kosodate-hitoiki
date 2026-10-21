@@ -9,7 +9,13 @@ class ScriptedPostRepository implements PostRepository {
     List<Object>? editScript,
     this.deleteError,
     this.actionError,
+    this.myPosts = const [],
+    this.savedPosts = const [],
   }) : editScript = editScript ?? [];
+
+  /// マイページの「自分の投稿」「保存した投稿」に返す一覧。
+  final List<Post> myPosts;
+  final List<Post> savedPosts;
 
   /// 作成の呼び出しごとに1つ使う。[CreatedPost]なら成功、`Future Function()`なら
   /// その結果を待つ(送信中の状態を作る)、それ以外は投げる。
@@ -75,10 +81,10 @@ class ScriptedPostRepository implements PostRepository {
       const [];
 
   @override
-  Future<List<Post>> fetchMyPosts() async => const [];
+  Future<List<Post>> fetchMyPosts() async => myPosts;
 
   @override
-  Future<List<Post>> fetchSavedPosts() async => const [];
+  Future<List<Post>> fetchSavedPosts() async => savedPosts;
 
   @override
   Future<void> hidePost(String postId) async {

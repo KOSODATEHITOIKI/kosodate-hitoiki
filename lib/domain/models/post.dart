@@ -61,6 +61,7 @@ class Post {
     this.isMine = false,
     this.isSaved = false,
     this.commentsOpen = true,
+    this.underReview = false,
   });
 
   final String id;
@@ -80,6 +81,9 @@ class Post {
   /// 既存のコメントは残り、新しいコメント・返信は送れない)。
   final bool commentsOpen;
 
+  /// 通報による一時非表示で、運営が確認中。投稿者本人にだけ見える(「確認中」と表示する)。
+  final bool underReview;
+
   Post copyWith({bool? isSaved, ResponseMode? responseMode, String? body}) =>
       Post(
         id: id,
@@ -95,5 +99,6 @@ class Post {
         isMine: isMine,
         isSaved: isSaved ?? this.isSaved,
         commentsOpen: commentsOpen,
+        underReview: underReview,
       );
 }

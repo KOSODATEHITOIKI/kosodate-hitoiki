@@ -143,8 +143,22 @@ class PostCard extends ConsumerWidget {
                 label: post.responseMode.label,
                 background: AppColors.accentPink,
               ),
+              if (post.underReview)
+                const _Tag(
+                  key: ValueKey('under-review-tag'),
+                  label: '確認中',
+                  background: AppColors.divider,
+                ),
             ],
           ),
+          if (post.underReview) ...[
+            const SizedBox(height: 8),
+            const Text(
+              '通報があったため、いまは、ほかの人には表示されていません。運営が確認しています。',
+              key: ValueKey('under-review-note'),
+              style: TextStyle(fontSize: 12, height: 1.7),
+            ),
+          ],
           const SizedBox(height: 12),
           Text(post.body, style: const TextStyle(fontSize: 13.5, height: 1.6)),
           if (showOpenButton)
@@ -273,7 +287,7 @@ class PostCard extends ConsumerWidget {
 }
 
 class _Tag extends StatelessWidget {
-  const _Tag({required this.label, required this.background});
+  const _Tag({super.key, required this.label, required this.background});
   final String label;
   final Color background;
 
