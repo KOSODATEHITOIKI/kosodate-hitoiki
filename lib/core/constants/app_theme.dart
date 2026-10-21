@@ -49,6 +49,10 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.white,
         contentPadding: const EdgeInsets.all(16),
+        // 入力欄の下の案内・エラーは、既定だと1行で「…」に省略され、読めない。
+        // 長い文でも折り返して全部見えるようにする(文字拡大でも欠けない)。
+        helperMaxLines: 4,
+        errorMaxLines: 4,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
