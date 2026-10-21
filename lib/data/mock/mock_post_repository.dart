@@ -181,6 +181,14 @@ class MockPostRepository implements PostRepository {
     _posts.removeWhere((post) => post.id == postId);
   }
 
+  /// サンプルでは、保存しない(画面は、画面内のプレビューだけで変える)。
+  @override
+  Future<void> updateReactionMode({
+    required String postId,
+    required ResponseMode mode,
+    bool? commentsOpen,
+  }) async {}
+
   @override
   Future<void> hidePost(String postId) async {
     _posts.removeWhere((post) => post.id == postId);

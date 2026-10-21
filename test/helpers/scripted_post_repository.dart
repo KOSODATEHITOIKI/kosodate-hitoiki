@@ -9,6 +9,7 @@ class ScriptedPostRepository implements PostRepository {
     List<Object>? editScript,
     this.deleteError,
     this.actionError,
+    this.modeError,
     this.myPosts = const [],
     this.savedPosts = const [],
   }) : editScript = editScript ?? [];
@@ -36,6 +37,11 @@ class ScriptedPostRepository implements PostRepository {
   final hideCalls = <String>[];
   final blockCalls = <String>[];
   final saveCalls = <String>[];
+
+  /// 反応モード・受付状態の変更で投げるエラー(nullなら成功)。
+  final Object? modeError;
+  final modeCalls =
+      <({String postId, ResponseMode mode, bool? commentsOpen})>[];
 
   @override
   bool get isSample => sample;
@@ -91,6 +97,16 @@ class ScriptedPostRepository implements PostRepository {
 
   @override
   Future<List<Post>> fetchSavedPosts() async => savedPosts;
+
+  @override
+  Future<void> updateReactionMode({
+    required String postId,
+    required ResponseMode mode,
+    bool? commentsOpen,
+  }) async {
+    modeCalls.add((postId: postId, mode: mode, commentsOpen: commentsOpen));
+    if (modeError != null) throw modeError!;
+  }
 
   @override
   Future<void> hidePost(String postId) async {
