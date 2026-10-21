@@ -64,6 +64,8 @@ class _NotificationSettingsPageState
         replies: kind == _Kind.replies ? value : null,
         reactions: kind == _Kind.reactions ? value : null,
       );
+      // 開き直したとき、古い値が出ないようにする。
+      if (mounted) ref.invalidate(notificationSettingsProvider);
     } catch (_) {
       if (!mounted) return;
       setState(() => _settings = _with(_settings ?? before, kind, !value));

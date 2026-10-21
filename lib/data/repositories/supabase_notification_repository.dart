@@ -82,10 +82,13 @@ class SupabaseNotificationRepository implements NotificationRepository {
       reactions: reactions,
     );
     if (body.isEmpty) return;
-    await _client
+    // 行がなければ0件の更新になり、エラーにならない。変更できていないことを失敗として扱う。
+    final updated = await _client
         .from('notification_settings')
         .update(body)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select('user_id');
+    if (updated.isEmpty) throw StateError('通知の設定の行がありません');
   }
 
   /// 設定の行を、通知の設定にする。
