@@ -8,6 +8,8 @@ import 'core/widgets/startup_error_app.dart';
 import 'data/datasources/supabase_client_provider.dart';
 import 'data/repositories/supabase_comment_repository.dart';
 import 'data/repositories/supabase_post_repository.dart';
+import 'data/repositories/supabase_report_repository.dart';
+import 'presentation/providers/report_providers.dart';
 import 'presentation/providers/comment_providers.dart';
 import 'presentation/providers/post_providers.dart';
 
@@ -32,6 +34,9 @@ Future<void> main() async {
         ),
         commentRepositoryProvider.overrideWith(
           (ref) => SupabaseCommentRepository(ref.watch(supabaseClientProvider)),
+        ),
+        reportRepositoryProvider.overrideWith(
+          (ref) => SupabaseReportRepository(ref.watch(supabaseClientProvider)),
         ),
       ],
       child: const App(),

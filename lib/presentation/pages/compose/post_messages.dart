@@ -34,6 +34,9 @@ String postFailureMessage(Object error) {
     if (reason == 'restricted') {
       return '現在、投稿やコメントができません。';
     }
+    if (reason == 'not_allowed') {
+      return '自分の投稿・コメントは、通報できません。';
+    }
     if (error.code == 'NOT_FOUND') {
       return '見つかりませんでした。すでに削除されているかもしれません。';
     }
