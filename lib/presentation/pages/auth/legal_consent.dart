@@ -70,7 +70,7 @@ class _Row extends StatelessWidget {
     onChanged: (value) => agreed ? onChanged(false) : _read(context),
     title: Text(
       '${document.title}を読んで同意',
-      style: const TextStyle(fontSize: 14),
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
     ),
   );
 }
