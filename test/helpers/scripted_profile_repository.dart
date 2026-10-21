@@ -25,7 +25,8 @@ class ScriptedProfileRepository implements ProfileRepository {
   final List<Object> fetchErrors;
   var fetchCount = 0;
 
-  /// 呼び出しごとに1つ使う。nullなら成功、それ以外は投げる。
+  /// 呼び出しごとに1つ使う。nullなら成功、`Future<void> Function()`ならその結果を待つ(ニックネーム変更)、
+  /// それ以外は投げる。
   final List<Object?> nicknameScript;
   final List<Object?> updateScript;
   final nicknameCalls = <({String nickname, bool confirmed})>[];
@@ -50,6 +51,7 @@ class ScriptedProfileRepository implements ProfileRepository {
   }) async {
     nicknameCalls.add((nickname: nickname, confirmed: confirmed));
     final next = nicknameScript.removeAt(0);
+    if (next is Future<void> Function()) return next();
     if (next != null) throw next;
   }
 

@@ -74,8 +74,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   }
 
   /// 自分のプロフィールと、投稿・コメントに出る名前・アイコンを、取り直す。
-  void _refreshCaches() {
-    ref
+  ///
+  /// 保存の応答を待つ間に、画面が閉じられる(戻る操作・利用者の切り替え)ことがある。
+  /// 閉じたあとの`ref`は使えないので、保存を始める前に取っておいた[container]で
+  /// 行う(画面が閉じても、保存できた変更は、表示に反映する)。
+  static void _refreshCaches(ProviderContainer container) {
+    container
       ..invalidate(myProfileProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider)
@@ -124,6 +128,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       _error = null;
     });
     final repository = ref.read(profileRepositoryProvider);
+    final container = ProviderScope.containerOf(context);
     try {
       if (nicknameChanged) {
         final error = await runModerated(
@@ -140,7 +145,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         // ここまでは保存できた。次の項目が失敗しても、ニックネームは二重に送らない。
         // また、ここで終わっても表示が古いまま残らないよう、すぐに取り直す。
         _origNickname = nickname;
-        _refreshCaches();
+        _refreshCaches(container);
       }
       if (bioChanged || iconChanged) {
         if (!mounted) return;
@@ -157,8 +162,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
           return;
         }
       }
+      _refreshCaches(container);
       if (!mounted) return;
-      _refreshCaches();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('プロフィールを保存しました')));
