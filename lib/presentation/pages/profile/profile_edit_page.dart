@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
@@ -67,7 +67,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             'アイコンを選ぶ',
             Column(
               children: [
-                SvgPicture.asset(
+                AppAsset(
                   _avatar,
                   width: 96,
                   height: 96,
@@ -105,7 +105,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                   width: 2,
                                 ),
                               ),
-                              child: SvgPicture.asset(
+                              child: AppAsset(
                                 item.$1,
                                 width: 56,
                                 height: 56,

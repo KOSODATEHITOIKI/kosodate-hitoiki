@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
@@ -58,7 +58,7 @@ class MainNavigationShell extends ConsumerWidget {
     );
   }
 
-  static Widget _navIcon(String asset, Color color) => SvgPicture.asset(
+  static Widget _navIcon(String asset, Color color) => AppAsset(
     asset,
     width: 24,
     height: 24,

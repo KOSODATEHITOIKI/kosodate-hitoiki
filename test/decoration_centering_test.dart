@@ -1,8 +1,11 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
+
+/// 重いためPNG化した装飾(SVG原本は`design/svg-src/`)。
+const _heavy = {'sun-smiling', 'sun-simple'};
 
 void main() {
   for (final name in [
@@ -19,8 +22,8 @@ void main() {
           child: Center(
             child: RepaintBoundary(
               key: key,
-              child: SvgPicture.asset(
-                'assets/decorations/decoration-$name.svg',
+              child: AppAsset(
+                'assets/decorations/decoration-$name.${_heavy.contains(name) ? 'png' : 'svg'}',
                 width: 240,
                 height: 240,
               ),
@@ -32,6 +35,14 @@ void main() {
       final boundary =
           key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       await tester.runAsync(() async {
+        // PNGは非同期にデコードされるため、描画前に読み込みを待つ。
+        if (_heavy.contains(name)) {
+          await precacheImage(
+            AssetImage('assets/decorations/decoration-$name.png'),
+            key.currentContext!,
+          );
+          await tester.pump();
+        }
         final image = await boundary.toImage(pixelRatio: 1);
         final rgba = (await image.toByteData(
           format: ui.ImageByteFormat.rawRgba,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/comfort_page.dart';
@@ -64,7 +64,7 @@ class _NotificationSettingsPageState
                   child: Column(
                     children: [
                       SwitchListTile(
-                        secondary: SvgPicture.asset(
+                        secondary: AppAsset(
                           AppIcons.comment,
                           width: 28,
                           height: 28,
@@ -87,7 +87,7 @@ class _NotificationSettingsPageState
                       const Divider(height: 1),
                       SwitchListTile(
                         value: _replies,
-                        secondary: SvgPicture.asset(
+                        secondary: AppAsset(
                           AppIcons.reply,
                           width: 28,
                           height: 28,
@@ -108,7 +108,7 @@ class _NotificationSettingsPageState
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
-                        secondary: SvgPicture.asset(
+                        secondary: AppAsset(
                           AppIcons.heart,
                           width: 28,
                           height: 28,

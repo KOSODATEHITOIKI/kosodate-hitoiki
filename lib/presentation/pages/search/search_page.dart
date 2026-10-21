@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
@@ -109,7 +109,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ),
           child: Row(
             children: [
-              SvgPicture.asset(
+              AppAsset(
                 AppDecorations.leavesSprout,
                 width: 36,
                 height: 36,

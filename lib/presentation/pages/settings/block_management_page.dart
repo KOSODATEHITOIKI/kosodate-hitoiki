@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_icons.dart';
 import '../../providers/auth_provider.dart';
@@ -102,7 +102,7 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
                                       20;
                               final identity = Row(
                                 children: [
-                                  SvgPicture.asset(
+                                  AppAsset(
                                     AppAvatars.defaultBlueFlowers,
                                     width: 48,
                                     height: 48,

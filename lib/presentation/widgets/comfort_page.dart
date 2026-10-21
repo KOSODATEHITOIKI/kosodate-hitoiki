@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_brand.dart';
 import '../../core/constants/app_icons.dart';
@@ -104,7 +104,7 @@ class _ComfortHeader extends StatelessWidget {
             right: -20,
             child: ExcludeSemantics(
               child: IgnorePointer(
-                child: SvgPicture.asset(
+                child: AppAsset(
                   illustration!,
                   width: illustrationSize,
                   height: illustrationSize,
@@ -118,7 +118,7 @@ class _ComfortHeader extends StatelessWidget {
             right: -40,
             child: ExcludeSemantics(
               child: IgnorePointer(
-                child: SvgPicture.asset(
+                child: AppAsset(
                   AppDecorations.cloudSoft,
                   width: 150,
                   height: 150,
@@ -130,7 +130,7 @@ class _ComfortHeader extends StatelessWidget {
             top: -36,
             right: -50,
             child: ExcludeSemantics(
-              child: SvgPicture.asset(
+              child: AppAsset(
                 AppDecorations.sunSmiling,
                 width: 190,
                 height: 190,
@@ -198,7 +198,7 @@ class _ComfortHeader extends StatelessWidget {
                       !useBrandLogo &&
                       titleImage == null) ...[
                     const SizedBox(width: 4),
-                    SvgPicture.asset(
+                    AppAsset(
                       AppDecorations.leavesSprout,
                       width: 28,
                       height: 28,
@@ -253,12 +253,7 @@ class ComfortNotice extends StatelessWidget {
     ),
     child: Column(
       children: [
-        SvgPicture.asset(
-          asset,
-          width: 144,
-          height: 144,
-          excludeFromSemantics: true,
-        ),
+        AppAsset(asset, width: 144, height: 144, excludeFromSemantics: true),
         const SizedBox(height: 16),
         Text(
           title,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
@@ -102,10 +102,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                     color: AppColors.surface,
                     shape: BoxShape.circle,
                   ),
-                  child: SvgPicture.asset(
-                    item.asset,
-                    excludeFromSemantics: true,
-                  ),
+                  child: AppAsset(item.asset, excludeFromSemantics: true),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

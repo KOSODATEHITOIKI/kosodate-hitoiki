@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -76,7 +76,7 @@ class PostCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipOval(
-                child: SvgPicture.asset(
+                child: AppAsset(
                   post.authorAvatarAsset,
                   width: 36,
                   height: 36,
@@ -235,7 +235,7 @@ class PostCard extends ConsumerWidget {
               IconButton(
                 onPressed: () => togglePostSaved(context, ref, post),
                 tooltip: post.isSaved ? '保存を解除' : '保存する',
-                icon: SvgPicture.asset(
+                icon: AppAsset(
                   post.isSaved ? AppIcons.bookmarkSaved : AppIcons.bookmark,
                   width: 22,
                   height: 22,
@@ -318,7 +318,7 @@ class _FooterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
+            AppAsset(
               icon,
               width: 16,
               height: 16,
