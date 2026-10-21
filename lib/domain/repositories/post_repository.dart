@@ -18,6 +18,17 @@ abstract class PostRepository {
   /// 自分が保存したもの。
   Future<List<Post>> fetchSavedPosts();
 
+  /// 投稿を作る。送信前チェックはサーバー側で行われ、確認が必要なとき・送信不可のときは
+  /// `ApiException`(`isConfirmRequired`・`isRejected`)で失敗する。確認後は[confirmed]を
+  /// trueにして再送する。[idempotencyKey]は、同じ送信の再送では同じ値にする。
+  Future<CreatedPost> createPost({
+    required PostType type,
+    required ResponseMode responseMode,
+    required String body,
+    required String idempotencyKey,
+    bool confirmed = false,
+  });
+
   /// 投稿の保存/保存解除を切り替える。
   Future<void> toggleSaved(String postId);
 }

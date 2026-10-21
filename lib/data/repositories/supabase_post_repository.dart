@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_icons.dart';
+import '../api/api_exception.dart';
 import '../../domain/models/post.dart';
 import '../../domain/repositories/post_repository.dart';
 
@@ -11,7 +12,7 @@ import '../../domain/repositories/post_repository.dart';
 /// 非表示・ミュートが適用される(kosodate-hitoiki-backend docs/API契約.md 3・6節)。
 ///
 /// 接続の段階(バックエンド docs/Flutter結合ガイド.md 2節):
-/// 段2 = 一覧・検索(ここ)。自分の投稿・保存は段4・6、保存の切り替えは段4で接続する。
+/// 段2 = 一覧・検索、段3 = 投稿の作成(ここ)。自分の投稿・保存の一覧は段6、保存の切り替えは段4で接続する。
 class SupabasePostRepository implements PostRepository {
   SupabasePostRepository(this._client);
 
@@ -39,6 +40,55 @@ class SupabasePostRepository implements PostRepository {
         postFromRow((row as Map).cast<String, dynamic>(), myUserId: myId),
     ];
   }
+
+  /// 投稿の作成(`POST /functions/v1/posts`)。送信前チェックもこのAPIの中で行われる。
+  @override
+  Future<CreatedPost> createPost({
+    required PostType type,
+    required ResponseMode responseMode,
+    required String body,
+    required String idempotencyKey,
+    bool confirmed = false,
+  }) async {
+    try {
+      final response = await _client.functions.invoke(
+        'posts',
+        headers: {'Idempotency-Key': idempotencyKey},
+        body: createBody(
+          type: type,
+          responseMode: responseMode,
+          body: body,
+          confirmed: confirmed,
+        ),
+      );
+      final data = (response.data as Map).cast<String, dynamic>();
+      return CreatedPost(
+        id: data['id'] as String,
+        createdAt: DateTime.parse(data['created_at'] as String).toLocal(),
+        supportNotice: data['support_notice'] == true,
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// 投稿作成APIのリクエスト本文。話題は、マスタが未決定のため送らない。
+  static Map<String, dynamic> createBody({
+    required PostType type,
+    required ResponseMode responseMode,
+    required String body,
+    bool confirmed = false,
+  }) => {
+    'post_type': postTypeCode(type),
+    'body': body.trim(),
+    'reaction_mode': reactionModeCode(responseMode),
+    if (confirmed) 'confirmed': true,
+  };
+
+  static String reactionModeCode(ResponseMode mode) => switch (mode) {
+    ResponseMode.listening => 'quiet_support',
+    ResponseMode.advice => 'want_comments',
+  };
 
   // 自分の投稿・保存した投稿は、投稿の作成(段3)・保存(段4)・マイページ(段6)の
   // 接続まで、空を返す(サンプルを見せない)。

@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_page.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
+import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/main_navigation_shell.dart';
+
+import 'helpers/scripted_post_repository.dart';
+
+/// ログイン済みの利用者として、書く画面を開く設定。
+final _loggedIn = isLoggedInProvider.overrideWithValue(true);
 
 void main() {
   testWidgets('初回案内は320px文字2倍でも延期でき、本文を失わない', (tester) async {
@@ -12,6 +21,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [_loggedIn],
         child: MaterialApp(
           theme: AppTheme.light,
           home: const MediaQuery(
@@ -92,6 +102,7 @@ void main() {
   testWidgets('空白だけでは投稿不可、初回案内と確認後も本文を保持する', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [_loggedIn],
         child: MaterialApp(
           theme: AppTheme.light,
           home: const Scaffold(body: ComposePage()),
@@ -154,6 +165,149 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  Future<void> typeAndPressPost(WidgetTester tester, String text) async {
+    await tester.enterText(find.byType(TextField), text);
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('compose-submit')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('未ログインで「投稿する」を押すと、登録・ログインを案内し、入力は残る', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [isLoggedInProvider.overrideWithValue(false)],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    expect(find.byType(AuthPage), findsOneWidget);
+    expect(find.text('はじめて投稿する前に'), findsNothing);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byType(TextField),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      '今日は少し疲れた。',
+    );
+  });
+
+  testWidgets('投稿できたら、下書きを空にして、ホームのタブへ戻る', (tester) async {
+    final repository = ScriptedPostRepository([created()]);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          _loggedIn,
+          postRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ComposePage)),
+    );
+    container.read(bottomNavIndexProvider.notifier).state = 2;
+
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    await tester.tap(find.text('確認して書く'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-send')));
+    await tester.pumpAndSettle();
+    expect(repository.calls.single.body, '今日は少し疲れた。');
+
+    await tester.tap(find.byKey(const ValueKey('compose-done')));
+    await tester.pumpAndSettle();
+    expect(container.read(bottomNavIndexProvider), 0);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      isEmpty,
+    );
+  });
+
+  testWidgets('ゲストがログインしても下書きは残り、ログアウト・別の利用者への切り替えでは消える', (tester) async {
+    final user = StateProvider<String?>((ref) => null);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          currentUserIdProvider.overrideWith((ref) => ref.watch(user)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ComposePage)),
+    );
+    String draft() =>
+        tester.widget<TextField>(find.byType(TextField)).controller!.text;
+
+    await tester.enterText(find.byType(TextField), 'ゲストの下書き');
+    await tester.pumpAndSettle();
+
+    // ゲスト → ログイン: 残る。
+    container.read(user.notifier).state = 'user-a';
+    await tester.pumpAndSettle();
+    expect(draft(), 'ゲストの下書き');
+
+    // 別の利用者に切り替え: 消える。
+    container.read(user.notifier).state = 'user-b';
+    await tester.pumpAndSettle();
+    expect(draft(), isEmpty);
+
+    // ログアウト: 消える。
+    await tester.enterText(find.byType(TextField), 'Bの下書き');
+    container.read(user.notifier).state = null;
+    await tester.pumpAndSettle();
+    expect(draft(), isEmpty);
+  });
+
+  testWidgets('話題は、サンプルのときだけ選べる(実データには送れないため)', (tester) async {
+    for (final sample in [false, true]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            postRepositoryProvider.overrideWithValue(
+              ScriptedPostRepository([], sample: sample),
+            ),
+          ],
+          child: MaterialApp(
+            key: ValueKey(sample),
+            theme: AppTheme.light,
+            home: const Scaffold(body: ComposePage()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('compose-submit')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('話題（任意・1つ）'), sample ? findsOneWidget : findsNothing);
+    }
+  });
+
   testWidgets('小さい画面と拡大文字で種類・反応の希望を変更できる', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;

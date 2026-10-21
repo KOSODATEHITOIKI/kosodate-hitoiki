@@ -6,11 +6,14 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../domain/models/post.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/post_providers.dart';
 import '../../widgets/comfort_page.dart';
+import '../../widgets/main_navigation_shell.dart';
 import '../../widgets/topic_picker.dart';
+import '../auth/auth_page.dart';
 import 'compose_review_page.dart';
 
-/// S-04。投稿API・送信前チェックとの接続はIssue #20で行う。
+/// S-04。投稿は、確認画面から投稿作成API(送信前チェックもサーバー側)を呼ぶ。
 class ComposePage extends ConsumerStatefulWidget {
   const ComposePage({super.key, this.initialPost});
   final Post? initialPost;
@@ -60,6 +63,14 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     if (_body.text.trim().isEmpty || _body.text.characters.length > 1000) {
       return;
     }
+    // 書く画面は未ログインでも開けて入力できる。投稿を押した時点で、登録・ログインを
+    // 案内する。入力した文章は残る(要件定義書6.2.4)。
+    if (!ref.read(isLoggedInProvider)) {
+      await Navigator.of(
+        context,
+      ).push<void>(MaterialPageRoute(builder: (_) => const AuthPage()));
+      return;
+    }
     if (!_guideSeen && widget.initialPost == null) {
       final accepted = await showDialog<bool>(
         context: context,
@@ -98,25 +109,34 @@ class _ComposePageState extends ConsumerState<ComposePage> {
       return;
     }
     if (!mounted) return;
-    await Navigator.of(context).push<void>(
+    final posted = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => ComposeReviewPage(
           body: _body.text,
-          postType: _postType,
+          postType: PostType.values.firstWhere(
+            (type) => type.label == _postType,
+          ),
           responseMode: _mode == _ResponseMode.listening
-              ? 'ただ聞いてほしい'
-              : '話を聞きたい',
+              ? ResponseMode.listening
+              : ResponseMode.advice,
           topic: _topic,
           editing: widget.initialPost != null,
         ),
       ),
     );
+    // 投稿できたら、下書きを空にして、ホームへ戻る。
+    if (posted == true && mounted) {
+      setState(_resetDraft);
+      ref.read(bottomNavIndexProvider.notifier).state = 0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
-      if (previous != next) setState(_resetDraft);
+      // ゲストがログインして書き続けるときは、入力を残す(登録・ログインの案内の
+      // 約束)。ログアウトや、別の利用者への切り替えのときだけ破棄する。
+      if (previous != null && previous != next) setState(_resetDraft);
     });
     return _build(context);
   }
@@ -203,31 +223,38 @@ class _ComposePageState extends ConsumerState<ComposePage> {
           ],
         ),
       ),
-      const SizedBox(height: 16),
-      _section(
-        '話題（任意・1つ）',
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final topic in kMockTopics)
-              ChoiceChip(
-                label: Text(topic, maxLines: 1, softWrap: false),
-                labelStyle: const TextStyle(fontSize: 12),
-                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                selected: _topic == topic,
-                onSelected: (selected) =>
-                    setState(() => _topic = selected ? topic : null),
-                showCheckmark: false,
-                selectedColor: AppColors.secondary,
-                backgroundColor: AppColors.background,
-                shape: const StadiumBorder(),
-                side: const BorderSide(color: AppColors.divider),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              ),
-          ],
+      // 話題のマスタは未決定(バックエンド 未決事項)で、実データには送れない。
+      // 選べるようにするのは、サンプル(モック)のときだけにする。
+      if (ref.watch(postsAreSampleProvider)) ...[
+        const SizedBox(height: 16),
+        _section(
+          '話題（任意・1つ）',
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final topic in kMockTopics)
+                ChoiceChip(
+                  label: Text(topic, maxLines: 1, softWrap: false),
+                  labelStyle: const TextStyle(fontSize: 12),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                  selected: _topic == topic,
+                  onSelected: (selected) =>
+                      setState(() => _topic = selected ? topic : null),
+                  showCheckmark: false,
+                  selectedColor: AppColors.secondary,
+                  backgroundColor: AppColors.background,
+                  shape: const StadiumBorder(),
+                  side: const BorderSide(color: AppColors.divider),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
+      ],
       const SizedBox(height: 24),
       FilledButton.icon(
         key: const ValueKey('compose-submit'),
@@ -248,7 +275,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
       ),
       const SizedBox(height: 12),
       const Text(
-        '入力内容はこの画面を開いている間だけ保持されます。\n投稿機能は準備中です。',
+        '入力内容はこの画面を開いている間だけ保持されます。',
         textAlign: TextAlign.center,
         style: TextStyle(fontSize: 11, height: 1.6),
       ),

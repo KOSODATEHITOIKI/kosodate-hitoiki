@@ -18,6 +18,22 @@ enum ResponseMode {
   final String label;
 }
 
+/// 投稿の作成に成功した結果(`POST /functions/v1/posts`の201応答)。
+class CreatedPost {
+  const CreatedPost({
+    required this.id,
+    required this.createdAt,
+    this.supportNotice = false,
+  });
+
+  final String id;
+  final DateTime createdAt;
+
+  /// 本人にだけ、相談先を案内する(自分や子どもへの危害をほのめかす内容のとき)。
+  /// 投稿は止めず、他の利用者には分からない(API契約3節・要件定義書6.2.1)。
+  final bool supportNotice;
+}
+
 /// 投稿(F-01)。バックエンド未接続の間はMockPostRepositoryが返す。
 class Post {
   const Post({

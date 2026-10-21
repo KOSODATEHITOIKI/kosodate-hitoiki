@@ -116,6 +116,35 @@ class MockPostRepository implements PostRepository {
   }
 
   @override
+  Future<CreatedPost> createPost({
+    required PostType type,
+    required ResponseMode responseMode,
+    required String body,
+    required String idempotencyKey,
+    bool confirmed = false,
+  }) async {
+    final now = DateTime.now();
+    final id = 'mine-${_posts.length + 1}';
+    _posts.insert(
+      0,
+      Post(
+        id: id,
+        authorId: 'sample-komorebi',
+        authorName: 'こもれび',
+        authorAvatarAsset: AppAvatars.defaultSprout,
+        createdAt: now,
+        type: type,
+        responseMode: responseMode,
+        body: body.trim(),
+        empathyCount: 0,
+        commentCount: 0,
+        isMine: true,
+      ),
+    );
+    return CreatedPost(id: id, createdAt: now);
+  }
+
+  @override
   Future<void> toggleSaved(String postId) async {
     final index = _posts.indexWhere((post) => post.id == postId);
     if (index == -1) {
