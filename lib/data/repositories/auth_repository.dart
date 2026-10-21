@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/config/auth_config.dart';
+
 /// メール/Google/Appleログインを扱う認証リポジトリ(決定: docs/全体設計書.md 2章 F-02)。
 class AuthRepository {
   AuthRepository(this._client);
@@ -32,8 +34,17 @@ class AuthRepository {
   }
 
   /// パスワード再設定のメールを送る。登録の有無は、応答からも分からない(Supabaseの仕様)。
+  /// メールのリンクは、アプリ([authCallbackUrl])へ戻る。
   Future<void> sendPasswordReset(String email) {
-    return _client.auth.resetPasswordForEmail(email);
+    return _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: authCallbackUrl,
+    );
+  }
+
+  /// 新しいパスワードにする(メールのリンクから戻った状態で呼ぶ)。
+  Future<UserResponse> updatePassword(String newPassword) {
+    return _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
   Future<bool> signInWithGoogle() {
