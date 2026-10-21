@@ -15,6 +15,11 @@ final notificationsAreSampleProvider = Provider<bool>(
   (ref) => ref.watch(notificationRepositoryProvider).isSample,
 );
 
+/// 自分の通知の設定。
+final notificationSettingsProvider = FutureProvider<NotificationSettings>(
+  (ref) => ref.watch(notificationRepositoryProvider).fetchSettings(),
+);
+
 /// 自分宛てのお知らせ(新しい順)。
 final notificationsProvider = FutureProvider<List<AppNotification>>(
   (ref) => ref.watch(notificationRepositoryProvider).fetchNotifications(),
