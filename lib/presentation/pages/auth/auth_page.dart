@@ -9,6 +9,8 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../providers/auth_provider.dart';
 import 'auth_messages.dart';
+import 'auth_validators.dart';
+import 'legal_consent.dart';
 import 'profile_creation.dart';
 import 'profile_setup_page.dart';
 
@@ -31,10 +33,17 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   final _nickname = TextEditingController();
   late AuthMode _mode = widget.initialMode;
   bool _obscure = true;
-  bool _agree = false;
-  String? _agreementError;
+  bool _agreeTerms = false;
+  bool _agreePrivacy = false;
   bool _busy = false;
   String? _error;
+
+  /// 入力欄を一度離れた(または送信を試した)項目。赤い表示は、この項目が
+  /// まだ間違っているときだけ出す。入力の途中では出さない。
+  final _touched = <String>{};
+  final _nicknameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
 
   /// 登録後、確認メールの送信先(メール確認が必要な設定のとき)。
   String? _sentTo;
@@ -46,7 +55,31 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    for (final entry in {
+      'nickname': _nicknameFocus,
+      'email': _emailFocus,
+      'password': _passwordFocus,
+    }.entries) {
+      entry.value.addListener(() {
+        if (!entry.value.hasFocus && mounted) {
+          setState(() => _touched.add(entry.key));
+        }
+      });
+    }
+  }
+
+  /// 赤いエラー表示にするか。離れた後、または送信を試した後に、まだ間違っている項目。
+  AutovalidateMode _autovalidate(String field) => _touched.contains(field)
+      ? AutovalidateMode.always
+      : AutovalidateMode.disabled;
+
+  @override
   void dispose() {
+    _nicknameFocus.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     _email.dispose();
     _password.dispose();
     _nickname.dispose();
@@ -60,10 +93,11 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     setState(() {
       _mode = mode;
       _obscure = true;
-      _agree = false;
-      _agreementError = null;
+      _agreeTerms = false;
+      _agreePrivacy = false;
       _error = null;
       _sentTo = null;
+      _touched.clear();
     });
   }
 
@@ -84,13 +118,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   Future<void> _submit() async {
+    setState(() => _touched.addAll(['nickname', 'email', 'password']));
     final valid = _form.currentState!.validate();
-    setState(
-      () => _agreementError = _mode == AuthMode.register && !_agree
-          ? '利用規約・プライバシーポリシーへの同意を確認してください。'
-          : null,
-    );
-    if (!valid || _agreementError != null) return;
+    if (!valid) return;
     FocusScope.of(context).unfocus();
     if (_mode == AuthMode.reset) {
       _notice('パスワード再設定は準備中です', 'メール内のリンクからアプリへ戻る設定を準備しています。メールは送信されません。');
@@ -290,47 +320,57 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     TextFormField(
                       key: const ValueKey('auth-nickname'),
                       controller: _nickname,
-                      maxLength: 12,
+                      focusNode: _nicknameFocus,
+                      maxLength: nicknameMaxLength,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      autovalidateMode: _autovalidate('nickname'),
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
                         labelText: 'ニックネーム',
-                        helperText: '2〜12文字・本名は使わないでください。',
+                        // 入力の途中は、足りないことを赤くせずに下へ案内する。
+                        helperText: _nickname.text.isEmpty
+                            ? '$nicknameMinLength〜$nicknameMaxLength文字・本名は使わないでください。'
+                            : (nicknameProblem(_nickname.text) ??
+                                  '$nicknameMinLength〜$nicknameMaxLength文字・本名は使わないでください。'),
                         counterText: '',
-                        prefixIcon: Icon(Icons.person_outline),
+                        prefixIcon: const Icon(Icons.person_outline),
                       ),
-                      validator: (value) =>
-                          (value ?? '').trim().characters.length < 2
-                          ? '2〜12文字で入力してください。'
-                          : null,
+                      validator: (value) => nicknameProblem(value ?? ''),
                     ),
                     const SizedBox(height: 16),
                   ],
                   TextFormField(
                     key: const ValueKey('auth-email'),
                     controller: _email,
+                    focusNode: _emailFocus,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
+                    autovalidateMode: _autovalidate('email'),
+                    onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       labelText: 'メールアドレス',
                       hintText: 'example@example.com',
-                      helperText: _mode == AuthMode.register
-                          ? '他の人には公開されません'
-                          : null,
+                      helperText: _email.text.isNotEmpty
+                          ? (emailProblem(_email.text) ??
+                                (_mode == AuthMode.register
+                                    ? '他の人には公開されません'
+                                    : null))
+                          : (_mode == AuthMode.register
+                                ? '他の人には公開されません'
+                                : null),
                       prefixIcon: const Icon(Icons.mail_outline),
                     ),
-                    validator: (value) =>
-                        RegExp(
-                          r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-                        ).hasMatch((value ?? '').trim())
-                        ? null
-                        : 'メールアドレスを確認してください。',
+                    validator: (value) => emailProblem(value ?? ''),
                   ),
                   const SizedBox(height: 16),
                   if (_mode != AuthMode.reset) ...[
                     TextFormField(
                       key: const ValueKey('auth-password'),
                       controller: _password,
+                      focusNode: _passwordFocus,
+                      autovalidateMode: _autovalidate('password'),
+                      onChanged: (_) => setState(() {}),
                       obscureText: _obscure,
                       autocorrect: false,
                       enableSuggestions: false,
@@ -347,8 +387,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           ),
                         ),
                       ),
-                      validator: (value) =>
-                          (value ?? '').isEmpty ? 'パスワードを入力してください。' : null,
+                      validator: (value) => passwordProblem(value ?? ''),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -361,38 +400,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       ),
                     ),
                   if (_mode == AuthMode.register) ...[
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        for (final title in ['利用規約', 'プライバシーポリシー'])
-                          TextButton(
-                            onPressed: () =>
-                                _notice('$titleは準備中です', '本文の公開を準備しています。'),
-                            child: Text(title),
-                          ),
-                      ],
+                    LegalConsent(
+                      termsAgreed: _agreeTerms,
+                      privacyAgreed: _agreePrivacy,
+                      onTermsChanged: (value) =>
+                          setState(() => _agreeTerms = value),
+                      onPrivacyChanged: (value) =>
+                          setState(() => _agreePrivacy = value),
                     ),
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: _agree,
-                      onChanged: (value) => setState(() {
-                        _agree = value ?? false;
-                        _agreementError = null;
-                      }),
-                      title: const Text(
-                        '利用規約・プライバシーポリシーに同意する',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    if (_agreementError != null)
-                      Text(
-                        _agreementError!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 13,
-                        ),
-                      ),
                   ],
                   if (_error != null)
                     Padding(
@@ -410,7 +425,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   const SizedBox(height: 16),
                   FilledButton(
                     key: const ValueKey('auth-submit'),
-                    onPressed: _busy ? null : _submit,
+                    // 登録は、利用規約とプライバシーポリシーの両方を読んで
+                    // チェックがついてから押せる。
+                    onPressed:
+                        _busy ||
+                            (_mode == AuthMode.register &&
+                                !(_agreeTerms && _agreePrivacy))
+                        ? null
+                        : _submit,
                     child: Text(
                       _busy
                           ? '通信しています…'

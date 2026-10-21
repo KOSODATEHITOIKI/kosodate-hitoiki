@@ -6,6 +6,7 @@ import 'package:kosodate_hitoiki/data/api/api_exception.dart';
 import 'package:kosodate_hitoiki/data/repositories/auth_repository.dart';
 import 'package:kosodate_hitoiki/data/repositories/profile_registration_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
+import 'package:kosodate_hitoiki/presentation/pages/auth/legal_document_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/profile_setup_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:mocktail/mocktail.dart';
@@ -95,18 +96,38 @@ void main() {
     );
   }
 
+  /// 本文を開いて最後までスクロールし、「読みました」で戻る。
+  Future<void> readDocument(WidgetTester tester, Key consentKey) async {
+    await tester.ensureVisible(find.byKey(consentKey));
+    await tester.tap(find.byKey(consentKey));
+    await tester.pumpAndSettle();
+    expect(find.byType(LegalDocumentPage), findsOneWidget);
+    for (var i = 0; i < 10; i++) {
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.byKey(const ValueKey('legal-done')));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> agreeBoth(WidgetTester tester) async {
+    await readDocument(tester, const ValueKey('consent-terms'));
+    await readDocument(tester, const ValueKey('consent-privacy'));
+  }
+
   Future<void> fillRegister(WidgetTester tester) async {
     await tester.enterText(find.byKey(const ValueKey('auth-nickname')), 'はなこ');
     await fillLogin(tester);
-    await tester.ensureVisible(find.byType(CheckboxListTile));
-    await tester.tap(find.byType(CheckboxListTile));
-    await tester.pumpAndSettle();
+    await agreeBoth(tester);
   }
 
   testWidgets('ログインの入力検証とパスワード表示切替', (tester) async {
     await pumpAuth(tester);
     await submit(tester);
-    expect(find.text('メールアドレスを確認してください。'), findsOneWidget);
+    expect(find.text('メールアドレスを入力してください。'), findsOneWidget);
     expect(find.text('パスワードを入力してください。'), findsOneWidget);
     verifyZeroInteractions(auth);
 
@@ -116,6 +137,89 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('パスワードを隠す'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('登録の入力欄: 入力の途中は赤くせず足りないことを案内し、離れて間違っていれば赤くする', (tester) async {
+    await pumpAuth(tester, mode: AuthMode.register);
+    final errorColor = AppTheme.light.colorScheme.error;
+
+    Color? helperColor(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+
+    // 1文字だけ入力: 入力の途中なので、赤ではなく案内として「あと1文字」を出す。
+    await tester.enterText(find.byKey(const ValueKey('auth-nickname')), 'あ');
+    await tester.pump();
+    expect(find.textContaining('あと1文字必要です'), findsOneWidget);
+    expect(helperColor('あと1文字必要です。(2〜12文字)'), isNot(errorColor));
+
+    // 入力欄を離れても間違ったままなら、赤いエラーになる。
+    await tester.tap(find.byKey(const ValueKey('auth-email')));
+    await tester.pumpAndSettle();
+    expect(helperColor('あと1文字必要です。(2〜12文字)'), errorColor);
+
+    // 直すと、赤い表示は消える。
+    await tester.enterText(find.byKey(const ValueKey('auth-nickname')), 'あい');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('あと1文字'), findsNothing);
+
+    // メール: 「@」がない間は案内を出し、直せば案内も消える。
+    await tester.enterText(find.byKey(const ValueKey('auth-email')), 'abc');
+    await tester.pump();
+    expect(find.textContaining('「@」を含めてください'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email')),
+      'a@example.com',
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('「@」を含めてください'), findsNothing);
+    expect(find.text('他の人には公開されません'), findsOneWidget);
+  });
+
+  testWidgets('登録は、利用規約とプライバシーポリシーを最後まで読んで2つチェックがつくまで押せない', (tester) async {
+    await pumpAuth(tester, mode: AuthMode.register);
+
+    FilledButton submitButton() =>
+        tester.widget<FilledButton>(find.byKey(const ValueKey('auth-submit')));
+    bool checked(String key) =>
+        tester.widget<CheckboxListTile>(find.byKey(ValueKey(key))).value!;
+
+    // 最初は登録できず、2つとも未読と案内される。
+    await tester.ensureVisible(find.byKey(const ValueKey('auth-submit')));
+    expect(submitButton().onPressed, isNull);
+    expect(find.text('2つとも、まだ読んでいません。'), findsOneWidget);
+
+    // 本文を開いても、最後まで読まずに戻ればチェックはつかない。
+    await tester.ensureVisible(find.byKey(const ValueKey('consent-terms')));
+    await tester.tap(find.byKey(const ValueKey('consent-terms')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const ValueKey('legal-done')))
+          .onPressed,
+      isNull,
+    );
+    expect(find.byKey(const ValueKey('legal-draft-banner')), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(checked('consent-terms'), isFalse);
+
+    // 1つ読むと、残りの1つを案内する。まだ登録できない。
+    await readDocument(tester, const ValueKey('consent-terms'));
+    expect(checked('consent-terms'), isTrue);
+    expect(find.text('プライバシーポリシーが、まだです。'), findsOneWidget);
+    expect(submitButton().onPressed, isNull);
+
+    // 2つともチェックがつくと、登録できる。
+    await readDocument(tester, const ValueKey('consent-privacy'));
+    expect(checked('consent-privacy'), isTrue);
+    expect(find.byKey(const ValueKey('consent-remaining')), findsNothing);
+    expect(submitButton().onPressed, isNotNull);
+
+    // チェックは外せて、外すと登録できなくなる。
+    await tester.tap(find.byKey(const ValueKey('consent-terms')));
+    await tester.pumpAndSettle();
+    expect(checked('consent-terms'), isFalse);
+    expect(submitButton().onPressed, isNull);
   });
 
   testWidgets('ログイン成功でプロフィール作成済みなら、画面を閉じて元へ戻る', (tester) async {
@@ -314,8 +418,7 @@ void main() {
     await submit(tester);
 
     await tester.enterText(find.byKey(const ValueKey('setup-nickname')), 'はなこ');
-    await tester.tap(find.byKey(const ValueKey('setup-agree')));
-    await tester.pumpAndSettle();
+    await agreeBoth(tester);
     await tester.tap(find.byKey(const ValueKey('setup-submit')));
     await tester.pumpAndSettle();
 
@@ -346,7 +449,7 @@ void main() {
     await tester.tap(find.text('会員登録へ'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('auth-nickname')), findsOneWidget);
-    expect(find.byType(CheckboxListTile), findsOneWidget);
+    expect(find.byType(CheckboxListTile), findsNWidgets(2));
     await tester.ensureVisible(find.text('ログインへ'));
     await tester.tap(find.text('ログインへ'));
     await tester.pumpAndSettle();

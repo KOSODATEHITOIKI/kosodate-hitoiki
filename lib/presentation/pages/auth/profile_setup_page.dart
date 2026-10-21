@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
+import 'legal_consent.dart';
 import 'profile_creation.dart';
 
 /// 認証は済んだがプロフィールが未作成の利用者に、ニックネームと利用規約への同意を
@@ -18,7 +19,8 @@ class ProfileSetupPage extends ConsumerStatefulWidget {
 class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   final _form = GlobalKey<FormState>();
   late final _nickname = TextEditingController(text: widget.initialNickname);
-  bool _agree = false;
+  bool _agreeTerms = false;
+  bool _agreePrivacy = false;
   bool _busy = false;
   String? _error;
 
@@ -30,10 +32,6 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
 
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
-    if (!_agree) {
-      setState(() => _error = '利用規約・プライバシーポリシーへの同意を確認してください。');
-      return;
-    }
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
@@ -96,19 +94,17 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    CheckboxListTile(
-                      key: const ValueKey('setup-agree'),
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: _agree,
-                      onChanged: (value) => setState(() {
-                        _agree = value ?? false;
+                    LegalConsent(
+                      termsAgreed: _agreeTerms,
+                      privacyAgreed: _agreePrivacy,
+                      onTermsChanged: (value) => setState(() {
+                        _agreeTerms = value;
                         _error = null;
                       }),
-                      title: const Text(
-                        '利用規約・プライバシーポリシーに同意する',
-                        style: TextStyle(fontSize: 14),
-                      ),
+                      onPrivacyChanged: (value) => setState(() {
+                        _agreePrivacy = value;
+                        _error = null;
+                      }),
                     ),
                     if (_error != null)
                       Padding(
@@ -124,7 +120,9 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                     const SizedBox(height: 8),
                     FilledButton(
                       key: const ValueKey('setup-submit'),
-                      onPressed: _busy ? null : _submit,
+                      onPressed: _busy || !(_agreeTerms && _agreePrivacy)
+                          ? null
+                          : _submit,
                       child: Text(_busy ? '登録しています…' : '登録する'),
                     ),
                   ],
