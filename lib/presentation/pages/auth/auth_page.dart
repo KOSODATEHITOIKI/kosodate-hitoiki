@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -54,6 +56,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   /// 登録後、確認メールの送信先(メール確認が必要な設定のとき)。
   String? _sentTo;
 
+  /// 再設定メールの送信先。登録の有無にかかわらず、送信後は同じ画面を出す。
+  String? _resetSentTo;
+
+  /// 確認メールを再送できるまでの残り秒数。連続で押せないようにする。
+  static const _resendCooldownSeconds = 60;
+  int _resendWait = 0;
+  bool _resending = false;
+  Timer? _cooldownTimer;
+
   String get _title => switch (_mode) {
     AuthMode.login => 'ログイン',
     AuthMode.register => '会員登録',
@@ -88,8 +99,46 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   String? _check(String value, String? Function(String) problem) =>
       value.isEmpty && !_submitted ? null : problem(value);
 
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() => _resendWait = _resendCooldownSeconds);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() => _resendWait = (_resendWait - 1).clamp(0, 9999));
+      if (_resendWait == 0) timer.cancel();
+    });
+  }
+
+  /// 「確認メールを送りました」の画面にする。登録済みのアドレスでも、同じ画面・
+  /// 同じ待ち時間にする(登録の有無を、見え方から推測させない)。
+  void _showSent(String email) {
+    setState(() => _sentTo = email);
+    _startCooldown();
+  }
+
+  void _snack(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
+
+  Future<void> _resend() async {
+    final email = _sentTo;
+    if (email == null || _resendWait > 0 || _resending) return;
+    setState(() => _resending = true);
+    try {
+      await ref.read(authRepositoryProvider).resendSignupEmail(email);
+      if (!mounted) return;
+      _snack('確認メールをもう一度送りました。');
+      _startCooldown();
+    } catch (error) {
+      if (mounted) _snack(authErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
+  }
+
   @override
   void dispose() {
+    _cooldownTimer?.cancel();
     _nicknameFocus.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
@@ -113,6 +162,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _agreePrivacy = false;
       _error = null;
       _sentTo = null;
+      _resetSentTo = null;
+      _resendWait = 0;
       _touched.clear();
       _submitted = false;
     });
@@ -143,7 +194,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     if (!valid) return;
     FocusScope.of(context).unfocus();
     if (_mode == AuthMode.reset) {
-      _notice('パスワード再設定は準備中です', 'メール内のリンクからアプリへ戻る設定を準備しています。メールは送信されません。');
+      await _sendReset();
       return;
     }
     setState(() {
@@ -163,21 +214,61 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
+  /// パスワード再設定のメール。登録の有無を明かさないよう、送信後は常に同じ画面を出す。
+  /// 通信できなかったときと、送信回数の制限のときだけ、そのことを伝える。
+  Future<void> _sendReset() async {
+    final email = _email.text.trim();
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authRepositoryProvider).sendPasswordReset(email);
+    } on AuthRetryableFetchException catch (error) {
+      if (mounted) setState(() => _error = authErrorMessage(error));
+      return;
+    } on AuthException catch (error) {
+      if (error.code == 'over_email_send_rate_limit' ||
+          error.code == 'over_request_rate_limit') {
+        if (mounted) setState(() => _error = authErrorMessage(error));
+        return;
+      }
+      // それ以外(未登録など)は、成功と同じに見せる。
+    } catch (error) {
+      if (mounted) setState(() => _error = authErrorMessage(error));
+      return;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+    if (mounted) setState(() => _resetSentTo = email);
+  }
+
   Future<void> _register() async {
     final email = _email.text.trim();
-    final response = await ref
-        .read(authRepositoryProvider)
-        .signUpWithEmail(
-          email: email,
-          password: _password.text,
-          // 確認メールのリンクを開いたあとにプロフィールを作るための控え。
-          // 規約の版数は、プロフィール作成時に送る(同意の記録はサーバー側)。
-          data: {'nickname': _nickname.text.trim(), 'terms_agreed': true},
-        );
+    final AuthResponse response;
+    try {
+      response = await ref
+          .read(authRepositoryProvider)
+          .signUpWithEmail(
+            email: email,
+            password: _password.text,
+            // 確認メールのリンクを開いたあとにプロフィールを作るための控え。
+            // 規約の版数は、プロフィール作成時に送る(同意の記録はサーバー側)。
+            data: {'nickname': _nickname.text.trim(), 'terms_agreed': true},
+          );
+    } on AuthException catch (error) {
+      // 登録済みのアドレスでも、成功と同じ画面にする。「すでに使われています」とは
+      // 表示しない(利用の事実が漏れる)。
+      if (error.code == 'user_already_exists' || error.code == 'email_exists') {
+        if (mounted) _showSent(email);
+        return;
+      }
+      rethrow;
+    }
     if (!mounted) return;
     if (response.session == null) {
       // メール確認が必要な設定。リンクを開くまでログインできない。
-      setState(() => _sentTo = email);
+      _showSent(email);
       return;
     }
     await _afterSignedInSafely(response.user);
@@ -245,12 +336,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final resetSentTo = _resetSentTo;
+    if (resetSentTo != null) return _resetSentPage();
     final sentTo = _sentTo;
     if (sentTo != null) return _checkEmailPage(sentTo);
     return _formPage();
   }
 
   /// 登録後の「確認メールを送りました」。メール確認が必要な設定のときだけ表示する。
+  /// 登録済みのアドレスでも、同じ画面を出す(登録の有無を推測させない)。
   Widget _checkEmailPage(String email) => Scaffold(
     body: SafeArea(
       child: Align(
@@ -274,18 +368,107 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 16),
+                const Text(
+                  '確認メールを送りました。メール内のボタンを押して、確認を完了してください。',
+                  style: TextStyle(height: 1.7),
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  '$email に届いたメールのリンクを開いてから、ログインしてください。',
-                  style: const TextStyle(height: 1.7),
+                  '送信先: $email',
+                  style: const TextStyle(fontSize: 12, height: 1.7),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  '届かないときは',
+                  style: TextStyle(fontWeight: FontWeight.w700, height: 1.7),
+                ),
+                const SizedBox(height: 4),
+                for (final line in const [
+                  '迷惑メールフォルダーを確認する',
+                  'メールアドレスの入力ミスがないか確認する',
+                  'すでに登録済みの可能性があります。その場合は、ログイン、またはパスワードの再設定をお試しください。',
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('・', style: TextStyle(height: 1.7)),
+                        Expanded(
+                          child: Text(
+                            line,
+                            style: const TextStyle(fontSize: 13, height: 1.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  key: const ValueKey('auth-to-login'),
+                  onPressed: () => _changeMode(AuthMode.login),
+                  child: const Text('ログインへ'),
                 ),
                 const SizedBox(height: 12),
+                OutlinedButton(
+                  key: const ValueKey('auth-to-reset'),
+                  onPressed: () {
+                    _changeMode(AuthMode.reset);
+                    _email.text = email;
+                  },
+                  child: const Text('パスワードを再設定する'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  key: const ValueKey('auth-resend'),
+                  onPressed: _resendWait > 0 || _resending ? null : _resend,
+                  child: Text(
+                    _resendWait > 0
+                        ? '確認メールをもう一度送る(あと$_resendWait秒)'
+                        : '確認メールをもう一度送る',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  /// パスワード再設定メールの送信後。登録の有無を明かさない文面にする。
+  Widget _resetSentPage() => Scaffold(
+    body: SafeArea(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: BackButton(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 const Text(
-                  'メールが届かないときは、迷惑メールフォルダも確認してください。',
-                  style: TextStyle(fontSize: 12, height: 1.7),
+                  '再設定のご案内',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '登録されている場合は、再設定のメールを送りました。'
+                  '届かない場合は、迷惑メールを確認するか、アドレスをご確認ください。',
+                  key: ValueKey('auth-reset-sent'),
+                  style: TextStyle(height: 1.7),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  key: const ValueKey('auth-to-login'),
+                  key: const ValueKey('auth-reset-to-login'),
                   onPressed: () => _changeMode(AuthMode.login),
                   child: const Text('ログインへ'),
                 ),
@@ -533,14 +716,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     ),
                     child: Text(_mode == AuthMode.login ? '会員登録へ' : 'ログインへ'),
                   ),
-                  if (_mode == AuthMode.reset) ...[
-                    const SizedBox(height: 12),
-                    const Text(
-                      'パスワード再設定は準備中です。\n入力内容は送信されません。',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, height: 1.7),
-                    ),
-                  ],
                 ],
               ),
             ),

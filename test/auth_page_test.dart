@@ -542,6 +542,159 @@ void main() {
     expect(find.byType(ProfileSetupPage), findsOneWidget);
   });
 
+  group('登録済みかどうかを漏らさない案内', () {
+    void stubSignUpNeedsConfirmation() {
+      when(
+        () => auth.signUpWithEmail(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async => AuthResponse(user: _user()));
+    }
+
+    Future<void> registerAndSubmit(WidgetTester tester) async {
+      await pumpAuth(tester, mode: AuthMode.register);
+      await fillRegister(tester);
+      await submit(tester);
+    }
+
+    testWidgets('確認メールの画面: 説明・届かないときの案内・3つのボタンが出る', (tester) async {
+      stubSignUpNeedsConfirmation();
+      await registerAndSubmit(tester);
+
+      expect(find.text('確認メールを送りました'), findsOneWidget);
+      expect(
+        find.text('確認メールを送りました。メール内のボタンを押して、確認を完了してください。'),
+        findsOneWidget,
+      );
+      expect(find.text('迷惑メールフォルダーを確認する'), findsOneWidget);
+      expect(find.text('メールアドレスの入力ミスがないか確認する'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'すでに登録済みの可能性があります。その場合は、ログイン、またはパスワードの再設定をお試しください。',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('auth-to-login')), findsOneWidget);
+      expect(find.byKey(const ValueKey('auth-to-reset')), findsOneWidget);
+      expect(find.byKey(const ValueKey('auth-resend')), findsOneWidget);
+    });
+
+    testWidgets('登録済みのアドレス(user_already_exists)でも、同じ画面になり、使用済みとは出さない', (
+      tester,
+    ) async {
+      when(
+        () => auth.signUpWithEmail(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(
+        const AuthApiException('exists', code: 'user_already_exists'),
+      );
+      await registerAndSubmit(tester);
+
+      expect(find.text('確認メールを送りました'), findsOneWidget);
+      expect(find.byKey(const ValueKey('auth-resend')), findsOneWidget);
+      expect(find.textContaining('(あと60秒)'), findsOneWidget);
+      expect(find.textContaining('すでに使われて'), findsNothing);
+      expect(find.byKey(const ValueKey('auth-error')), findsNothing);
+    });
+
+    testWidgets('再送は60秒待たせ、残り秒数を出す。待ったあとに送れて、また待つ', (tester) async {
+      stubSignUpNeedsConfirmation();
+      when(
+        () => auth.resendSignupEmail(any()),
+      ).thenAnswer((_) async => ResendResponse());
+      await registerAndSubmit(tester);
+
+      OutlinedButton resend() => tester.widget<OutlinedButton>(
+        find.byKey(const ValueKey('auth-resend')),
+      );
+      expect(resend().onPressed, isNull);
+      expect(find.text('確認メールをもう一度送る(あと60秒)'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 30));
+      expect(find.text('確認メールをもう一度送る(あと30秒)'), findsOneWidget);
+      expect(resend().onPressed, isNull);
+      verifyNever(() => auth.resendSignupEmail(any()));
+
+      await tester.pump(const Duration(seconds: 31));
+      expect(find.text('確認メールをもう一度送る'), findsOneWidget);
+      expect(resend().onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const ValueKey('auth-resend')));
+      await tester.pump();
+      verify(() => auth.resendSignupEmail('a@example.com')).called(1);
+      expect(find.text('確認メールをもう一度送りました。'), findsOneWidget);
+      // 送ったあとは、また待たせる。
+      expect(resend().onPressed, isNull);
+      expect(find.textContaining('(あと60秒)'), findsOneWidget);
+    });
+
+    testWidgets('「パスワードを再設定する」で、入力したアドレスのまま再設定へ進む', (tester) async {
+      stubSignUpNeedsConfirmation();
+      await registerAndSubmit(tester);
+
+      await tester.tap(find.byKey(const ValueKey('auth-to-reset')));
+      await tester.pumpAndSettle();
+      expect(find.text('パスワード再設定'), findsWidgets);
+      expect(
+        tester
+            .widget<TextFormField>(find.byKey(const ValueKey('auth-email')))
+            .controller!
+            .text,
+        'a@example.com',
+      );
+    });
+
+    for (final failure in <bool>[false, true]) {
+      testWidgets('再設定: 登録の有無にかかわらず、同じ文面(${failure ? 'エラー' : '成功'})', (
+        tester,
+      ) async {
+        if (failure) {
+          when(() => auth.sendPasswordReset(any())).thenThrow(
+            const AuthApiException('not found', code: 'user_not_found'),
+          );
+        } else {
+          when(() => auth.sendPasswordReset(any())).thenAnswer((_) async {});
+        }
+        await pumpAuth(tester, mode: AuthMode.reset);
+        await tester.enterText(
+          find.byKey(const ValueKey('auth-email')),
+          'a@example.com',
+        );
+        await submit(tester);
+
+        verify(() => auth.sendPasswordReset('a@example.com')).called(1);
+        expect(
+          find.text(
+            '登録されている場合は、再設定のメールを送りました。'
+            '届かない場合は、迷惑メールを確認するか、アドレスをご確認ください。',
+          ),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('auth-error')), findsNothing);
+      });
+    }
+
+    testWidgets('再設定: 送信回数の制限のときだけ、そのことを伝える', (tester) async {
+      when(() => auth.sendPasswordReset(any())).thenThrow(
+        const AuthApiException('limit', code: 'over_email_send_rate_limit'),
+      );
+      await pumpAuth(tester, mode: AuthMode.reset);
+      await tester.enterText(
+        find.byKey(const ValueKey('auth-email')),
+        'a@example.com',
+      );
+      await submit(tester);
+
+      expect(find.text('しばらく時間をおいてから、もう一度お試しください。'), findsOneWidget);
+      expect(find.byKey(const ValueKey('auth-reset-sent')), findsNothing);
+    });
+  });
+
   testWidgets('小さい画面・文字拡大で登録と再設定へ移動できる', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
