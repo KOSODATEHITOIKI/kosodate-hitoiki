@@ -34,6 +34,9 @@ String postFailureMessage(Object error) {
     if (reason == 'restricted') {
       return '現在、投稿やコメントができません。';
     }
+    if (reason == 'unavailable') {
+      return '送れませんでした。しばらくしてから、もう一度お試しください。';
+    }
     if (reason == 'comments_closed') {
       return 'この投稿は、コメントの受付を終了しています。';
     }

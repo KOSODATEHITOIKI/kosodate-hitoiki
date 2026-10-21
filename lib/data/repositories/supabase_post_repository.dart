@@ -137,6 +137,7 @@ class SupabasePostRepository implements PostRepository {
       empathyCount: 0,
       commentCount: (row['comment_count'] as num?)?.toInt() ?? 0,
       isMine: myUserId != null && authorId == myUserId,
+      commentsOpen: row['comment_acceptance'] != 'closed',
     );
   }
 
