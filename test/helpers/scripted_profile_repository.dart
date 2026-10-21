@@ -9,11 +9,21 @@ class ScriptedProfileRepository implements ProfileRepository {
     this.sample = false,
     List<Object?>? nicknameScript,
     List<Object?>? updateScript,
-  }) : nicknameScript = nicknameScript ?? [],
+    this.fetchGate,
+    List<Object>? fetchErrors,
+  }) : fetchErrors = fetchErrors ?? [],
+       nicknameScript = nicknameScript ?? [],
        updateScript = updateScript ?? [];
 
   final UserProfile? profile;
   final bool sample;
+
+  /// 取得を、これが終わるまで待たせる(読み込み中の状態を作る)。
+  final Future<void>? fetchGate;
+
+  /// 取得の呼び出しごとに1つ使う(なくなったら成功)。投げる。
+  final List<Object> fetchErrors;
+  var fetchCount = 0;
 
   /// 呼び出しごとに1つ使う。nullなら成功、それ以外は投げる。
   final List<Object?> nicknameScript;
@@ -26,7 +36,12 @@ class ScriptedProfileRepository implements ProfileRepository {
   bool get isSample => sample;
 
   @override
-  Future<UserProfile?> fetchProfile(String userId) async => profile;
+  Future<UserProfile?> fetchProfile(String userId) async {
+    fetchCount++;
+    if (fetchGate != null) await fetchGate;
+    if (fetchErrors.isNotEmpty) throw fetchErrors.removeAt(0);
+    return profile;
+  }
 
   @override
   Future<void> changeNickname({
