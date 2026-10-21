@@ -188,7 +188,8 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
   );
 
   Widget _content() => ComfortPage(
-    title: _stage == _Stage.rejected ? '内容を見直してみましょう' : '送信する前に、ひと確認。',
+    // 句点だけが次の行に残らないよう、意味の切れ目で改行する。
+    title: _stage == _Stage.rejected ? '内容を見直して\nみましょう' : '送信する前に、\nひと確認。',
     message: '名前や個人情報、\n誰かを傷つける表現はありませんか？',
     children: [
       Card(
