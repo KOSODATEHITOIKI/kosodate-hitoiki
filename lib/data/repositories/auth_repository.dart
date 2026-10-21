@@ -14,8 +14,9 @@ class AuthRepository {
   Future<AuthResponse> signUpWithEmail({
     required String email,
     required String password,
+    Map<String, dynamic>? data,
   }) {
-    return _client.auth.signUp(email: email, password: password);
+    return _client.auth.signUp(email: email, password: password, data: data);
   }
 
   Future<AuthResponse> signInWithEmail({

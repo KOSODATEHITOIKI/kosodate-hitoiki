@@ -5,6 +5,7 @@ import 'core/config/flavor.dart';
 import 'core/constants/app_theme.dart';
 import 'core/utils/accessibility.dart';
 import 'presentation/pages/welcome/welcome_page.dart';
+import 'presentation/widgets/main_navigation_shell.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/post_providers.dart';
 
@@ -27,7 +28,10 @@ class App extends ConsumerWidget {
         ).copyWith(textScaler: responsiveTextScaler(context)),
         child: child!,
       ),
-      home: const WelcomePage(),
+      // ログイン状態が保持されていれば、案内画面を飛ばしてホームから始める(要件定義書6.2.4)。
+      home: ref.watch(isLoggedInProvider)
+          ? const MainNavigationShell()
+          : const WelcomePage(),
     );
   }
 }

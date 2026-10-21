@@ -3,10 +3,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/datasources/supabase_client_provider.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/profile_registration_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(supabaseClientProvider));
 });
+
+final profileRegistrationRepositoryProvider =
+    Provider<ProfileRegistrationRepository>((ref) {
+      return ProfileRegistrationRepository(ref.watch(supabaseClientProvider));
+    });
 
 /// ログイン状態の変化を監視するStream。
 final authStateChangesProvider = StreamProvider<AuthState>((ref) {

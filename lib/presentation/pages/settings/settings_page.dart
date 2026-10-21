@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/comfort_page.dart';
 import 'withdrawal_page.dart';
 import 'notification_settings_page.dart';
@@ -10,7 +12,7 @@ import 'block_management_page.dart';
 import '../support/support_resources_page.dart';
 
 /// S-11。未接続の設定操作は案内だけを表示する。
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   void _showNotice(BuildContext context, String title) {
@@ -29,8 +31,57 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  /// ログアウト。確認のあとサインアウトし、最初の画面まで戻る。
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    if (!ref.read(isLoggedInProvider)) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('ログインしていません'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('閉じる'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ログアウトしますか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('やめる'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('ログアウト'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('ログアウトできませんでした')));
+      }
+      return;
+    }
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
     appBar: AppBar(title: const Text('設定')),
     body: ComfortPage(
       title: '設定',
@@ -81,6 +132,7 @@ class SettingsPage extends StatelessWidget {
                         [
                           '利用ガイド',
                           '退会',
+                          'ログアウト',
                           '通知',
                           'ブロック管理',
                           '困ったときの相談先',
@@ -89,7 +141,9 @@ class SettingsPage extends StatelessWidget {
                         : const Text('準備中', style: TextStyle(fontSize: 11)),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      if (group[index].$2 == '利用ガイド') {
+                      if (group[index].$2 == 'ログアウト') {
+                        _logout(context, ref);
+                      } else if (group[index].$2 == '利用ガイド') {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => const UsageGuidePage(),

@@ -1,18 +1,90 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/data/api/api_exception.dart';
+import 'package:kosodate_hitoiki/data/repositories/auth_repository.dart';
+import 'package:kosodate_hitoiki/data/repositories/profile_registration_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
+import 'package:kosodate_hitoiki/presentation/pages/auth/profile_setup_page.dart';
+import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _MockAuth extends Mock implements AuthRepository {}
+
+class _MockProfiles extends Mock implements ProfileRegistrationRepository {}
+
+User _user({Map<String, dynamic>? metadata}) => User(
+  id: 'user-1',
+  appMetadata: const {},
+  userMetadata: metadata,
+  aud: 'authenticated',
+  createdAt: '2026-10-21T00:00:00Z',
+);
+
+AuthResponse _signedIn({Map<String, dynamic>? metadata}) => AuthResponse(
+  user: _user(metadata: metadata),
+  session: Session(
+    accessToken: 'token',
+    tokenType: 'bearer',
+    user: _user(metadata: metadata),
+  ),
+);
 
 void main() {
-  testWidgets('ログインの入力検証とパスワード表示切替、未送信の案内', (tester) async {
+  late _MockAuth auth;
+  late _MockProfiles profiles;
+
+  setUp(() {
+    auth = _MockAuth();
+    profiles = _MockProfiles();
+    when(() => auth.signOut()).thenAnswer((_) async {});
+  });
+
+  Future<void> pumpAuth(
+    WidgetTester tester, {
+    AuthMode mode = AuthMode.login,
+  }) async {
+    // 戻り先が分かるよう、AuthPageは別の画面から開く。
     await tester.pumpWidget(
-      MaterialApp(theme: AppTheme.light, home: const AuthPage()),
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(auth),
+          profileRegistrationRepositoryProvider.overrideWithValue(profiles),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute(
+                      builder: (_) => AuthPage(initialMode: mode),
+                    ),
+                  ),
+                  child: const Text('開く'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+    await tester.tap(find.text('開く'));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> submit(WidgetTester tester) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('auth-submit')));
     await tester.tap(find.byKey(const ValueKey('auth-submit')));
     await tester.pumpAndSettle();
-    expect(find.text('メールアドレスを確認してください。'), findsOneWidget);
-    expect(find.text('パスワードを入力してください。'), findsOneWidget);
+  }
+
+  Future<void> fillLogin(WidgetTester tester) async {
     await tester.enterText(
       find.byKey(const ValueKey('auth-email')),
       'a@example.com',
@@ -21,40 +93,253 @@ void main() {
       find.byKey(const ValueKey('auth-password')),
       'password123',
     );
-    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  Future<void> fillRegister(WidgetTester tester) async {
+    await tester.enterText(find.byKey(const ValueKey('auth-nickname')), 'はなこ');
+    await fillLogin(tester);
+    await tester.ensureVisible(find.byType(CheckboxListTile));
+    await tester.tap(find.byType(CheckboxListTile));
     await tester.pumpAndSettle();
+  }
+
+  testWidgets('ログインの入力検証とパスワード表示切替', (tester) async {
+    await pumpAuth(tester);
+    await submit(tester);
+    expect(find.text('メールアドレスを確認してください。'), findsOneWidget);
+    expect(find.text('パスワードを入力してください。'), findsOneWidget);
+    verifyZeroInteractions(auth);
+
+    await fillLogin(tester);
     await tester.ensureVisible(find.byTooltip('パスワードを表示'));
     await tester.tap(find.byTooltip('パスワードを表示'));
     await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const ValueKey('auth-password')))
-          .controller!
-          .text,
-      'password123',
-    );
     expect(find.byTooltip('パスワードを隠す'), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const ValueKey('auth-submit')));
-    await tester.tap(find.byKey(const ValueKey('auth-submit')));
-    await tester.pumpAndSettle();
-    expect(find.text('ログインは準備中です'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('ログイン成功でプロフィール作成済みなら、画面を閉じて元へ戻る', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => _signedIn());
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => true);
+
+    await pumpAuth(tester);
+    await fillLogin(tester);
+    await submit(tester);
+
+    verify(
+      () =>
+          auth.signInWithEmail(email: 'a@example.com', password: 'password123'),
+    ).called(1);
+    expect(find.byType(AuthPage), findsNothing);
+    expect(find.text('開く'), findsOneWidget);
+  });
+
+  testWidgets('パスワード違いは、登録の有無を示さない文言で表示する', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenThrow(const AuthApiException('x', code: 'invalid_credentials'));
+
+    await pumpAuth(tester);
+    await fillLogin(tester);
+    await submit(tester);
+
+    expect(find.text('メールアドレスまたはパスワードが違います。'), findsOneWidget);
+    expect(find.byType(AuthPage), findsOneWidget);
+  });
+
+  testWidgets('登録後にメール確認が必要なら、確認メールの案内を表示する', (tester) async {
+    when(
+      () => auth.signUpWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+        data: any(named: 'data'),
+      ),
+    ).thenAnswer((_) async => AuthResponse(user: _user()));
+
+    await pumpAuth(tester, mode: AuthMode.register);
+    await fillRegister(tester);
+    await submit(tester);
+
+    verify(
+      () => auth.signUpWithEmail(
+        email: 'a@example.com',
+        password: 'password123',
+        data: {'nickname': 'はなこ', 'terms_agreed': true},
+      ),
+    ).called(1);
+    expect(find.text('確認メールを送りました'), findsOneWidget);
+    verifyNever(
+      () => profiles.create(
+        nickname: any(named: 'nickname'),
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: any(named: 'confirmed'),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('auth-to-login')));
+    await tester.pumpAndSettle();
+    expect(find.text('ログインする'), findsOneWidget);
+  });
+
+  testWidgets('メール確認後の初回ログインで、控えたニックネームからプロフィールを作る', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          _signedIn(metadata: {'nickname': 'はなこ', 'terms_agreed': true}),
+    );
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+    when(
+      () => profiles.create(
+        nickname: any(named: 'nickname'),
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: any(named: 'confirmed'),
+      ),
+    ).thenAnswer((_) async {});
+
+    await pumpAuth(tester);
+    await fillLogin(tester);
+    await submit(tester);
+
+    verify(
+      () => profiles.create(
+        nickname: 'はなこ',
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: false,
+      ),
+    ).called(1);
+    expect(find.byType(AuthPage), findsNothing);
+  });
+
+  testWidgets('送信前チェックの確認が必要なら、確認後に confirmed: true で再送する', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          _signedIn(metadata: {'nickname': 'はなこ', 'terms_agreed': true}),
+    );
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+    when(
+      () => profiles.create(
+        nickname: any(named: 'nickname'),
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: false,
+      ),
+    ).thenThrow(
+      const ApiException(
+        code: 'MODERATION_CONFIRM_REQUIRED',
+        message: '強い言葉が含まれています。',
+        status: 409,
+      ),
+    );
+    when(
+      () => profiles.create(
+        nickname: any(named: 'nickname'),
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: true,
+      ),
+    ).thenAnswer((_) async {});
+
+    await pumpAuth(tester);
+    await fillLogin(tester);
+    await submit(tester);
+
+    expect(find.text('強い言葉が含まれています。'), findsOneWidget);
+    await tester.tap(find.text('そのまま登録'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => profiles.create(
+        nickname: 'はなこ',
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: true,
+      ),
+    ).called(1);
+    expect(find.byType(AuthPage), findsNothing);
+  });
+
+  testWidgets('控えがないときはプロフィール登録へ進み、中断するとログアウトする', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => _signedIn());
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+
+    await pumpAuth(tester);
+    await fillLogin(tester);
+    await submit(tester);
+
+    expect(find.byType(ProfileSetupPage), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    verify(() => auth.signOut()).called(1);
+    expect(find.byType(ProfileSetupPage), findsNothing);
+  });
+
+  testWidgets('プロフィール登録でニックネームが使用中なら、案内を出して入力へ戻す', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => _signedIn());
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+    when(
+      () => profiles.create(
+        nickname: any(named: 'nickname'),
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: any(named: 'confirmed'),
+      ),
+    ).thenThrow(const ApiException(code: 'CONFLICT', message: '', status: 409));
+
+    await pumpAuth(tester);
+    await fillLogin(tester);
+    await submit(tester);
+
+    await tester.enterText(find.byKey(const ValueKey('setup-nickname')), 'はなこ');
+    await tester.tap(find.byKey(const ValueKey('setup-agree')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('setup-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('このニックネームは使えません。別のニックネームにしてください。'), findsOneWidget);
+    expect(find.byType(ProfileSetupPage), findsOneWidget);
+  });
+
   testWidgets('小さい画面・文字拡大で登録と再設定へ移動できる', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.5)),
-          child: child!,
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.light,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: const AuthPage(),
         ),
-        home: const AuthPage(),
       ),
     );
     await tester.ensureVisible(find.text('会員登録へ'));
