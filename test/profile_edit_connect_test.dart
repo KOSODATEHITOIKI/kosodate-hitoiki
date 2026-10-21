@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_icons.dart';
+import 'package:kosodate_hitoiki/core/constants/child_age_range.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/data/api/api_exception.dart';
 import 'package:kosodate_hitoiki/data/repositories/supabase_profile_repository.dart';
@@ -82,16 +83,23 @@ Future<void> typeInto(WidgetTester tester, String key, String text) async {
   await tester.pumpAndSettle();
 }
 
+String _ageValue(WidgetTester tester) => tester
+    .widget<DropdownButton<String>>(
+      find.byKey(const ValueKey('profile-age-band')),
+    )
+    .value!;
+
 String _text(WidgetTester tester, String key) =>
     tester.widget<TextFormField>(find.byKey(ValueKey(key))).controller!.text;
 
 void main() {
-  testWidgets('開くと、いまのニックネーム・自己紹介が入っている。実データでは年齢帯を出さない', (tester) async {
+  testWidgets('開くと、いまのニックネーム・自己紹介・年齢帯が入っている', (tester) async {
     await pumpEdit(tester, ScriptedProfileRepository(profile: _me));
     expect(_text(tester, 'profile-nickname'), 'こもれび');
     expect(_text(tester, 'profile-bio'), 'もとの自己紹介');
-    // 年齢帯の選択肢は未決定のため、実データでは出さない(送らない)。
-    expect(find.byKey(const ValueKey('profile-age-band')), findsNothing);
+    // 年齢帯は、決まった5つから選ぶ。未設定なら「未選択」。
+    expect(find.byKey(const ValueKey('profile-age-band')), findsOneWidget);
+    expect(_ageValue(tester), '');
   });
 
   testWidgets('何も変えずに保存すると、APIを呼ばず「変更はありません」', (tester) async {
@@ -281,7 +289,100 @@ void main() {
     expect(find.byKey(const ValueKey('profile-age-band')), findsOneWidget);
   });
 
+  testWidgets('保存済みの年齢帯が入り、変えると、その項目のコードだけを送る', (tester) async {
+    final repository = ScriptedProfileRepository(
+      profile: const UserProfile(
+        id: 'me',
+        nickname: 'こもれび',
+        avatarAsset: AppAvatars.defaultSprout,
+        bio: 'もとの自己紹介',
+        childAgeBand: 'age_2_3',
+      ),
+      updateScript: [null],
+    );
+    await pumpEdit(tester, repository);
+    expect(_ageValue(tester), 'age_2_3');
+
+    final ages = find.byKey(const ValueKey('profile-age-band'));
+    await tester.ensureVisible(ages);
+    await tester.pumpAndSettle();
+    await tester.tap(ages);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('小学生').last);
+    await tester.pumpAndSettle();
+    await save(tester);
+
+    expect(repository.updateCalls, hasLength(1));
+    expect(repository.updateCalls.single.age, ChildAgeRange.elementary);
+    expect(repository.updateCalls.single.clearAge, isFalse);
+    expect(repository.updateCalls.single.bio, isNull);
+    expect(repository.updateCalls.single.iconKey, isNull);
+  });
+
+  testWidgets('未選択に戻すと、空(サーバーへはnull)を送る', (tester) async {
+    final repository = ScriptedProfileRepository(
+      profile: const UserProfile(
+        id: 'me',
+        nickname: 'こもれび',
+        avatarAsset: AppAvatars.defaultSprout,
+        bio: 'もとの自己紹介',
+        childAgeBand: 'age_0_1',
+      ),
+      updateScript: [null],
+    );
+    await pumpEdit(tester, repository);
+    final ages = find.byKey(const ValueKey('profile-age-band'));
+    await tester.ensureVisible(ages);
+    await tester.pumpAndSettle();
+    await tester.tap(ages);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('未選択').last);
+    await tester.pumpAndSettle();
+    await save(tester);
+
+    expect(repository.updateCalls.single.age, isNull);
+    expect(repository.updateCalls.single.clearAge, isTrue);
+  });
+
+  testWidgets('決まった値以外(未知のコード)は、未選択として扱う', (tester) async {
+    final repository = ScriptedProfileRepository(
+      profile: const UserProfile(
+        id: 'me',
+        nickname: 'こもれび',
+        avatarAsset: AppAvatars.defaultSprout,
+        bio: 'もとの自己紹介',
+        childAgeBand: '乳児',
+      ),
+    );
+    await pumpEdit(tester, repository);
+    expect(_ageValue(tester), '');
+    // 何も変えていなければ、送らない。
+    await save(tester);
+    expect(repository.updateCalls, isEmpty);
+  });
+
   group('プロフィール更新のリクエスト', () {
+    test('年齢帯は、設定するとコードを、解除するとnullを送る。指定しなければ入れない', () {
+      expect(
+        SupabaseProfileRepository.updateBody(
+          childAgeRange: ChildAgeRange.age46,
+        ),
+        {'child_age_range': 'age_4_6'},
+      );
+      expect(SupabaseProfileRepository.updateBody(clearChildAgeRange: true), {
+        'child_age_range': null,
+      });
+      expect(SupabaseProfileRepository.updateBody(bio: 'a'), {'bio': 'a'});
+      // 設定と解除を同時には指定できない。
+      expect(
+        () => SupabaseProfileRepository.updateBody(
+          childAgeRange: ChildAgeRange.age01,
+          clearChildAgeRange: true,
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('指定した項目だけを入れる(空の自己紹介も送れる)', () {
       expect(SupabaseProfileRepository.updateBody(), isEmpty);
       expect(SupabaseProfileRepository.updateBody(bio: '  こんにちは '), {

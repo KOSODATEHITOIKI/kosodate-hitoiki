@@ -47,9 +47,9 @@ void main() {
       expect(tester.widget<DropdownButton<String>>(ages).value, '');
       await tester.tap(ages);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('未就学児').last);
+      await tester.tap(find.text('4〜6歳(未就学)').last);
       await tester.pumpAndSettle();
-      expect(tester.widget<DropdownButton<String>>(ages).value, '未就学児');
+      expect(tester.widget<DropdownButton<String>>(ages).value, 'age_4_6');
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('profile-save')),
         160,
@@ -63,7 +63,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.ensureVisible(ages);
       await tester.pumpAndSettle();
-      expect(tester.widget<DropdownButton<String>>(ages).value, '未就学児');
+      expect(tester.widget<DropdownButton<String>>(ages).value, 'age_4_6');
       await tester.tap(ages);
       await tester.pumpAndSettle();
       await tester.tap(find.text('未選択').last);
