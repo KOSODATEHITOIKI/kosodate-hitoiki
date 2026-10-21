@@ -6,7 +6,9 @@ import 'core/config/flavor.dart';
 import 'core/config/supabase_config.dart';
 import 'core/widgets/startup_error_app.dart';
 import 'data/datasources/supabase_client_provider.dart';
+import 'data/repositories/supabase_account_repository.dart';
 import 'data/repositories/supabase_comment_repository.dart';
+import 'presentation/providers/account_providers.dart';
 import 'data/repositories/supabase_post_repository.dart';
 import 'data/repositories/supabase_profile_repository.dart';
 import 'presentation/providers/profile_providers.dart';
@@ -39,6 +41,9 @@ Future<void> main() async {
         ),
         reportRepositoryProvider.overrideWith(
           (ref) => SupabaseReportRepository(ref.watch(supabaseClientProvider)),
+        ),
+        accountRepositoryProvider.overrideWith(
+          (ref) => SupabaseAccountRepository(ref.watch(supabaseClientProvider)),
         ),
         profileRepositoryProvider.overrideWith(
           (ref) => SupabaseProfileRepository(ref.watch(supabaseClientProvider)),
