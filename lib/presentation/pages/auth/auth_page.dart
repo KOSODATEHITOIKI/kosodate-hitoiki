@@ -333,9 +333,9 @@ class _AuthHeader extends StatelessWidget {
                       label: 'ひと息',
                       child: Image.asset(
                         AppBrand.logo,
-                        width: (MediaQuery.sizeOf(context).width * 0.42).clamp(
-                          134.0,
-                          180.0,
+                        width: (MediaQuery.sizeOf(context).width * 0.36).clamp(
+                          110.0,
+                          150.0,
                         ),
                         fit: BoxFit.contain,
                         alignment: Alignment.centerLeft,
@@ -345,7 +345,7 @@ class _AuthHeader extends StatelessWidget {
                   : const Text(
                       'ひと息',
                       style: TextStyle(
-                        fontSize: 27,
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -355,11 +355,11 @@ class _AuthHeader extends StatelessWidget {
               AuthMode.login => 'おかえりなさい。',
               AuthMode.register => 'がんばる毎日に、\nやさしいつながりを。',
               AuthMode.reset => '登録したメールアドレスを\n入力してください。',
-            }, style: const TextStyle(fontSize: 15.5, height: 1.7)),
+            }, style: const TextStyle(fontSize: 14.5, height: 1.7)),
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
           ],
         ),

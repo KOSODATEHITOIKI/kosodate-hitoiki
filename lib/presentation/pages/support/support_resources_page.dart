@@ -108,7 +108,7 @@ class SupportResourcesPage extends StatelessWidget {
                         child: Text(
                           item.$1,
                           style: const TextStyle(
-                            fontSize: 17,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),

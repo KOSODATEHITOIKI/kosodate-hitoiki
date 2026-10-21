@@ -74,7 +74,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
                           Text(
                             item.$1,
                             style: const TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -92,7 +92,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
                 const SizedBox(height: 16),
                 const Text(
                   '退会すると元に戻せません。',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 const Text(

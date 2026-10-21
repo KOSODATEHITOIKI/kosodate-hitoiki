@@ -216,7 +216,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
             minimumSize: const Size(48, 52),
             side: const BorderSide(color: AppColors.divider),
             textStyle: const TextStyle(
-              fontSize: 13.5,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
             ),
           ),

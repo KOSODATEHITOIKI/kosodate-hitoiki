@@ -6,27 +6,27 @@ class AppTypography {
 
   static const fontFamily = 'M PLUS Rounded 1c';
   static const appName = TextStyle(
-    fontSize: 27,
+    fontSize: 24,
     fontWeight: FontWeight.w800,
     height: 1.4,
   );
   static const title = TextStyle(
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w700,
     height: 1.4,
   );
   static const section = TextStyle(
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: FontWeight.w700,
     height: 1.5,
   );
   static const body = TextStyle(
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: FontWeight.w400,
     height: 1.7,
   );
   static const button = TextStyle(
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: FontWeight.w700,
     height: 1.5,
   );

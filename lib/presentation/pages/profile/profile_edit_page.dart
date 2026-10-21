@@ -235,7 +235,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 16),
         child,
