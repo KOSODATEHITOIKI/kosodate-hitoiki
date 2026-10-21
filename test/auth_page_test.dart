@@ -135,6 +135,12 @@ void main() {
     await agreeBoth(tester);
   }
 
+  testWidgets('Appleでのログインは、フェーズ2まで出さない', (tester) async {
+    await pumpAuth(tester);
+    expect(find.text('Appleで続ける'), findsNothing);
+    expect(find.text('Googleで続ける'), findsOneWidget);
+  });
+
   testWidgets('ログインの入力検証とパスワード表示切替', (tester) async {
     await pumpAuth(tester);
     await submit(tester);
