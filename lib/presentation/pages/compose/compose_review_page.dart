@@ -115,9 +115,13 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
   }
 
   /// 確認表示のあと、「そのまま投稿する」。確認済みとして、新しい送信にする。
+  /// キーを新しくするのは、最初の確認のときだけ。確認後の送信が通信の失敗になって
+  /// 再試行するときは、同じキーのまま送る(サーバーで投稿済みでも重複しない)。
   void _confirmAndSubmit() {
-    _confirmed = true;
-    _key = newIdempotencyKey();
+    if (!_confirmed) {
+      _confirmed = true;
+      _key = newIdempotencyKey();
+    }
     _submit();
   }
 
@@ -136,10 +140,13 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
       }
     });
     return PopScope<bool>(
-      // 投稿できたあとは、戻る操作でも「投稿できた」を返して閉じる。
-      canPop: _stage != _Stage.success,
+      // 送信中は戻れない(閉じると結果を受け取れず、下書きが残って、重複投稿に
+      // つながる)。投稿できたあとは、戻る操作でも「投稿できた」を返して閉じる。
+      canPop: _stage != _Stage.success && !_busy,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) Navigator.of(context).pop(true);
+        if (!didPop && _stage == _Stage.success) {
+          Navigator.of(context).pop(true);
+        }
       },
       child: Scaffold(
         appBar: AppBar(

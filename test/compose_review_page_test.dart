@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -146,6 +148,57 @@ void main() {
     expect(repository.calls[1].confirmed, isTrue);
     expect(repository.calls[1].key, isNot(repository.calls[0].key));
     expect(find.text('投稿しました。'), findsOneWidget);
+  });
+
+  testWidgets('確認後の送信が通信の失敗になっても、再試行は同じキーで送る(二重投稿を防ぐ)', (tester) async {
+    final repository = ScriptedPostRepository([
+      const ApiException(
+        code: 'MODERATION_CONFIRM_REQUIRED',
+        message: '確認してください。',
+        status: 409,
+      ),
+      Exception('network'),
+      Exception('network again'),
+      created(),
+    ]);
+    await pumpReview(tester, repository);
+    await tapKey(tester, 'compose-send'); // 確認が出る
+    await tapKey(tester, 'compose-send'); // そのまま投稿 → 通信の失敗
+    expect(find.byKey(const ValueKey('compose-error')), findsOneWidget);
+    await tapKey(tester, 'compose-send'); // 再試行 → また失敗
+    await tapKey(tester, 'compose-send'); // 再試行 → 成功
+
+    expect(repository.calls, hasLength(4));
+    final confirmedKeys = repository.calls.skip(1).map((c) => c.key).toSet();
+    // 確認後の3回は、すべて同じキー。確認前のキーとは別。
+    expect(confirmedKeys, hasLength(1));
+    expect(confirmedKeys.single, isNot(repository.calls.first.key));
+    expect(repository.calls.skip(1).every((c) => c.confirmed), isTrue);
+    expect(find.text('投稿しました。'), findsOneWidget);
+  });
+
+  testWidgets('送信中は戻れず、終わると結果(成功画面)が出る', (tester) async {
+    final completer = Completer<CreatedPost>();
+    final repository = ScriptedPostRepository([() => completer.future]);
+    final result = <bool?>[];
+    await pumpReview(tester, repository, result: result);
+
+    await tester.tap(find.byKey(const ValueKey('compose-send')));
+    await tester.pump();
+    expect(find.text('送信しています…'), findsOneWidget);
+
+    // 送信中に戻る操作をしても、画面は閉じない。
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(ComposeReviewPage), findsOneWidget);
+    expect(result, isEmpty);
+
+    completer.complete(created());
+    await tester.pumpAndSettle();
+    expect(find.text('投稿しました。'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(result, [true]);
   });
 
   testWidgets('送信不可のときは理由を出し、送るボタンはなく、書き直せる', (tester) async {

@@ -243,6 +243,45 @@ void main() {
     );
   });
 
+  testWidgets('ゲストがログインしても下書きは残り、ログアウト・別の利用者への切り替えでは消える', (tester) async {
+    final user = StateProvider<String?>((ref) => null);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          currentUserIdProvider.overrideWith((ref) => ref.watch(user)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(ComposePage)),
+    );
+    String draft() =>
+        tester.widget<TextField>(find.byType(TextField)).controller!.text;
+
+    await tester.enterText(find.byType(TextField), 'ゲストの下書き');
+    await tester.pumpAndSettle();
+
+    // ゲスト → ログイン: 残る。
+    container.read(user.notifier).state = 'user-a';
+    await tester.pumpAndSettle();
+    expect(draft(), 'ゲストの下書き');
+
+    // 別の利用者に切り替え: 消える。
+    container.read(user.notifier).state = 'user-b';
+    await tester.pumpAndSettle();
+    expect(draft(), isEmpty);
+
+    // ログアウト: 消える。
+    await tester.enterText(find.byType(TextField), 'Bの下書き');
+    container.read(user.notifier).state = null;
+    await tester.pumpAndSettle();
+    expect(draft(), isEmpty);
+  });
+
   testWidgets('話題は、サンプルのときだけ選べる(実データには送れないため)', (tester) async {
     for (final sample in [false, true]) {
       await tester.pumpWidget(

@@ -134,7 +134,9 @@ class _ComposePageState extends ConsumerState<ComposePage> {
   @override
   Widget build(BuildContext context) {
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
-      if (previous != next) setState(_resetDraft);
+      // ゲストがログインして書き続けるときは、入力を残す(登録・ログインの案内の
+      // 約束)。ログアウトや、別の利用者への切り替えのときだけ破棄する。
+      if (previous != null && previous != next) setState(_resetDraft);
     });
     return _build(context);
   }

@@ -5,7 +5,8 @@ import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 class ScriptedPostRepository implements PostRepository {
   ScriptedPostRepository(this.script, {this.sample = false});
 
-  /// 呼び出しごとに1つ使う。[CreatedPost]なら成功、それ以外は投げる。
+  /// 呼び出しごとに1つ使う。[CreatedPost]なら成功、`Future<CreatedPost> Function()`なら
+  /// その結果を待つ(送信中の状態を作る)、それ以外は投げる。
   final List<Object> script;
   final bool sample;
   final calls = <CreateCall>[];
@@ -24,6 +25,7 @@ class ScriptedPostRepository implements PostRepository {
     calls.add(CreateCall(type, responseMode, body, idempotencyKey, confirmed));
     final next = script.removeAt(0);
     if (next is CreatedPost) return next;
+    if (next is Future<CreatedPost> Function()) return next();
     throw next;
   }
 
