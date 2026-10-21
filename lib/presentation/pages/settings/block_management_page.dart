@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
-import '../../../core/constants/app_icons.dart';
+import '../../../domain/models/blocked_user.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/post_providers.dart';
 import '../../widgets/comfort_page.dart';
 import '../auth/auth_page.dart';
+import '../compose/post_messages.dart';
 
-/// S-11。画面確認用のサンプル。取得・解除・投稿除外はIssue #24で接続する。
+/// S-11。ブロック中の相手の一覧と、解除(`my_blocks`の取得、`blocks`の削除)。
+/// ブロックや解除は、相手に通知されない。解除すると、相手の投稿・コメントが再び表示される。
 class BlockManagementPage extends ConsumerStatefulWidget {
   const BlockManagementPage({super.key});
 
@@ -17,17 +20,21 @@ class BlockManagementPage extends ConsumerStatefulWidget {
 }
 
 class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
-  bool _blocked = true;
+  /// 解除の送信中(続けて押しても、二重に送らない)。
+  bool _busy = false;
 
-  Future<void> _unblock() async {
-    if (!ref.read(isLoggedInProvider)) return;
+  Future<void> _unblock(BlockedUser user) async {
+    if (_busy || !ref.read(isLoggedInProvider)) return;
+    final sample = ref.read(postsAreSampleProvider);
+    final name = user.nickname.isEmpty ? 'この相手' : '${user.nickname}さん';
     final accepted = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('あおぞらさんのブロックを解除しますか？'),
-        content: const SingleChildScrollView(
+        title: Text('$nameのブロックを解除しますか？'),
+        content: SingleChildScrollView(
           child: Text(
-            '解除すると、相手の投稿・コメントが再び表示されます。解除は相手に通知されません。\n\n現在はサンプルです。実際のブロック状態は変わらず、この画面の一覧だけから取り除きます。',
+            '解除すると、相手の投稿・コメントが再び表示されます。解除は相手に通知されません。'
+            '${sample ? '\n\n現在はサンプルです。実際のブロック状態は変わりません。' : ''}',
           ),
         ),
         actions: [
@@ -36,22 +43,43 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
             child: const Text('キャンセル'),
           ),
           FilledButton(
+            key: const ValueKey('unblock-confirm'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('サンプルで解除'),
+            child: Text(sample ? 'サンプルで解除' : '解除する'),
           ),
         ],
       ),
     );
     if (!mounted || accepted != true || !ref.read(isLoggedInProvider)) return;
-    setState(() => _blocked = false);
+    // 応答を待つ間に画面が閉じられても、取り直せるよう、先に取っておく。
+    final container = ProviderScope.containerOf(context);
+    final repository = ref.read(postRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      await repository.unblockUser(user.id);
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(postFailureMessage(error))),
+      );
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
+    // 解除した相手の投稿が、一覧・検索に戻る。
+    container
+      ..invalidate(blockedUsersProvider)
+      ..invalidate(feedPostsProvider)
+      ..invalidate(searchResultsProvider)
+      ..invalidate(myPostsProvider)
+      ..invalidate(savedPostsProvider);
+    messenger.showSnackBar(const SnackBar(content: Text('ブロックを解除しました')));
+    if (mounted) setState(() => _busy = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final loggedIn = ref.watch(isLoggedInProvider);
-    ref.listen<bool>(isLoggedInProvider, (_, next) {
-      if (!next) setState(() => _blocked = true);
-    });
+    final sample = ref.watch(postsAreSampleProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('ブロック管理')),
       body: !loggedIn
@@ -74,11 +102,13 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
               title: 'ブロック管理',
               message: '安心して使えるように、\nブロックした相手を管理できます。',
               children: [
-                const Text(
-                  'サンプルの一覧です。実際のブロック状態には反映されません。',
-                  style: TextStyle(fontSize: 12, height: 1.7),
-                ),
-                const SizedBox(height: 16),
+                if (sample) ...[
+                  const Text(
+                    'サンプルの一覧です。実際のブロック状態には反映されません。',
+                    style: TextStyle(fontSize: 12, height: 1.7),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -93,71 +123,48 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        if (_blocked)
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final stacked =
-                                  constraints.maxWidth < 280 ||
-                                  MediaQuery.textScalerOf(context).scale(14) >
-                                      20;
-                              final identity = Row(
+                        ref
+                            .watch(blockedUsersProvider)
+                            .when(
+                              loading: () => const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                              error: (_, _) => Column(
                                 children: [
-                                  AppAsset(
-                                    AppAvatars.defaultBlueFlowers,
-                                    width: 48,
-                                    height: 48,
-                                    excludeFromSemantics: true,
+                                  const Text(
+                                    '読み込めませんでした。',
+                                    key: ValueKey('blocks-load-failed'),
+                                    style: TextStyle(fontSize: 14),
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Expanded(
-                                    child: Text(
-                                      'あおぞら',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
+                                  TextButton(
+                                    key: const ValueKey('blocks-retry'),
+                                    onPressed: () =>
+                                        ref.invalidate(blockedUsersProvider),
+                                    child: const Text('再読み込み'),
                                   ),
                                 ],
-                              );
-                              final button = FilledButton(
-                                onPressed: _unblock,
-                                child: const Text('解除'),
-                              );
-                              if (stacked) {
-                                return Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    identity,
-                                    const SizedBox(height: 12),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: button,
+                              ),
+                              data: (users) => users.isEmpty
+                                  ? const Text(
+                                      'ブロック中の相手はいません',
+                                      key: ValueKey('blocks-empty'),
+                                      style: TextStyle(fontSize: 14),
+                                    )
+                                  : Column(
+                                      children: [
+                                        for (final user in users)
+                                          _BlockedRow(
+                                            user: user,
+                                            onUnblock: _busy
+                                                ? null
+                                                : () => _unblock(user),
+                                          ),
+                                      ],
                                     ),
-                                  ],
-                                );
-                              }
-                              return Row(
-                                children: [
-                                  Expanded(child: identity),
-                                  const SizedBox(width: 12),
-                                  button,
-                                ],
-                              );
-                            },
-                          )
-                        else ...[
-                          const Text(
-                            'ブロック中の相手はいません',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () => setState(() => _blocked = true),
-                            child: const Text('サンプルを戻す'),
-                          ),
-                        ],
+                            ),
                       ],
                     ),
                   ),
@@ -175,4 +182,68 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
   void _auth(AuthMode mode) => Navigator.of(
     context,
   ).push<void>(MaterialPageRoute(builder: (_) => AuthPage(initialMode: mode)));
+}
+
+/// 一覧の1行。狭い画面・大きな文字では、名前と「解除」を縦に並べる。
+class _BlockedRow extends StatelessWidget {
+  const _BlockedRow({required this.user, required this.onUnblock});
+
+  final BlockedUser user;
+  final VoidCallback? onUnblock;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final stacked =
+            constraints.maxWidth < 280 ||
+            MediaQuery.textScalerOf(context).scale(14) > 20;
+        final identity = Row(
+          children: [
+            ClipOval(
+              child: AppAsset(
+                user.avatarAsset,
+                width: 48,
+                height: 48,
+                excludeFromSemantics: true,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                user.nickname.isEmpty ? '(名前なし)' : user.nickname,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+        final button = FilledButton(
+          key: ValueKey('unblock-${user.id}'),
+          onPressed: onUnblock,
+          child: const Text('解除'),
+        );
+        if (stacked) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              identity,
+              const SizedBox(height: 12),
+              Align(alignment: Alignment.centerRight, child: button),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: identity),
+            const SizedBox(width: 12),
+            button,
+          ],
+        );
+      },
+    ),
+  );
 }

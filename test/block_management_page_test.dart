@@ -19,7 +19,7 @@ Future<void> tapVisible(WidgetTester tester, String label) async {
 
 void main() {
   for (final scale in [1.0, 2.0]) {
-    testWidgets('320px文字$scale倍で解除の取消・確認・空表示・復帰', (tester) async {
+    testWidgets('320px文字$scale倍で解除の取消・確認・空表示', (tester) async {
       tester.view.physicalSize = const Size(320, 700);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -50,8 +50,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('ブロック中の相手はいません'), findsOneWidget);
       expect(find.text('あおぞら'), findsNothing);
-      await tapVisible(tester, 'サンプルを戻す');
-      expect(find.text('あおぞら'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(SettingsPage), findsOneWidget);

@@ -1,3 +1,4 @@
+import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 
@@ -10,9 +11,13 @@ class ScriptedPostRepository implements PostRepository {
     this.deleteError,
     this.actionError,
     this.modeError,
+    List<BlockedUser>? blocked,
+    this.blockedFetchErrors,
+    this.unblockError,
     this.myPosts = const [],
     this.savedPosts = const [],
-  }) : editScript = editScript ?? [];
+  }) : editScript = editScript ?? [],
+       blocked = blocked ?? [];
 
   /// マイページの「自分の投稿」「保存した投稿」に返す一覧。
   final List<Post> myPosts;
@@ -42,6 +47,32 @@ class ScriptedPostRepository implements PostRepository {
   final Object? modeError;
   final modeCalls =
       <({String postId, ResponseMode mode, bool? commentsOpen})>[];
+
+  /// ブロック中の相手(解除すると取り除く)。
+  final List<BlockedUser> blocked;
+
+  /// 取得の呼び出しごとに1つ使う(なくなったら成功)。投げる。
+  final List<Object>? blockedFetchErrors;
+  var blockedFetchCount = 0;
+
+  /// 解除で投げるエラー(nullなら成功)。
+  final Object? unblockError;
+  final unblockCalls = <String>[];
+
+  @override
+  Future<List<BlockedUser>> fetchBlockedUsers() async {
+    blockedFetchCount++;
+    final errors = blockedFetchErrors;
+    if (errors != null && errors.isNotEmpty) throw errors.removeAt(0);
+    return List.of(blocked);
+  }
+
+  @override
+  Future<void> unblockUser(String userId) async {
+    unblockCalls.add(userId);
+    if (unblockError != null) throw unblockError!;
+    blocked.removeWhere((user) => user.id == userId);
+  }
 
   @override
   bool get isSample => sample;

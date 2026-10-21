@@ -1,3 +1,4 @@
+import '../models/blocked_user.dart';
 import '../models/post.dart';
 
 /// 投稿データ取得の抽象。バックエンド接続時はSupabase実装に差し替える
@@ -62,6 +63,12 @@ abstract class PostRepository {
   /// 投稿者をブロックする。相手の投稿・コメントが自分に表示されなくなり、相手は自分への
   /// コメント・返信・共感ができなくなる。相手には知らせない。重ねても、エラーにならない。
   Future<void> blockUser(String userId);
+
+  /// ブロック中の相手の一覧(新しくブロックした順。自分がブロックした相手だけ)。
+  Future<List<BlockedUser>> fetchBlockedUsers();
+
+  /// ブロックを解除する。相手には知らせない。ブロックしていない相手でも、エラーにならない。
+  Future<void> unblockUser(String userId);
 
   /// 投稿の保存/保存解除を切り替える。
   Future<void> toggleSaved(String postId);
