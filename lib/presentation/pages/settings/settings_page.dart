@@ -9,6 +9,7 @@ import '../../widgets/comfort_page.dart';
 import 'withdrawal_page.dart';
 import 'notification_settings_page.dart';
 import 'block_management_page.dart';
+import 'mute_management_page.dart';
 import '../support/support_resources_page.dart';
 
 /// S-11。未接続の設定操作は案内だけを表示する。
@@ -134,6 +135,7 @@ class SettingsPage extends ConsumerWidget {
                           '退会',
                           'ログアウト',
                           '通知',
+                          'ミュート管理',
                           'ブロック管理',
                           '困ったときの相談先',
                         ].contains(group[index].$2)
@@ -159,6 +161,12 @@ class SettingsPage extends ConsumerWidget {
                         Navigator.of(context).push<void>(
                           MaterialPageRoute(
                             builder: (_) => const NotificationSettingsPage(),
+                          ),
+                        );
+                      } else if (group[index].$2 == 'ミュート管理') {
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute(
+                            builder: (_) => const MuteManagementPage(),
                           ),
                         );
                       } else if (group[index].$2 == 'ブロック管理') {
