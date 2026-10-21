@@ -8,6 +8,7 @@ import 'presentation/pages/welcome/welcome_page.dart';
 import 'presentation/widgets/main_navigation_shell.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/comment_providers.dart';
+import 'presentation/providers/mute_providers.dart';
 import 'presentation/providers/notification_providers.dart';
 import 'presentation/providers/profile_providers.dart';
 import 'presentation/providers/post_providers.dart';
@@ -24,6 +25,7 @@ class App extends ConsumerWidget {
         ref.invalidate(commentRepositoryProvider);
         ref.invalidate(profileRepositoryProvider);
         ref.invalidate(notificationRepositoryProvider);
+        ref.invalidate(muteRepositoryProvider);
       }
     });
     return MaterialApp(
