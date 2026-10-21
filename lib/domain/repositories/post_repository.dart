@@ -40,6 +40,14 @@ abstract class PostRepository {
   /// 投稿を削除する(本人のみ)。コメント・返信・共感・保存・通知も一緒に消える。
   Future<void> deletePost(String postId);
 
+  /// 投稿を、自分の画面にだけ表示しないようにする(非表示)。相手には知らせない。
+  /// 同じ投稿を重ねて非表示にしても、エラーにならない。
+  Future<void> hidePost(String postId);
+
+  /// 投稿者をブロックする。相手の投稿・コメントが自分に表示されなくなり、相手は自分への
+  /// コメント・返信・共感ができなくなる。相手には知らせない。重ねても、エラーにならない。
+  Future<void> blockUser(String userId);
+
   /// 投稿の保存/保存解除を切り替える。
   Future<void> toggleSaved(String postId);
 }

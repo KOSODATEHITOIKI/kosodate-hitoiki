@@ -12,7 +12,8 @@ import '../../domain/repositories/post_repository.dart';
 /// 非表示・ミュートが適用される(kosodate-hitoiki-backend docs/API契約.md 3・6節)。
 ///
 /// 接続の段階(バックエンド docs/Flutter結合ガイド.md 2節):
-/// 段2 = 一覧・検索、段3 = 投稿の作成(ここ)。自分の投稿・保存の一覧は段6、保存の切り替えは段4で接続する。
+/// 段2 = 一覧・検索、段3 = 投稿の作成・編集・削除、段4 = 保存・非表示・ブロック(ここ)。
+/// 共感・定型文は、定型文のマスタが未決定のため未接続。自分の投稿の一覧は段6。
 class SupabasePostRepository implements PostRepository {
   SupabasePostRepository(this._client);
 
@@ -35,10 +36,28 @@ class SupabasePostRepository implements PostRepository {
       params: searchParams(query: query, type: type),
     );
     final myId = _client.auth.currentUser?.id;
+    final saved = await _savedIds([
+      for (final row in rows) (row as Map)['id'] as String,
+    ]);
     return [
       for (final row in rows)
-        postFromRow((row as Map).cast<String, dynamic>(), myUserId: myId),
+        postFromRow(
+          (row as Map).cast<String, dynamic>(),
+          myUserId: myId,
+          isSaved: saved.contains(row['id']),
+        ),
     ];
+  }
+
+  /// [postIds]のうち、自分が保存しているもの(RLSにより、自分の保存だけが見える)。
+  /// 未ログインは保存を持たない。
+  Future<Set<String>> _savedIds(List<String> postIds) async {
+    if (_client.auth.currentUser == null || postIds.isEmpty) return const {};
+    final rows = await _client
+        .from('saved_posts')
+        .select('post_id')
+        .inFilter('post_id', postIds);
+    return {for (final row in rows) row['post_id'] as String};
   }
 
   /// 投稿の作成(`POST /functions/v1/posts`)。送信前チェックもこのAPIの中で行われる。
@@ -137,13 +156,62 @@ class SupabasePostRepository implements PostRepository {
   @override
   Future<List<Post>> fetchMyPosts() async => const [];
 
+  /// 保存した投稿(新しく保存した順)。見えなくなった投稿(削除・一時非表示・ブロックなど)は
+  /// 出ない(保存自体は残る)。ログイン必須。
   @override
-  Future<List<Post>> fetchSavedPosts() async => const [];
+  Future<List<Post>> fetchSavedPosts() async {
+    final rows = await _client
+        .from('saved_post_list')
+        .select()
+        .order('saved_at', ascending: false)
+        .limit(pageSize);
+    final myId = _client.auth.currentUser?.id;
+    return [
+      for (final row in rows) postFromRow(row, myUserId: myId, isSaved: true),
+    ];
+  }
+
+  /// 保存の切り替え。いまの保存の有無を調べて、あれば解除、なければ保存する。
+  /// 見えない投稿・存在しない投稿は保存できない(どちらも`42501`)。
+  @override
+  Future<void> toggleSaved(String postId) async {
+    final existing = await _client
+        .from('saved_posts')
+        .select('post_id')
+        .eq('post_id', postId)
+        .limit(1);
+    if (existing.isNotEmpty) {
+      await _client.from('saved_posts').delete().eq('post_id', postId);
+      return;
+    }
+    await _insertIgnoringDuplicate('saved_posts', {'post_id': postId});
+  }
 
   @override
-  Future<void> toggleSaved(String postId) {
-    throw StateError('保存の接続は未実装です(接続段4)');
+  Future<void> hidePost(String postId) => _insertIgnoringDuplicate(
+    'hidden_items',
+    {'target_type': 'post', 'target_id': postId},
+  );
+
+  @override
+  Future<void> blockUser(String userId) =>
+      _insertIgnoringDuplicate('blocks', {'blocked_id': userId});
+
+  /// 追加する。すでにある(一意制約違反)ときは、何もしない(重ねても成功)。
+  Future<void> _insertIgnoringDuplicate(
+    String table,
+    Map<String, dynamic> row,
+  ) async {
+    try {
+      await _client.from(table).insert(row);
+    } on PostgrestException catch (error) {
+      if (!isDuplicate(error)) rethrow;
+    }
   }
+
+  /// PostgRESTの一意制約違反(`23505`、HTTP 409)か。
+  static bool isDuplicate(PostgrestException error) =>
+      error.code == '23505' || error.code == '409';
 
   /// `search_posts`の引数。空の検索語は渡さない(新着一覧になる)。
   static Map<String, dynamic> searchParams({
@@ -162,8 +230,12 @@ class SupabasePostRepository implements PostRepository {
   /// APIの行をアプリの投稿にする。
   ///
   /// 共感の件数は、投稿者本人にしか返らない仕様(別の段で取得)なので0にする。
-  /// 保存の有無は段4で接続するため、いまはfalse。
-  static Post postFromRow(Map<String, dynamic> row, {String? myUserId}) {
+  /// 保存の有無は[isSaved]で渡す(自分の保存を別に調べる)。
+  static Post postFromRow(
+    Map<String, dynamic> row, {
+    String? myUserId,
+    bool isSaved = false,
+  }) {
     final authorId = row['author_id'] as String?;
     return Post(
       id: row['id'] as String,
@@ -179,6 +251,7 @@ class SupabasePostRepository implements PostRepository {
       empathyCount: 0,
       commentCount: (row['comment_count'] as num?)?.toInt() ?? 0,
       isMine: myUserId != null && authorId == myUserId,
+      isSaved: isSaved,
       commentsOpen: row['comment_acceptance'] != 'closed',
     );
   }

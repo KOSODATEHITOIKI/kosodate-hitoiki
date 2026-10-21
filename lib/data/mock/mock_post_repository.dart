@@ -178,6 +178,16 @@ class MockPostRepository implements PostRepository {
   }
 
   @override
+  Future<void> hidePost(String postId) async {
+    _posts.removeWhere((post) => post.id == postId);
+  }
+
+  @override
+  Future<void> blockUser(String userId) async {
+    _posts.removeWhere((post) => post.authorId == userId);
+  }
+
+  @override
   Future<void> toggleSaved(String postId) async {
     final index = _posts.indexWhere((post) => post.id == postId);
     if (index == -1) {

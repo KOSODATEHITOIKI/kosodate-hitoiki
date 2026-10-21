@@ -48,6 +48,12 @@ class _RealLikeRepository implements PostRepository {
   Future<void> deletePost(String postId) => throw UnimplementedError();
 
   @override
+  Future<void> hidePost(String postId) => throw UnimplementedError();
+
+  @override
+  Future<void> blockUser(String userId) => throw UnimplementedError();
+
+  @override
   Future<void> toggleSaved(String postId) async {}
 }
 

@@ -8,6 +8,7 @@ class ScriptedPostRepository implements PostRepository {
     this.sample = false,
     List<Object>? editScript,
     this.deleteError,
+    this.actionError,
   }) : editScript = editScript ?? [];
 
   /// 作成の呼び出しごとに1つ使う。[CreatedPost]なら成功、`Future Function()`なら
@@ -23,6 +24,12 @@ class ScriptedPostRepository implements PostRepository {
   /// 削除で投げるエラー(nullなら成功)。
   final Object? deleteError;
   final deleteCalls = <String>[];
+
+  /// 非表示・ブロック・保存の切り替えで投げるエラー(nullなら成功)。
+  final Object? actionError;
+  final hideCalls = <String>[];
+  final blockCalls = <String>[];
+  final saveCalls = <String>[];
 
   @override
   bool get isSample => sample;
@@ -74,7 +81,22 @@ class ScriptedPostRepository implements PostRepository {
   Future<List<Post>> fetchSavedPosts() async => const [];
 
   @override
-  Future<void> toggleSaved(String postId) async {}
+  Future<void> hidePost(String postId) async {
+    hideCalls.add(postId);
+    if (actionError != null) throw actionError!;
+  }
+
+  @override
+  Future<void> blockUser(String userId) async {
+    blockCalls.add(userId);
+    if (actionError != null) throw actionError!;
+  }
+
+  @override
+  Future<void> toggleSaved(String postId) async {
+    saveCalls.add(postId);
+    if (actionError != null) throw actionError!;
+  }
 }
 
 class EditCall {
