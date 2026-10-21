@@ -2,103 +2,259 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/data/api/api_exception.dart';
+import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_review_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/support/support_resources_page.dart';
+import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
 
-Future<void> showSample(WidgetTester tester, String label) async {
-  final target = find.widgetWithText(ChoiceChip, label);
+import 'helpers/scripted_post_repository.dart';
+
+const _body = '今日は少し疲れた。';
+
+/// 確認画面を、別の画面から開いて、閉じたときの戻り値を[result]に入れる。
+Future<void> pumpReview(
+  WidgetTester tester,
+  ScriptedPostRepository repository, {
+  List<bool?>? result,
+  double scale = 1,
+  Size size = const Size(390, 900),
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [postRepositoryProvider.overrideWithValue(repository)],
+      child: MaterialApp(
+        theme: AppTheme.light,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () async {
+                  final posted = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => const ComposeReviewPage(
+                        body: _body,
+                        postType: PostType.consult,
+                        responseMode: ResponseMode.advice,
+                      ),
+                    ),
+                  );
+                  result?.add(posted);
+                },
+                child: const Text('開く'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('開く'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> tapKey(WidgetTester tester, String key) async {
+  // 画面外のボタンは遅延構築されるので、見えるまでスクロールしてから押す。
   await tester.scrollUntilVisible(
-    target,
-    150,
+    find.byKey(ValueKey(key)),
+    200,
     scrollable: find.byType(Scrollable).first,
   );
   await tester.pumpAndSettle();
-  await tester.tap(target);
+  await tester.tap(find.byKey(ValueKey(key)));
   await tester.pumpAndSettle();
 }
 
 void main() {
+  testWidgets('投稿できたら、内容をAPIへ送り、成功画面から「ホームへ」で閉じる', (tester) async {
+    final repository = ScriptedPostRepository([created()]);
+    final result = <bool?>[];
+    await pumpReview(tester, repository, result: result);
+
+    expect(find.text(_body), findsOneWidget);
+    expect(find.text('相談'), findsOneWidget);
+    await tapKey(tester, 'compose-send');
+
+    expect(repository.calls, hasLength(1));
+    final call = repository.calls.single;
+    expect(call.type, PostType.consult);
+    expect(call.responseMode, ResponseMode.advice);
+    expect(call.body, _body);
+    expect(call.confirmed, isFalse);
+    expect(call.key, matches(RegExp(r'^[0-9a-f-]{36}$')));
+    expect(find.text('投稿しました。'), findsOneWidget);
+    expect(find.byKey(const ValueKey('support-notice')), findsNothing);
+
+    await tapKey(tester, 'compose-done');
+    expect(result, [true]);
+  });
+
+  testWidgets('成功後に戻る操作をしても「投稿できた」を返す', (tester) async {
+    final repository = ScriptedPostRepository([created()]);
+    final result = <bool?>[];
+    await pumpReview(tester, repository, result: result);
+    await tapKey(tester, 'compose-send');
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(result, [true]);
+  });
+
+  testWidgets('相談先の案内(support_notice)は、本人にだけ出し、投稿は止めない', (tester) async {
+    final repository = ScriptedPostRepository([created(supportNotice: true)]);
+    await pumpReview(tester, repository);
+    await tapKey(tester, 'compose-send');
+
+    expect(find.byKey(const ValueKey('support-notice')), findsOneWidget);
+    expect(find.text('投稿しました。'), findsOneWidget);
+    await tester.tap(find.text('困ったときの相談先'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SupportResourcesPage), findsOneWidget);
+  });
+
+  testWidgets('確認が必要なときは確認を出し、「そのまま投稿する」で confirmed:true・新しいキーで再送する', (
+    tester,
+  ) async {
+    final repository = ScriptedPostRepository([
+      const ApiException(
+        code: 'MODERATION_CONFIRM_REQUIRED',
+        message: '強い言葉が含まれています。',
+        status: 409,
+      ),
+      created(),
+    ]);
+    await pumpReview(tester, repository);
+    await tapKey(tester, 'compose-send');
+
+    expect(find.byKey(const ValueKey('compose-confirm')), findsOneWidget);
+    expect(find.text('強い言葉が含まれています。'), findsOneWidget);
+    expect(find.text('そのまま投稿する'), findsOneWidget);
+    expect(find.text('投稿しました。'), findsNothing);
+
+    await tapKey(tester, 'compose-send');
+    expect(repository.calls, hasLength(2));
+    expect(repository.calls[0].confirmed, isFalse);
+    expect(repository.calls[1].confirmed, isTrue);
+    expect(repository.calls[1].key, isNot(repository.calls[0].key));
+    expect(find.text('投稿しました。'), findsOneWidget);
+  });
+
+  testWidgets('送信不可のときは理由を出し、送るボタンはなく、書き直せる', (tester) async {
+    final repository = ScriptedPostRepository([
+      const ApiException(
+        code: 'MODERATION_REJECTED',
+        message: '',
+        status: 422,
+        details: {
+          'reasons': ['pii_phone'],
+        },
+      ),
+    ]);
+    await pumpReview(tester, repository);
+    await tapKey(tester, 'compose-send');
+
+    expect(find.text('この内容では送信できません。'), findsOneWidget);
+    expect(find.textContaining('個人が特定される情報'), findsOneWidget);
+    expect(find.byKey(const ValueKey('compose-send')), findsNothing);
+    await tapKey(tester, 'compose-rewrite');
+    expect(find.byType(ComposeReviewPage), findsNothing);
+  });
+
+  testWidgets('通信の失敗は表示し、再送は同じキーで行う(二重投稿を防ぐ)', (tester) async {
+    final repository = ScriptedPostRepository([
+      Exception('network'),
+      created(),
+    ]);
+    await pumpReview(tester, repository);
+    await tapKey(tester, 'compose-send');
+    expect(find.byKey(const ValueKey('compose-error')), findsOneWidget);
+    expect(find.text('投稿しました。'), findsNothing);
+
+    await tapKey(tester, 'compose-send');
+    expect(repository.calls, hasLength(2));
+    expect(repository.calls[1].key, repository.calls[0].key);
+    expect(find.text('投稿しました。'), findsOneWidget);
+  });
+
+  for (final item in <(String, ApiException, String)>[
+    (
+      '503',
+      const ApiException(
+        code: 'MODERATION_UNAVAILABLE',
+        message: '',
+        status: 503,
+      ),
+      '確認の仕組みが一時的に使えません。しばらくしてから、もう一度お試しください。',
+    ),
+    (
+      'プロフィール未登録',
+      const ApiException(
+        code: 'FORBIDDEN',
+        message: '',
+        status: 403,
+        details: {'reason': 'profile_required'},
+      ),
+      'プロフィールの登録が必要です。ログインし直して、ニックネームを登録してください。',
+    ),
+    (
+      '利用停止中',
+      const ApiException(
+        code: 'FORBIDDEN',
+        message: '',
+        status: 403,
+        details: {'reason': 'restricted'},
+      ),
+      '現在、投稿やコメントができません。',
+    ),
+  ]) {
+    testWidgets('${item.$1}のときは、案内を出し、確認や成功の画面にはならない', (tester) async {
+      final repository = ScriptedPostRepository([item.$2]);
+      await pumpReview(tester, repository);
+      await tapKey(tester, 'compose-send');
+      expect(find.text(item.$3), findsOneWidget);
+      expect(find.byKey(const ValueKey('compose-confirm')), findsNothing);
+      expect(find.text('投稿しました。'), findsNothing);
+    });
+  }
+
+  testWidgets('投稿の回数制限は、解除の目安の時刻を出す', (tester) async {
+    final repository = ScriptedPostRepository([
+      const ApiException(
+        code: 'RATE_LIMITED',
+        message: '',
+        status: 429,
+        details: {
+          'reason': 'new_user_limit',
+          'retry_at': '2030-01-02T03:04:00',
+        },
+      ),
+    ]);
+    await pumpReview(tester, repository);
+    await tapKey(tester, 'compose-send');
+    expect(find.textContaining('1月2日 3:04ごろまでお待ちください'), findsOneWidget);
+  });
+
   for (final scale in [1.0, 2.0]) {
-    testWidgets('320px文字$scale倍で確認・送信不可・相談先表示を確認する', (tester) async {
-      tester.view.physicalSize = const Size(320, 700);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: AppTheme.light,
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(scale)),
-              child: child!,
-            ),
-            home: const ComposeReviewPage(
-              body: '今日は少し疲れた。',
-              postType: '相談',
-              responseMode: '話を聞きたい',
-              topic: '食事',
-            ),
-          ),
-        ),
+    testWidgets('320px文字$scale倍でも、投稿の流れを最後まで操作できる', (tester) async {
+      final repository = ScriptedPostRepository([created(supportNotice: true)]);
+      await pumpReview(
+        tester,
+        repository,
+        scale: scale,
+        size: const Size(320, 700),
       );
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('今日は少し疲れた。'),
-        150,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('今日は少し疲れた。'), findsOneWidget);
-      expect(find.text('相談'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('チェック結果の表示サンプル'),
-        160,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('チェック結果の表示サンプル'));
-      await tester.pumpAndSettle();
-      await showSample(tester, '送信不可');
-      expect(find.text('この内容で投稿する'), findsNothing);
-      await tester.scrollUntilVisible(
-        find.text('この内容では送信できません。（表示サンプル）'),
-        -150,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('この内容では送信できません。（表示サンプル）'), findsOneWidget);
-      await showSample(tester, '相談先案内');
-      await tester.scrollUntilVisible(
-        find.text('困ったときの相談先'),
-        -150,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('困ったときの相談先'), findsOneWidget);
-      await tester.ensureVisible(find.text('困ったときの相談先'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('困ったときの相談先'));
-      await tester.pumpAndSettle();
-      expect(find.byType(SupportResourcesPage), findsOneWidget);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      expect(find.text('この内容で投稿する'), findsOneWidget);
-      await tester.ensureVisible(find.text('この内容で投稿する'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('この内容で投稿する'));
-      await tester.pumpAndSettle();
-      expect(find.text('投稿機能は準備中です'), findsOneWidget);
-      await tester.tap(find.text('確認に戻る'));
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('今日は少し疲れた。'),
-        -150,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('今日は少し疲れた。'), findsOneWidget);
+      await tapKey(tester, 'compose-send');
+      expect(find.byKey(const ValueKey('support-notice')), findsOneWidget);
+      await tapKey(tester, 'compose-done');
       expect(tester.takeException(), isNull);
     });
   }

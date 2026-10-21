@@ -29,6 +29,15 @@ class _RealLikeRepository implements PostRepository {
   Future<List<Post>> fetchSavedPosts() async => const [];
 
   @override
+  Future<CreatedPost> createPost({
+    required PostType type,
+    required ResponseMode responseMode,
+    required String body,
+    required String idempotencyKey,
+    bool confirmed = false,
+  }) => throw UnimplementedError();
+
+  @override
   Future<void> toggleSaved(String postId) async {}
 }
 

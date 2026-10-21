@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_icons.dart';
+import 'package:kosodate_hitoiki/data/api/idempotency_key.dart';
 import 'package:kosodate_hitoiki/data/repositories/supabase_post_repository.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 
@@ -114,5 +115,43 @@ void main() {
       });
       expect(post.responseMode, ResponseMode.listening);
     });
+  });
+
+  group('投稿作成のリクエスト', () {
+    test('本文は前後の空白を除き、種類・反応モードをAPIの値にする(話題は送らない)', () {
+      expect(
+        SupabasePostRepository.createBody(
+          type: PostType.tips,
+          responseMode: ResponseMode.advice,
+          body: '  夜泣きが落ち着きました。\n',
+        ),
+        {
+          'post_type': 'kotsu',
+          'body': '夜泣きが落ち着きました。',
+          'reaction_mode': 'want_comments',
+        },
+      );
+    });
+
+    test('確認後の再送は confirmed: true を付ける', () {
+      final body = SupabasePostRepository.createBody(
+        type: PostType.grumble,
+        responseMode: ResponseMode.listening,
+        body: 'つかれた',
+        confirmed: true,
+      );
+      expect(body['confirmed'], isTrue);
+      expect(body['reaction_mode'], 'quiet_support');
+      expect(body['post_type'], 'guchi');
+    });
+  });
+
+  test('冪等キーはUUID(v4)の形で、毎回違う', () {
+    final keys = {for (var i = 0; i < 50; i++) newIdempotencyKey()};
+    expect(keys, hasLength(50));
+    final pattern = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+    );
+    expect(keys.every(pattern.hasMatch), isTrue);
   });
 }
