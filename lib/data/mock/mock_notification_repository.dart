@@ -37,6 +37,25 @@ class MockNotificationRepository implements NotificationRepository {
 
   late final List<AppNotification> _items;
 
+  /// サンプルの設定。共感のまとめは、初期は受け取らない(画面確認用)。
+  var _settings = const NotificationSettings(reactions: false);
+
+  @override
+  Future<NotificationSettings> fetchSettings() async => _settings;
+
+  @override
+  Future<void> updateSettings({
+    bool? comments,
+    bool? replies,
+    bool? reactions,
+  }) async {
+    _settings = _settings.copyWith(
+      comments: comments,
+      replies: replies,
+      reactions: reactions,
+    );
+  }
+
   @override
   bool get isSample => true;
 

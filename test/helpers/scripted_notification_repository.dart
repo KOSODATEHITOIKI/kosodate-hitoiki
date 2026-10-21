@@ -8,7 +8,11 @@ class ScriptedNotificationRepository implements NotificationRepository {
     this.sample = false,
     this.markError,
     List<Object>? fetchErrors,
-  }) : fetchErrors = fetchErrors ?? [];
+    this.settings = const NotificationSettings(),
+    this.settingsError,
+    List<Object>? settingsFetchErrors,
+  }) : fetchErrors = fetchErrors ?? [],
+       settingsFetchErrors = settingsFetchErrors ?? [];
 
   final List<AppNotification> items;
   final bool sample;
@@ -19,6 +23,17 @@ class ScriptedNotificationRepository implements NotificationRepository {
   /// 取得の呼び出しごとに1つ使う(なくなったら成功)。投げる。
   final List<Object> fetchErrors;
   final markCalls = <String>[];
+
+  /// 設定の取得結果。
+  final NotificationSettings settings;
+
+  /// 設定の変更で投げるエラー(nullなら成功)。
+  final Object? settingsError;
+
+  /// 設定の取得の呼び出しごとに1つ使う(なくなったら成功)。投げる。
+  final List<Object> settingsFetchErrors;
+  var settingsFetchCount = 0;
+  final updateCalls = <({bool? comments, bool? replies, bool? reactions})>[];
   var fetchCount = 0;
 
   @override
@@ -29,6 +44,27 @@ class ScriptedNotificationRepository implements NotificationRepository {
     fetchCount++;
     if (fetchErrors.isNotEmpty) throw fetchErrors.removeAt(0);
     return items;
+  }
+
+  @override
+  Future<NotificationSettings> fetchSettings() async {
+    settingsFetchCount++;
+    if (settingsFetchErrors.isNotEmpty) throw settingsFetchErrors.removeAt(0);
+    return settings;
+  }
+
+  @override
+  Future<void> updateSettings({
+    bool? comments,
+    bool? replies,
+    bool? reactions,
+  }) async {
+    updateCalls.add((
+      comments: comments,
+      replies: replies,
+      reactions: reactions,
+    ));
+    if (settingsError != null) throw settingsError!;
   }
 
   @override

@@ -51,6 +51,63 @@ class SupabaseNotificationRepository implements NotificationRepository {
     };
   }
 
+  /// 自分の通知の設定(`notification_settings`。本人の行だけが見える)。まだ行がなければ、
+  /// 既定(すべて受け取る)にする。
+  @override
+  Future<NotificationSettings> fetchSettings() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const NotificationSettings();
+    final row = await _client
+        .from('notification_settings')
+        .select(
+          'comments_enabled,replies_enabled,reactions_enabled,push_enabled',
+        )
+        .eq('user_id', userId)
+        .maybeSingle();
+    return row == null ? const NotificationSettings() : settingsFromRow(row);
+  }
+
+  /// 通知の設定の変更(`PATCH notification_settings`)。指定した項目だけ送る。
+  @override
+  Future<void> updateSettings({
+    bool? comments,
+    bool? replies,
+    bool? reactions,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('ログインが必要です');
+    final body = settingsBody(
+      comments: comments,
+      replies: replies,
+      reactions: reactions,
+    );
+    if (body.isEmpty) return;
+    await _client
+        .from('notification_settings')
+        .update(body)
+        .eq('user_id', userId);
+  }
+
+  /// 設定の行を、通知の設定にする。
+  static NotificationSettings settingsFromRow(Map<String, dynamic> row) =>
+      NotificationSettings(
+        comments: row['comments_enabled'] != false,
+        replies: row['replies_enabled'] != false,
+        reactions: row['reactions_enabled'] != false,
+        push: row['push_enabled'] != false,
+      );
+
+  /// 設定の変更の本文。指定した項目だけを入れる。
+  static Map<String, dynamic> settingsBody({
+    bool? comments,
+    bool? replies,
+    bool? reactions,
+  }) => {
+    'comments_enabled': ?comments,
+    'replies_enabled': ?replies,
+    'reactions_enabled': ?reactions,
+  };
+
   @override
   Future<void> markRead(String id) async {
     await _client.from('notifications').update({'is_read': true}).eq('id', id);

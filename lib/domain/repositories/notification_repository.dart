@@ -9,6 +9,12 @@ abstract class NotificationRepository {
   /// お知らせは、サーバー側で除かれる。
   Future<List<AppNotification>> fetchNotifications();
 
+  /// 自分の通知の設定。ログイン必須。
+  Future<NotificationSettings> fetchSettings();
+
+  /// 通知の設定を変える(指定した項目だけ)。止めた種類は、お知らせ自体が作られなくなる。
+  Future<void> updateSettings({bool? comments, bool? replies, bool? reactions});
+
   /// お知らせを既読にする(本人のみ。既読にできるのは`is_read`だけ)。
   Future<void> markRead(String id);
 }

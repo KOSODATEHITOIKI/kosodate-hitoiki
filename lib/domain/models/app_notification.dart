@@ -61,3 +61,38 @@ class AppNotification {
     isRead: isRead ?? this.isRead,
   );
 }
+
+/// 通知の設定(`notification_settings`)。止めた種類は、お知らせ自体が作られない。
+/// 運営からのお知らせは、止められない。
+class NotificationSettings {
+  const NotificationSettings({
+    this.comments = true,
+    this.replies = true,
+    this.reactions = true,
+    this.push = true,
+  });
+
+  /// 自分の投稿へのコメント。
+  final bool comments;
+
+  /// 自分のコメントへの返信。
+  final bool replies;
+
+  /// 共感のまとめ。
+  final bool reactions;
+
+  /// プッシュ通知。止めても、アプリ内のお知らせは作られる(プッシュだけ送られない)。
+  final bool push;
+
+  NotificationSettings copyWith({
+    bool? comments,
+    bool? replies,
+    bool? reactions,
+    bool? push,
+  }) => NotificationSettings(
+    comments: comments ?? this.comments,
+    replies: replies ?? this.replies,
+    reactions: reactions ?? this.reactions,
+    push: push ?? this.push,
+  );
+}
