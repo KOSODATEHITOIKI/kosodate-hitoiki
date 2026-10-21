@@ -6,6 +6,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/config/password_policy.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../providers/auth_provider.dart';
 import 'auth_messages.dart';
@@ -30,6 +31,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _passwordConfirm = TextEditingController();
   final _nickname = TextEditingController();
   late AuthMode _mode = widget.initialMode;
   bool _obscure = true;
@@ -47,6 +49,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   final _nicknameFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
+  final _passwordConfirmFocus = FocusNode();
 
   /// 登録後、確認メールの送信先(メール確認が必要な設定のとき)。
   String? _sentTo;
@@ -64,6 +67,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       'nickname': _nicknameFocus,
       'email': _emailFocus,
       'password': _passwordFocus,
+      'passwordConfirm': _passwordConfirmFocus,
     }.entries) {
       entry.value.addListener(() {
         if (!entry.value.hasFocus && mounted) {
@@ -89,8 +93,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     _nicknameFocus.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
+    _passwordConfirmFocus.dispose();
     _email.dispose();
     _password.dispose();
+    _passwordConfirm.dispose();
     _nickname.dispose();
     super.dispose();
   }
@@ -99,6 +105,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     FocusScope.of(context).unfocus();
     _form.currentState?.reset();
     _password.clear();
+    _passwordConfirm.clear();
     setState(() {
       _mode = mode;
       _obscure = true;
@@ -130,7 +137,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   Future<void> _submit() async {
     setState(() {
       _submitted = true;
-      _touched.addAll(['nickname', 'email', 'password']);
+      _touched.addAll(['nickname', 'email', 'password', 'passwordConfirm']);
     });
     final valid = _form.currentState!.validate();
     if (!valid) return;
@@ -173,7 +180,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       setState(() => _sentTo = email);
       return;
     }
-    await _afterSignedIn(response.user);
+    await _afterSignedInSafely(response.user);
   }
 
   Future<void> _login() async {
@@ -181,7 +188,25 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         .read(authRepositoryProvider)
         .signInWithEmail(email: _email.text.trim(), password: _password.text);
     if (!mounted) return;
-    await _afterSignedIn(response.user);
+    await _afterSignedInSafely(response.user);
+  }
+
+  /// ログイン自体はできたが、そのあとのプロフィールの確認・作成で失敗したとき。
+  /// ログインしたまま「失敗」と見せないよう、ログアウトして、原因を伝える。
+  Future<void> _afterSignedInSafely(User? user) async {
+    try {
+      await _afterSignedIn(user);
+    } catch (error) {
+      await ref.read(authRepositoryProvider).signOut();
+      if (mounted) {
+        setState(
+          () => _error = withDevDetail(
+            'ログインはできましたが、プロフィールの確認に失敗しました。もう一度お試しください。',
+            error,
+          ),
+        );
+      }
+    }
   }
 
   /// ログイン後、プロフィールが未作成なら作る(控えがあれば自動、なければ入力画面)。
@@ -390,6 +415,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       enableSuggestions: false,
                       decoration: InputDecoration(
                         labelText: 'パスワード',
+                        // 登録のときは、条件と、まだ足りないことを下に案内する。
+                        helperText: _mode != AuthMode.register
+                            ? null
+                            : (_password.text.isEmpty
+                                  ? PasswordPolicy.description
+                                  : (passwordRegisterProblem(_password.text) ??
+                                        '条件を満たしています。')),
+                        helperMaxLines: 3,
+                        errorMaxLines: 3,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           tooltip: _obscure ? 'パスワードを表示' : 'パスワードを隠す',
@@ -401,9 +435,41 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           ),
                         ),
                       ),
-                      validator: (value) =>
-                          _check(value ?? '', passwordProblem),
+                      validator: (value) => _check(
+                        value ?? '',
+                        _mode == AuthMode.register
+                            ? passwordRegisterProblem
+                            : passwordProblem,
+                      ),
                     ),
+                    if (_mode == AuthMode.register) ...[
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        key: const ValueKey('auth-password-confirm'),
+                        controller: _passwordConfirm,
+                        focusNode: _passwordConfirmFocus,
+                        autovalidateMode: _autovalidate('passwordConfirm'),
+                        onChanged: (_) => setState(() {}),
+                        obscureText: _obscure,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        decoration: InputDecoration(
+                          labelText: 'パスワード(確認用)',
+                          // 入力の途中は、赤くせず、合っているかだけを案内する。
+                          helperText: _passwordConfirm.text.isEmpty
+                              ? 'もう一度、同じパスワードを入力してください。'
+                              : (_passwordConfirm.text == _password.text
+                                    ? '一致しています。'
+                                    : 'まだ一致していません。'),
+                          prefixIcon: const Icon(Icons.lock_outline),
+                        ),
+                        validator: (value) => _check(
+                          value ?? '',
+                          (confirm) =>
+                              passwordConfirmProblem(_password.text, confirm),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                   ],
                   if (_mode == AuthMode.login)

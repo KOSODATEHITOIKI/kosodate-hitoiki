@@ -120,7 +120,18 @@ void main() {
 
   Future<void> fillRegister(WidgetTester tester) async {
     await tester.enterText(find.byKey(const ValueKey('auth-nickname')), 'はなこ');
-    await fillLogin(tester);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email')),
+      'a@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password')),
+      'Password1234',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password-confirm')),
+      'Password1234',
+    );
     await agreeBoth(tester);
   }
 
@@ -137,6 +148,83 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('パスワードを隠す'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('登録のパスワード: 条件を案内し、足りないことを下に出し、確認用と一致しないと登録できない', (tester) async {
+    await pumpAuth(tester, mode: AuthMode.register);
+    final errorColor = AppTheme.light.colorScheme.error;
+    Color? colorOf(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+
+    // 条件が、最初から下に出ている。
+    expect(find.text('10文字以上で、英大文字・英小文字・数字を1文字ずつ以上入れてください。'), findsOneWidget);
+
+    // 入力の途中は、足りないことを赤くせずに案内する。
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password')),
+      'password',
+    );
+    await tester.pump();
+    expect(find.text('あと2文字・英大文字・数字が必要です。'), findsOneWidget);
+    expect(colorOf('あと2文字・英大文字・数字が必要です。'), isNot(errorColor));
+
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password')),
+      'Password1234',
+    );
+    await tester.pump();
+    expect(find.text('条件を満たしています。'), findsOneWidget);
+
+    // 確認用: 一致しない間は案内し、離れても間違ったままなら赤くする。
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password-confirm')),
+      'Password',
+    );
+    await tester.pump();
+    expect(find.text('まだ一致していません。'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('auth-nickname')));
+    await tester.tap(find.byKey(const ValueKey('auth-nickname')));
+    await tester.pumpAndSettle();
+    expect(find.text('パスワードが一致しません。'), findsOneWidget);
+    expect(colorOf('パスワードが一致しません。'), errorColor);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password-confirm')),
+      'Password1234',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('一致しています。'), findsOneWidget);
+    expect(find.text('パスワードが一致しません。'), findsNothing);
+  });
+
+  testWidgets('規約・プライバシーから戻っても、入力欄にフォーカスが戻らずキーボードが出ない', (tester) async {
+    await pumpAuth(tester, mode: AuthMode.register);
+    await tester.tap(find.byKey(const ValueKey('auth-nickname')));
+    await tester.pumpAndSettle();
+    expect(FocusManager.instance.primaryFocus?.hasFocus, isTrue);
+
+    await readDocument(tester, const ValueKey('consent-terms'));
+
+    // 入力欄(EditableText)にフォーカスが戻っていない。
+    final focus = FocusManager.instance.primaryFocus;
+    expect(
+      focus?.context?.findAncestorWidgetOfExactType<EditableText>() ??
+          focus?.context?.widget is EditableText,
+      anyOf(isNull, isFalse),
+    );
+    expect(
+      tester
+          .state<EditableTextState>(
+            find.descendant(
+              of: find.byKey(const ValueKey('auth-nickname')),
+              matching: find.byType(EditableText),
+            ),
+          )
+          .widget
+          .focusNode
+          .hasFocus,
+      isFalse,
+    );
   });
 
   testWidgets('何も入力せず入力欄をタップして離れただけでは、赤くしない', (tester) async {
@@ -300,7 +388,7 @@ void main() {
     verify(
       () => auth.signUpWithEmail(
         email: 'a@example.com',
-        password: 'password123',
+        password: 'Password1234',
         data: {'nickname': 'はなこ', 'terms_agreed': true},
       ),
     ).called(1);

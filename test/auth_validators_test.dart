@@ -35,7 +35,34 @@ void main() {
     });
   });
 
-  test('passwordProblem は空欄だけを見る(条件は未決定のため決めない)', () {
+  group('passwordRegisterProblem(登録。dev の Supabase Auth の設定に合わせる)', () {
+    test('足りないことをまとめて案内する', () {
+      expect(passwordRegisterProblem(''), 'パスワードを入力してください。');
+      expect(passwordRegisterProblem('a'), 'あと9文字・英大文字・数字が必要です。');
+      expect(passwordRegisterProblem('abcdefghij'), '英大文字・数字が必要です。');
+      expect(passwordRegisterProblem('ABCDEFGHIJ1'), '英小文字が必要です。');
+      expect(passwordRegisterProblem('Abcdefghij'), '数字が必要です。');
+      expect(passwordRegisterProblem('Abc12'), 'あと5文字が必要です。');
+    });
+
+    test('条件を満たせば問題なし', () {
+      expect(passwordRegisterProblem('Password1234'), isNull);
+      expect(passwordRegisterProblem('Abcdefghi1'), isNull);
+    });
+  });
+
+  group('passwordConfirmProblem', () {
+    test('空・不一致は案内し、一致すれば問題なし', () {
+      expect(passwordConfirmProblem('Password1234', ''), '確認のため、もう一度入力してください。');
+      expect(
+        passwordConfirmProblem('Password1234', 'Password123'),
+        'パスワードが一致しません。',
+      );
+      expect(passwordConfirmProblem('Password1234', 'Password1234'), isNull);
+    });
+  });
+
+  test('passwordProblem(ログイン)は空欄だけを見る', () {
     expect(passwordProblem(''), 'パスワードを入力してください。');
     expect(passwordProblem('a'), isNull);
   });
