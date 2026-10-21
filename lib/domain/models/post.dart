@@ -49,6 +49,7 @@ class Post {
     required this.commentCount,
     this.isMine = false,
     this.isSaved = false,
+    this.commentsOpen = true,
   });
 
   final String id;
@@ -64,6 +65,10 @@ class Post {
   final bool isMine;
   final bool isSaved;
 
+  /// コメントの受付中か。「話を聞きたい」の投稿だけで意味を持つ(終了していれば、
+  /// 既存のコメントは残り、新しいコメント・返信は送れない)。
+  final bool commentsOpen;
+
   Post copyWith({bool? isSaved, ResponseMode? responseMode}) => Post(
     id: id,
     authorId: authorId,
@@ -77,5 +82,6 @@ class Post {
     commentCount: commentCount,
     isMine: isMine,
     isSaved: isSaved ?? this.isSaved,
+    commentsOpen: commentsOpen,
   );
 }

@@ -7,6 +7,7 @@ import 'core/utils/accessibility.dart';
 import 'presentation/pages/welcome/welcome_page.dart';
 import 'presentation/widgets/main_navigation_shell.dart';
 import 'presentation/providers/auth_provider.dart';
+import 'presentation/providers/comment_providers.dart';
 import 'presentation/providers/post_providers.dart';
 
 class App extends ConsumerWidget {
@@ -16,7 +17,10 @@ class App extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 利用者ID(A→B切替も含む)が変わるたびに投稿リポジトリを作り直し、前の利用者のモックデータを引き継がない。
     ref.listen<String?>(currentUserIdProvider, (previous, next) {
-      if (previous != next) ref.invalidate(postRepositoryProvider);
+      if (previous != next) {
+        ref.invalidate(postRepositoryProvider);
+        ref.invalidate(commentRepositoryProvider);
+      }
     });
     return MaterialApp(
       title: AppConfig.appName,

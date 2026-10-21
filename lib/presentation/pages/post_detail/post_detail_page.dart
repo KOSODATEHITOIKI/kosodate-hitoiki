@@ -104,8 +104,8 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                 children: [
                   Text(
                     ref.watch(postsAreSampleProvider)
-                        ? 'サンプル投稿です。コメント・共感は準備中です。'
-                        : 'コメント・共感は準備中です。',
+                        ? 'サンプル投稿です。共感は準備中です。'
+                        : '共感は準備中です。',
                     style: const TextStyle(fontSize: 11, height: 1.6),
                   ),
                   const SizedBox(height: 12),
@@ -173,7 +173,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                           const SizedBox(height: 12),
                           CommentThread(
                             postId: post.id,
-                            accepting: !_commentsClosed,
+                            accepting: !_commentsClosed && current.commentsOpen,
                           ),
                         ],
                       ],
