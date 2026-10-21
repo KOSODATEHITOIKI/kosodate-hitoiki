@@ -1,5 +1,6 @@
 import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
+import 'package:kosodate_hitoiki/domain/models/reaction_type.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 
 /// 投稿の作成・編集・削除の呼び出しを記録し、決めた順に結果(成功・失敗)を返す偽のリポジトリ。
@@ -14,10 +15,19 @@ class ScriptedPostRepository implements PostRepository {
     List<BlockedUser>? blocked,
     this.blockedFetchErrors,
     this.unblockError,
+    this.reactionTypes = const [
+      ReactionType(id: 1, code: 'empathy', label: 'わかる'),
+      ReactionType(id: 2, code: 'take_a_break', label: 'おつかれさま'),
+      ReactionType(id: 3, code: 'listening', label: '聞いているよ'),
+    ],
+    Map<String, int>? myReactions,
+    this.reactionError,
+    this.reactionCounts = const {},
     this.myPosts = const [],
     this.savedPosts = const [],
   }) : editScript = editScript ?? [],
-       blocked = blocked ?? [];
+       blocked = blocked ?? [],
+       myReactions = myReactions ?? {};
 
   /// マイページの「自分の投稿」「保存した投稿」に返す一覧。
   final List<Post> myPosts;
@@ -47,6 +57,43 @@ class ScriptedPostRepository implements PostRepository {
   final Object? modeError;
   final modeCalls =
       <({String postId, ResponseMode mode, bool? commentsOpen})>[];
+
+  /// 共感の定型文・自分の共感(送ると変わる)・件数。
+  final List<ReactionType> reactionTypes;
+  final Map<String, int> myReactions;
+  final Map<String, int> reactionCounts;
+
+  /// 共感の送信・取消で投げるエラー(nullなら成功)。
+  final Object? reactionError;
+  final setReactionCalls = <({String postId, int typeId})>[];
+  final removeReactionCalls = <String>[];
+
+  @override
+  Future<List<ReactionType>> fetchReactionTypes() async => reactionTypes;
+
+  @override
+  Future<Map<String, int>> fetchMyReactions() async => Map.of(myReactions);
+
+  @override
+  Future<void> setReaction({
+    required String postId,
+    required int reactionTypeId,
+  }) async {
+    setReactionCalls.add((postId: postId, typeId: reactionTypeId));
+    if (reactionError != null) throw reactionError!;
+    myReactions[postId] = reactionTypeId;
+  }
+
+  @override
+  Future<void> removeReaction(String postId) async {
+    removeReactionCalls.add(postId);
+    if (reactionError != null) throw reactionError!;
+    myReactions.remove(postId);
+  }
+
+  @override
+  Future<int> fetchReactionCount(String postId) async =>
+      reactionCounts[postId] ?? 0;
 
   /// ブロック中の相手(解除すると取り除く)。
   final List<BlockedUser> blocked;

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/data/mock/mock_post_repository.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
-import 'package:kosodate_hitoiki/presentation/providers/mock_reaction_providers.dart';
+import 'package:kosodate_hitoiki/presentation/providers/reaction_providers.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/post_card.dart';
 
 void main() {
@@ -50,17 +50,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('おつかれさま'));
       await tester.pumpAndSettle();
-      expect(container.read(mockReactionsProvider), {
-        'p2': MockReaction.breakTime,
-      });
+      expect(container.read(myReactionsProvider), {'p2': 2});
       expect(find.text('おつかれさま ✓'), findsOneWidget);
       await tester.ensureVisible(find.text('わかる'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('わかる'));
       await tester.pumpAndSettle();
-      expect(container.read(mockReactionsProvider), {
-        'p2': MockReaction.empathy,
-      });
+      expect(container.read(myReactionsProvider), {'p2': 1});
       await tester.ensureVisible(find.text('定型文を送る'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('定型文を送る'));
@@ -73,7 +69,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('共感を取り消す'));
       await tester.pumpAndSettle();
-      expect(container.read(mockReactionsProvider), isEmpty);
+      expect(container.read(myReactionsProvider), isEmpty);
       expect(tester.takeException(), isNull);
     });
   }

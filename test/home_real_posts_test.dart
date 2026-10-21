@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
+import 'package:kosodate_hitoiki/domain/models/reaction_type.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/home/home_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
@@ -32,6 +33,24 @@ class _RealLikeRepository implements PostRepository {
     required ResponseMode mode,
     bool? commentsOpen,
   }) async {}
+
+  @override
+  Future<List<ReactionType>> fetchReactionTypes() async => const [];
+
+  @override
+  Future<Map<String, int>> fetchMyReactions() async => const {};
+
+  @override
+  Future<void> setReaction({
+    required String postId,
+    required int reactionTypeId,
+  }) async {}
+
+  @override
+  Future<void> removeReaction(String postId) async {}
+
+  @override
+  Future<int> fetchReactionCount(String postId) async => 0;
 
   @override
   Future<List<BlockedUser>> fetchBlockedUsers() async => const [];

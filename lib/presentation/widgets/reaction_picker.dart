@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../providers/auth_provider.dart';
-import '../providers/mock_reaction_providers.dart';
+import '../providers/post_providers.dart';
+import '../providers/reaction_providers.dart';
+import 'reaction_actions.dart';
 
+/// 共感の定型文を選ぶ。1つ選べて、選び直すと前の選択が切り替わる。
 Future<void> showReactionPicker(BuildContext context, String postId) =>
     showModalBottomSheet<void>(
       context: context,
@@ -15,6 +18,7 @@ Future<void> showReactionPicker(BuildContext context, String postId) =>
 class _ReactionPicker extends ConsumerWidget {
   const _ReactionPicker({required this.postId});
   final String postId;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(isLoggedInProvider)) {
@@ -23,18 +27,20 @@ class _ReactionPicker extends ConsumerWidget {
         child: Text('ログインが必要です。'),
       );
     }
-    final selected = ref.watch(mockReactionsProvider)[postId];
-    void select(MockReaction? reaction) {
-      if (!ref.read(isLoggedInProvider)) return;
-      ref.read(mockReactionAuthGuardProvider);
-      final next = {...ref.read(mockReactionsProvider)};
-      if (reaction == null) {
-        next.remove(postId);
-      } else {
-        next[postId] = reaction;
-      }
-      ref.read(mockReactionsProvider.notifier).state = next;
+    final sample = ref.watch(postsAreSampleProvider);
+    final types = ref.watch(reactionTypesProvider);
+    final selected = ref.watch(
+      myReactionsProvider.select((reactions) => reactions[postId]),
+    );
+
+    Future<void> change(int? typeId) async {
       Navigator.of(context).pop();
+      await changeReaction(
+        context,
+        ref,
+        postId: postId,
+        reactionTypeId: typeId,
+      );
     }
 
     return SingleChildScrollView(
@@ -49,30 +55,58 @@ class _ReactionPicker extends ConsumerWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            const Text(
-              '1つ選べます。選び直すと、前の選択が切り替わります。\nサンプル操作です。実際には送信されません。',
-              style: TextStyle(fontSize: 12, height: 1.6),
+            Text(
+              '1つ選べます。選び直すと、前の選択が切り替わります。'
+              '${sample ? '\nサンプル操作です。実際には送信されません。' : ''}',
+              style: const TextStyle(fontSize: 12, height: 1.6),
             ),
             const SizedBox(height: 12),
-            for (final reaction in MockReaction.values)
-              ListTile(
-                selected: selected == reaction,
-                leading: AppAsset(
-                  reaction.asset,
-                  width: 36,
-                  height: 36,
-                  excludeFromSemantics: true,
-                ),
-                title: Text(
-                  reaction.label,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                trailing: selected == reaction ? const Icon(Icons.check) : null,
-                onTap: () => select(reaction),
+            types.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
               ),
+              error: (_, _) => Column(
+                children: [
+                  const Text(
+                    '読み込めませんでした。',
+                    key: ValueKey('reaction-types-failed'),
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  TextButton(
+                    key: const ValueKey('reaction-types-retry'),
+                    onPressed: () => ref.invalidate(reactionTypesProvider),
+                    child: const Text('再読み込み'),
+                  ),
+                ],
+              ),
+              data: (items) => Column(
+                children: [
+                  for (final type in items)
+                    ListTile(
+                      key: ValueKey('reaction-${type.code}'),
+                      selected: selected == type.id,
+                      leading: AppAsset(
+                        type.asset,
+                        width: 36,
+                        height: 36,
+                        excludeFromSemantics: true,
+                      ),
+                      title: Text(
+                        type.label,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      trailing: selected == type.id
+                          ? const Icon(Icons.check)
+                          : null,
+                      onTap: () => change(type.id),
+                    ),
+                ],
+              ),
+            ),
             if (selected != null)
               TextButton(
-                onPressed: () => select(null),
+                onPressed: () => change(null),
                 child: const Text('共感を取り消す'),
               ),
             TextButton(

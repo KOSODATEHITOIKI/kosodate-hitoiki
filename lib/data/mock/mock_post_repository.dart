@@ -1,6 +1,7 @@
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
+import '../../domain/models/reaction_type.dart';
 import '../../domain/repositories/post_repository.dart';
 
 /// 画面確認・結合用のモック実装。docs/design/S-02・S-05のサンプル文言を使用。
@@ -199,6 +200,41 @@ class MockPostRepository implements PostRepository {
   Future<void> blockUser(String userId) async {
     _posts.removeWhere((post) => post.authorId == userId);
   }
+
+  /// サンプルの定型文(本物のマスタと同じ5種)。
+  static const _reactionTypes = [
+    ReactionType(id: 1, code: 'empathy', label: 'わかる'),
+    ReactionType(id: 2, code: 'take_a_break', label: 'おつかれさま'),
+    ReactionType(id: 3, code: 'listening', label: '聞いているよ'),
+    ReactionType(id: 4, code: 'gentle_cheer', label: 'そっと応援'),
+    ReactionType(id: 5, code: 'applause', label: 'がんばってるね'),
+  ];
+
+  /// サンプルの共感。この画面の間だけ覚える(実際には送信されない)。
+  final _reactions = <String, int>{};
+
+  @override
+  Future<List<ReactionType>> fetchReactionTypes() async => _reactionTypes;
+
+  @override
+  Future<Map<String, int>> fetchMyReactions() async => Map.of(_reactions);
+
+  @override
+  Future<void> setReaction({
+    required String postId,
+    required int reactionTypeId,
+  }) async {
+    _reactions[postId] = reactionTypeId;
+  }
+
+  @override
+  Future<void> removeReaction(String postId) async {
+    _reactions.remove(postId);
+  }
+
+  @override
+  Future<int> fetchReactionCount(String postId) async =>
+      _posts.where((post) => post.id == postId).firstOrNull?.empathyCount ?? 0;
 
   /// サンプルのブロック中の相手。解除すると、この画面の間だけ取り除く。
   final _blocked = [

@@ -1,5 +1,6 @@
 import '../models/blocked_user.dart';
 import '../models/post.dart';
+import '../models/reaction_type.dart';
 
 /// 投稿データ取得の抽象。バックエンド接続時はSupabase実装に差し替える
 /// (現在はMockPostRepositoryのみ。docs/全体設計書.md F-01〜F-09参照)。
@@ -63,6 +64,25 @@ abstract class PostRepository {
   /// 投稿者をブロックする。相手の投稿・コメントが自分に表示されなくなり、相手は自分への
   /// コメント・返信・共感ができなくなる。相手には知らせない。重ねても、エラーにならない。
   Future<void> blockUser(String userId);
+
+  /// 共感の定型文(並び順どおり。未ログインでも読める)。
+  Future<List<ReactionType>> fetchReactionTypes();
+
+  /// 自分の共感(投稿ID→定型文のID)。未ログインは空。
+  Future<Map<String, int>> fetchMyReactions();
+
+  /// 共感する(登録・選び直しを1操作で扱う。1投稿1人1つ)。自分の投稿・ブロックされている
+  /// 投稿・見えない投稿などは`ApiException`で失敗する。
+  Future<void> setReaction({
+    required String postId,
+    required int reactionTypeId,
+  });
+
+  /// 共感を取り消す(していなくても、エラーにならない)。
+  Future<void> removeReaction(String postId);
+
+  /// 自分の投稿への共感の件数(投稿者本人だけが取得できる)。
+  Future<int> fetchReactionCount(String postId);
 
   /// ブロック中の相手の一覧(新しくブロックした順。自分がブロックした相手だけ)。
   Future<List<BlockedUser>> fetchBlockedUsers();

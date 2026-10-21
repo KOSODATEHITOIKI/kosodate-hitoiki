@@ -9,8 +9,9 @@ import '../pages/post_detail/post_detail_page.dart';
 import '../pages/profile/other_profile_page.dart';
 import '../pages/auth/auth_page.dart';
 import '../providers/auth_provider.dart';
-import '../providers/mock_reaction_providers.dart';
 import '../providers/post_providers.dart';
+import '../providers/reaction_providers.dart';
+import 'reaction_actions.dart';
 import 'reaction_picker.dart';
 
 /// 投稿の保存・解除。認証確認・一覧Providerの更新・エラー表示をここに集約する。
@@ -61,11 +62,24 @@ class PostCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 自分の投稿のリアクションだけを監視し、他の投稿への操作で再構築しない。
-    final reaction = ref.watch(
-      mockReactionsProvider.select((reactions) => reactions[post.id]),
+    // この投稿への自分の共感だけを監視し、他の投稿への操作で再構築しない。
+    final reactionId = ref.watch(
+      myReactionsProvider.select((reactions) => reactions[post.id]),
     );
-    final reacted = reaction == MockReaction.empathy;
+    final types = ref.watch(reactionTypesProvider).valueOrNull ?? const [];
+    final empathy = types.where((type) => type.isEmpathy).firstOrNull;
+    final reacted =
+        reactionId != null && empathy != null && reactionId == empathy.id;
+    // 「わかる」以外の定型文を選んでいるとき、その文言。
+    final otherLabel = reactionId != null && !reacted
+        ? (types.where((type) => type.id == reactionId).firstOrNull?.label ??
+              '共感済み')
+        : null;
+    // 自分の投稿には共感できない。件数だけを出す(件数は、投稿者本人だけが取得できる)。
+    final ownCount = post.isMine
+        ? ref.watch(reactionCountProvider(post.id)).valueOrNull ??
+              post.empathyCount
+        : null;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -178,32 +192,33 @@ class PostCard extends ConsumerWidget {
                   children: [
                     _FooterChip(
                       icon: AppIcons.heart,
-                      label:
-                          !showPresetReactions && reaction != null && !reacted
-                          ? '${reaction.label} ✓'
-                          : '${post.isMine ? 'わかる ${post.empathyCount}' : 'わかる'}${reacted ? ' ✓' : ''}',
+                      label: !showPresetReactions && otherLabel != null
+                          ? '$otherLabel ✓'
+                          : '${ownCount != null ? 'わかる $ownCount' : 'わかる'}${reacted ? ' ✓' : ''}',
                       selected: showPresetReactions
                           ? reacted
-                          : reaction != null,
-                      onTap: () {
-                        if (!ref.read(isLoggedInProvider)) {
-                          Navigator.of(context).push<void>(
-                            MaterialPageRoute(builder: (_) => const AuthPage()),
-                          );
-                          return;
-                        }
-                        ref.read(mockReactionAuthGuardProvider);
-                        final current = {...ref.read(mockReactionsProvider)};
-                        if (current[post.id] == MockReaction.empathy ||
-                            (!showPresetReactions &&
-                                current.containsKey(post.id))) {
-                          current.remove(post.id);
-                        } else {
-                          current[post.id] = MockReaction.empathy;
-                        }
-                        ref.read(mockReactionsProvider.notifier).state =
-                            current;
-                      },
+                          : reactionId != null,
+                      // 自分の投稿は、押せない。
+                      onTap: post.isMine
+                          ? null
+                          : () {
+                              // 一覧では、何か選んでいれば取り消す。詳細では、「わかる」だけを
+                              // 切り替える(ほかの定型文からは、「わかる」に選び直す)。
+                              if (reacted ||
+                                  (!showPresetReactions &&
+                                      reactionId != null)) {
+                                changeReaction(context, ref, postId: post.id);
+                              } else if (empathy != null) {
+                                changeReaction(
+                                  context,
+                                  ref,
+                                  postId: post.id,
+                                  reactionTypeId: empathy.id,
+                                );
+                              } else if (!ref.read(isLoggedInProvider)) {
+                                changeReaction(context, ref, postId: post.id);
+                              }
+                            },
                       background: reacted
                           ? AppColors.secondary
                           : AppColors.accentPink,
@@ -226,10 +241,10 @@ class PostCard extends ConsumerWidget {
                             : 'コメントする',
                         background: AppColors.accentLeaf.withValues(alpha: 0.3),
                       ),
-                    if (showPresetReactions)
+                    if (showPresetReactions && !post.isMine)
                       _FooterChip(
                         icon: AppIcons.send,
-                        selected: reaction != null && !reacted,
+                        selected: reactionId != null && !reacted,
                         onTap: () {
                           if (!ref.read(isLoggedInProvider)) {
                             Navigator.of(context).push<void>(
@@ -241,9 +256,7 @@ class PostCard extends ConsumerWidget {
                           }
                           showReactionPicker(context, post.id);
                         },
-                        label: reaction != null && !reacted
-                            ? '${reaction.label} ✓'
-                            : '定型文を送る',
+                        label: otherLabel != null ? '$otherLabel ✓' : '定型文を送る',
                         background: AppColors.secondary.withValues(alpha: 0.45),
                       ),
                   ],
