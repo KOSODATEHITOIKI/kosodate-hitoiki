@@ -59,7 +59,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
   }
 
   Future<void> _showPostingNotice() async {
-    FocusScope.of(context).unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
     if (_body.text.trim().isEmpty || _body.text.characters.length > 1000) {
       return;
     }
@@ -105,6 +105,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
           ],
         ),
       );
+      FocusManager.instance.primaryFocus?.unfocus();
       if (mounted && accepted == true) setState(() => _guideSeen = true);
       return;
     }
@@ -125,6 +126,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
         ),
       ),
     );
+    FocusManager.instance.primaryFocus?.unfocus();
     if (posted != true || !mounted) return;
     if (widget.initialPost != null) {
       // 編集できたら、新しい本文を持って、詳細へ戻る。

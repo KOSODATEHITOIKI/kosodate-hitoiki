@@ -165,6 +165,55 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+  testWidgets('案内ダイアログと確認画面から戻っても、本文の入力欄にフォーカスは戻らない', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [_loggedIn],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), '今日は少し疲れた。');
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(find.byType(TextField)).focusNode, isNull);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('compose-submit')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('確認して書く'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(TextField),
+        matching: find.byType(EditableText),
+      ),
+      findsOneWidget,
+    );
+    bool fieldFocused() => tester
+        .state<EditableTextState>(find.byType(EditableText))
+        .widget
+        .focusNode
+        .hasFocus;
+    expect(fieldFocused(), isFalse);
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('投稿の確認'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('書き直す'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('書き直す'));
+    await tester.pumpAndSettle();
+    expect(fieldFocused(), isFalse);
+  });
+
   Future<void> typeAndPressPost(WidgetTester tester, String text) async {
     await tester.enterText(find.byType(TextField), text);
     FocusManager.instance.primaryFocus?.unfocus();
