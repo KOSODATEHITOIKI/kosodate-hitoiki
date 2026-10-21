@@ -1,26 +1,39 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Supabaseクライアントの初期化。
+import 'flavor.dart';
+
+/// Supabaseクライアントの初期化。接続先は[AppConfig.flavor]で切り替える。
 ///
-/// [_anonKey]は「匿名キー」であり、クライアントアプリに同梱される前提の公開情報
-/// (秘匿すべきAPIキーではない)。実際のアクセス制御はSupabase側のRLS(行単位の権限)
-/// で行う(docs/全体設計書.md 7章)。サービスロールキー等の本当に秘匿すべき値は
-/// クライアントアプリには一切含めず、kosodate-hitoiki-backend側でのみ扱う。
-///
-/// 値は仮のプレースホルダー。kosodate-hitoiki-backendでSupabaseプロジェクトを
-/// 作成した後、実際のURL・匿名キーに差し替える。
+/// キーは「公開用キー(publishable key／旧anon key)」であり、クライアントアプリに
+/// 同梱される前提の公開情報(秘匿すべきAPIキーではない)。実際のアクセス制御は
+/// Supabase側のRLS(行単位の権限)で行う(docs/全体設計書.md 7章)。
+/// secret／service_role相当の特権キーはクライアントアプリには一切含めず、
+/// kosodate-hitoiki-backend側でのみ扱う。
 class SupabaseConfig {
   SupabaseConfig._();
 
-  static const _url = 'https://your-project.supabase.co';
-  static const _anonKey = 'your-anon-key';
+  /// prodのSupabaseプロジェクトは未作成(2026-10-21時点)。作成後に差し替える。
+  static const _prodPlaceholderUrl = 'https://your-project.supabase.co';
+
+  static String get _url => switch (AppConfig.flavor) {
+    Flavor.dev => 'https://djbizophhqtlqmlabhdo.supabase.co',
+    Flavor.prod => _prodPlaceholderUrl,
+  };
+
+  static String get _publishableKey => switch (AppConfig.flavor) {
+    Flavor.dev => 'sb_publishable_e9JHW9PnR1fb3qNVQVkwsQ_30-GHwsk',
+    Flavor.prod => 'your-publishable-key',
+  };
 
   static Future<void> initialize() async {
+    if (_url == _prodPlaceholderUrl) {
+      throw StateError('prodのSupabase接続先が未設定です(supabase_config.dart)');
+    }
     await Supabase.initialize(
       url: _url,
-      // publishableKeyへの移行は、supabase_flutter側で正式に使えるようになってから対応する。
+      // supabase_flutterのパラメーター名は旧称のanonKey。publishable keyもここに渡す。
       // ignore: deprecated_member_use
-      anonKey: _anonKey,
+      anonKey: _publishableKey,
     );
   }
 }
