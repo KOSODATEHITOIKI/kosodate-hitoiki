@@ -145,6 +145,39 @@ class MockPostRepository implements PostRepository {
   }
 
   @override
+  Future<EditResult> editPost({
+    required String postId,
+    required String body,
+    bool confirmed = false,
+  }) async {
+    final index = _posts.indexWhere((post) => post.id == postId);
+    if (index != -1) {
+      final old = _posts[index];
+      _posts[index] = Post(
+        id: old.id,
+        authorId: old.authorId,
+        authorName: old.authorName,
+        authorAvatarAsset: old.authorAvatarAsset,
+        createdAt: old.createdAt,
+        type: old.type,
+        responseMode: old.responseMode,
+        body: body.trim(),
+        empathyCount: old.empathyCount,
+        commentCount: old.commentCount,
+        isMine: old.isMine,
+        isSaved: old.isSaved,
+        commentsOpen: old.commentsOpen,
+      );
+    }
+    return EditResult(editedAt: DateTime.now());
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    _posts.removeWhere((post) => post.id == postId);
+  }
+
+  @override
   Future<void> toggleSaved(String postId) async {
     final index = _posts.indexWhere((post) => post.id == postId);
     if (index == -1) {

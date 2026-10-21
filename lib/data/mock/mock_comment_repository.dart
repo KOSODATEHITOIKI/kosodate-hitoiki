@@ -1,5 +1,6 @@
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/comment.dart';
+import '../../domain/models/post.dart' show EditResult;
 import '../../domain/repositories/comment_repository.dart';
 
 /// 画面確認・テスト用のモック実装。投稿`p2`にだけ、サンプルのコメントがある。
@@ -66,5 +67,27 @@ class MockCommentRepository implements CommentRepository {
       ),
     );
     return CreatedComment(id: id, createdAt: now);
+  }
+
+  void _replace(String commentId, Comment Function(Comment) change) {
+    for (final comments in _byPost.values) {
+      final index = comments.indexWhere((c) => c.id == commentId);
+      if (index != -1) comments[index] = change(comments[index]);
+    }
+  }
+
+  @override
+  Future<EditResult> editComment({
+    required String commentId,
+    required String body,
+    bool confirmed = false,
+  }) async {
+    _replace(commentId, (c) => c.copyWith(body: body.trim(), isEdited: true));
+    return EditResult(editedAt: DateTime.now());
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    _replace(commentId, (c) => c.copyWith(isDeleted: true, clearBody: true));
   }
 }

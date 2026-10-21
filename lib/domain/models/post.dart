@@ -18,6 +18,17 @@ enum ResponseMode {
   final String label;
 }
 
+/// 投稿・コメントの編集に成功した結果(`PATCH`の200応答)。
+class EditResult {
+  const EditResult({this.editedAt, this.supportNotice = false});
+
+  /// 本文が実際に変わったときだけ設定される(「編集済み」の表示に使う)。
+  final DateTime? editedAt;
+
+  /// 本人にだけ、相談先を案内する。編集は止めない。
+  final bool supportNotice;
+}
+
 /// 投稿の作成に成功した結果(`POST /functions/v1/posts`の201応答)。
 class CreatedPost {
   const CreatedPost({
@@ -69,19 +80,20 @@ class Post {
   /// 既存のコメントは残り、新しいコメント・返信は送れない)。
   final bool commentsOpen;
 
-  Post copyWith({bool? isSaved, ResponseMode? responseMode}) => Post(
-    id: id,
-    authorId: authorId,
-    authorName: authorName,
-    authorAvatarAsset: authorAvatarAsset,
-    createdAt: createdAt,
-    type: type,
-    responseMode: responseMode ?? this.responseMode,
-    body: body,
-    empathyCount: empathyCount,
-    commentCount: commentCount,
-    isMine: isMine,
-    isSaved: isSaved ?? this.isSaved,
-    commentsOpen: commentsOpen,
-  );
+  Post copyWith({bool? isSaved, ResponseMode? responseMode, String? body}) =>
+      Post(
+        id: id,
+        authorId: authorId,
+        authorName: authorName,
+        authorAvatarAsset: authorAvatarAsset,
+        createdAt: createdAt,
+        type: type,
+        responseMode: responseMode ?? this.responseMode,
+        body: body ?? this.body,
+        empathyCount: empathyCount,
+        commentCount: commentCount,
+        isMine: isMine,
+        isSaved: isSaved ?? this.isSaved,
+        commentsOpen: commentsOpen,
+      );
 }

@@ -31,6 +31,24 @@ class Comment {
   final bool isMine;
 
   bool get isReply => parentId != null;
+
+  Comment copyWith({
+    String? body,
+    bool? isEdited,
+    bool? isDeleted,
+    bool clearBody = false,
+  }) => Comment(
+    id: id,
+    authorId: authorId,
+    authorName: authorName,
+    authorAvatarAsset: authorAvatarAsset,
+    createdAt: createdAt,
+    parentId: parentId,
+    body: clearBody ? null : (body ?? this.body),
+    isDeleted: isDeleted ?? this.isDeleted,
+    isEdited: isEdited ?? this.isEdited,
+    isMine: isMine,
+  );
 }
 
 /// コメント作成に成功した結果(`POST /functions/v1/comments`の201応答)。

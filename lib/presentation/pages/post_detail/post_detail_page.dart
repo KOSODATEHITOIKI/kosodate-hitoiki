@@ -8,6 +8,7 @@ import '../../providers/post_providers.dart';
 import '../../widgets/post_card.dart';
 import '../../widgets/comment_thread.dart';
 import '../auth/auth_page.dart';
+import '../compose/post_messages.dart';
 import '../report/report_page.dart';
 import '../compose/compose_page.dart';
 
@@ -31,6 +32,9 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
   Post get post => widget.post;
   ResponseMode? _previewMode;
   bool _commentsClosed = false;
+
+  /// 編集できたあとの本文。一覧に載っていない古い投稿でも、詳細にすぐ反映する。
+  String? _editedBody;
 
   @override
   void initState() {
@@ -68,7 +72,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     final items = ref.watch(feedPostsProvider).valueOrNull;
     final current =
         (items?.where((item) => item.id == post.id).firstOrNull ?? post)
-            .copyWith(responseMode: _previewMode);
+            .copyWith(responseMode: _previewMode, body: _editedBody);
     return Scaffold(
       appBar: AppBar(
         title: const Text('投稿の詳細'),
@@ -270,7 +274,8 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
         await _notice('ブロックは準備中です', '投稿者はまだブロックされません。ブロック機能の接続を準備しています。');
       case 'edit':
         if (!current.isMine) return;
-        Navigator.of(context).push<void>(
+        // 編集できたら、新しい本文が返る。
+        final newBody = await Navigator.of(context).push<String>(
           MaterialPageRoute(
             builder: (_) => Scaffold(
               appBar: AppBar(title: const Text('投稿を編集')),
@@ -278,12 +283,10 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
             ),
           ),
         );
+        if (mounted && newBody != null) setState(() => _editedBody = newBody);
       case 'delete':
         if (!current.isMine) return;
-        await _notice(
-          '投稿を削除する前に',
-          '削除すると投稿とコメント・返信・共感が削除され、元に戻せません。\n\n削除機能は準備中です。現在は削除されません。',
-        );
+        await _confirmDelete(current);
       case 'mode':
         if (!current.isMine) return;
         final accepted = await _previewConfirmation(
@@ -303,6 +306,45 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
           setState(() => _commentsClosed = !_commentsClosed);
         }
     }
+  }
+
+  /// 投稿の削除。取り消せないので、確認してから削除する。
+  Future<void> _confirmDelete(Post current) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('投稿を削除しますか？'),
+        content: const Text('削除すると、この投稿とコメント・返信・共感が消えます。元に戻せません。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('やめる'),
+          ),
+          FilledButton(
+            key: const ValueKey('post-delete-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(postRepositoryProvider).deletePost(current.id);
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(postFailureMessage(error))),
+      );
+      return;
+    }
+    ref
+      ..invalidate(feedPostsProvider)
+      ..invalidate(searchResultsProvider)
+      ..invalidate(myPostsProvider)
+      ..invalidate(savedPostsProvider);
+    messenger.showSnackBar(const SnackBar(content: Text('投稿を削除しました')));
+    if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _notice(String title, String message) => showDialog<void>(

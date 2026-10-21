@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../data/api/api_exception.dart';
 import '../../data/api/idempotency_key.dart';
 import '../../domain/models/comment.dart';
+import '../../domain/models/post.dart' show EditResult;
 import '../pages/compose/post_messages.dart';
 import '../pages/report/report_page.dart';
 import '../pages/support/support_resources_page.dart';
@@ -134,6 +135,53 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
     _send();
   }
 
+  /// 自分のコメントの編集。受付を終了した投稿でも、編集できる。
+  Future<void> _editComment(Comment comment) async {
+    final result = await showDialog<EditResult>(
+      context: context,
+      builder: (context) => _CommentEditDialog(comment: comment),
+    );
+    if (result == null || !mounted) return;
+    ref.invalidate(commentsProvider(widget.postId));
+    if (result.supportNotice) setState(() => _supportNotice = true);
+  }
+
+  /// 自分のコメントの削除。本文は消えて、返信は残る。取り消せないので、確認する。
+  Future<void> _deleteComment(Comment comment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('コメントを削除しますか？'),
+        content: const Text('削除すると、本文が消えて「削除済み」になります。返信は残ります。元に戻せません。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('やめる'),
+          ),
+          FilledButton(
+            key: const ValueKey('comment-delete-confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(commentRepositoryProvider).deleteComment(comment.id);
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(postFailureMessage(error))),
+      );
+      return;
+    }
+    ref
+      ..invalidate(commentsProvider(widget.postId))
+      ..invalidate(feedPostsProvider)
+      ..invalidate(searchResultsProvider);
+  }
+
   Widget _comment(Comment comment, {bool reply = false}) {
     final body = comment.isDeleted ? '削除済み' : (comment.body ?? '');
     return Container(
@@ -192,6 +240,26 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
           ),
           if (comment.isEdited && !comment.isDeleted)
             const Text('編集済み', style: TextStyle(fontSize: 11, height: 1.6)),
+          if (comment.isMine && !comment.isDeleted)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                children: [
+                  TextButton.icon(
+                    key: ValueKey('comment-edit-${comment.id}'),
+                    onPressed: () => _editComment(comment),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('編集'),
+                  ),
+                  TextButton.icon(
+                    key: ValueKey('comment-delete-${comment.id}'),
+                    onPressed: () => _deleteComment(comment),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('削除'),
+                  ),
+                ],
+              ),
+            ),
           if (!reply && !comment.isDeleted && widget.accepting)
             Align(
               alignment: Alignment.centerLeft,
@@ -414,4 +482,141 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
       ],
     );
   }
+}
+
+/// コメントの編集ダイアログ。送信前チェックは、作成と同じ(確認→「そのまま保存」、
+/// 送信不可→書き直し)。保存できたら[EditResult]を返す。
+class _CommentEditDialog extends ConsumerStatefulWidget {
+  const _CommentEditDialog({required this.comment});
+  final Comment comment;
+
+  @override
+  ConsumerState<_CommentEditDialog> createState() => _CommentEditDialogState();
+}
+
+class _CommentEditDialogState extends ConsumerState<_CommentEditDialog> {
+  late final _controller = TextEditingController(text: widget.comment.body);
+  bool _busy = false;
+  bool _confirmed = false;
+  String? _confirmMessage;
+  String? _rejectedMessage;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  bool get _canSave =>
+      !_busy &&
+      _controller.text.trim().isNotEmpty &&
+      _controller.text.characters.length <= 500;
+
+  Future<void> _save() async {
+    if (!_canSave) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final result = await ref
+          .read(commentRepositoryProvider)
+          .editComment(
+            commentId: widget.comment.id,
+            body: _controller.text,
+            confirmed: _confirmed,
+          );
+      if (mounted) Navigator.of(context).pop(result);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        if (error.isConfirmRequired && !_confirmed) {
+          _confirmMessage = confirmMessage(error);
+        } else if (error.isRejected) {
+          _confirmMessage = null;
+          _rejectedMessage = rejectionMessage(error);
+        } else {
+          _error = postFailureMessage(error);
+        }
+      });
+    } catch (error) {
+      if (mounted) setState(() => _error = postFailureMessage(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    scrollable: true,
+    title: const Text('コメントを編集'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const ValueKey('comment-edit-field'),
+          controller: _controller,
+          enabled: !_busy,
+          minLines: 2,
+          maxLines: 6,
+          maxLength: 500,
+          onChanged: (_) => setState(() {
+            // 直したら、前の確認・結果は関係ない。
+            _confirmed = false;
+            _confirmMessage = null;
+            _rejectedMessage = null;
+            _error = null;
+          }),
+        ),
+        if (_confirmMessage != null)
+          Text(
+            _confirmMessage!,
+            key: const ValueKey('comment-edit-confirm'),
+            style: const TextStyle(fontSize: 13, height: 1.7),
+          ),
+        if (_rejectedMessage != null) ...[
+          const Text(
+            'この内容では保存できません。',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+          Text(
+            _rejectedMessage!,
+            key: const ValueKey('comment-edit-rejected'),
+            style: const TextStyle(fontSize: 13, height: 1.7),
+          ),
+        ],
+        if (_error != null)
+          Text(
+            _error!,
+            key: const ValueKey('comment-edit-error'),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 13,
+              height: 1.6,
+            ),
+          ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: _busy ? null : () => Navigator.of(context).pop(),
+        child: const Text('キャンセル'),
+      ),
+      if (_rejectedMessage == null)
+        FilledButton(
+          key: const ValueKey('comment-edit-save'),
+          onPressed: _canSave
+              ? () {
+                  if (_confirmMessage != null) _confirmed = true;
+                  _save();
+                }
+              : null,
+          child: Text(
+            _busy ? '保存しています…' : (_confirmMessage != null ? 'そのまま保存' : '保存'),
+          ),
+        ),
+    ],
+  );
 }

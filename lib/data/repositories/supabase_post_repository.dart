@@ -72,6 +72,48 @@ class SupabasePostRepository implements PostRepository {
     }
   }
 
+  /// 投稿の本文の編集(`PATCH /functions/v1/posts/{id}`)。
+  @override
+  Future<EditResult> editPost({
+    required String postId,
+    required String body,
+    bool confirmed = false,
+  }) async {
+    try {
+      final response = await _client.functions.invoke(
+        'posts/$postId',
+        method: HttpMethod.patch,
+        body: {'body': body.trim(), if (confirmed) 'confirmed': true},
+      );
+      return editResultFromResponse(response.data);
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// 投稿の削除(`DELETE /functions/v1/posts/{id}`)。
+  @override
+  Future<void> deletePost(String postId) async {
+    try {
+      await _client.functions.invoke(
+        'posts/$postId',
+        method: HttpMethod.delete,
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// 編集APIの応答(`{ id, edited_at, support_notice }`)。
+  static EditResult editResultFromResponse(Object? data) {
+    final map = data is Map ? data.cast<String, dynamic>() : const {};
+    final editedAt = map['edited_at'] as String?;
+    return EditResult(
+      editedAt: editedAt == null ? null : DateTime.parse(editedAt).toLocal(),
+      supportNotice: map['support_notice'] == true,
+    );
+  }
+
   /// 投稿作成APIのリクエスト本文。話題は、マスタが未決定のため送らない。
   static Map<String, dynamic> createBody({
     required PostType type,

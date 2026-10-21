@@ -1,16 +1,31 @@
 import 'package:kosodate_hitoiki/domain/models/comment.dart';
+import 'package:kosodate_hitoiki/domain/models/post.dart' show EditResult;
 import 'package:kosodate_hitoiki/domain/repositories/comment_repository.dart';
 
-/// コメント取得の結果を固定し、作成の呼び出しを記録して、決めた順に結果を返す偽のリポジトリ。
+/// コメント取得の結果を固定し、作成・編集・削除の呼び出しを記録して、決めた順に結果を返す偽のリポジトリ。
 class ScriptedCommentRepository implements CommentRepository {
-  ScriptedCommentRepository({this.comments = const [], List<Object>? script})
-    : script = script ?? [];
+  ScriptedCommentRepository({
+    this.comments = const [],
+    List<Object>? script,
+    List<Object>? editScript,
+    this.deleteError,
+  }) : script = script ?? [],
+       editScript = editScript ?? [];
 
   final List<Comment> comments;
 
-  /// 作成の呼び出しごとに1つ使う。[CreatedComment]なら成功、`Future Function()`ならその結果を待つ、それ以外は投げる。
+  /// 作成の呼び出しごとに1つ使う。[CreatedComment]なら成功、`Future Function()`なら
+  /// その結果を待つ、それ以外は投げる。
   final List<Object> script;
   final calls = <CommentCall>[];
+
+  /// 編集の呼び出しごとに1つ使う。[EditResult]なら成功、それ以外は投げる。
+  final List<Object> editScript;
+  final editCalls = <({String id, String body, bool confirmed})>[];
+
+  /// 削除で投げるエラー(nullなら成功)。
+  final Object? deleteError;
+  final deleteCalls = <String>[];
 
   @override
   bool get isSample => false;
@@ -31,6 +46,24 @@ class ScriptedCommentRepository implements CommentRepository {
     if (next is CreatedComment) return next;
     if (next is Future<CreatedComment> Function()) return next();
     throw next;
+  }
+
+  @override
+  Future<EditResult> editComment({
+    required String commentId,
+    required String body,
+    bool confirmed = false,
+  }) async {
+    editCalls.add((id: commentId, body: body, confirmed: confirmed));
+    final next = editScript.removeAt(0);
+    if (next is EditResult) return next;
+    throw next;
+  }
+
+  @override
+  Future<void> deleteComment(String commentId) async {
+    deleteCalls.add(commentId);
+    if (deleteError != null) throw deleteError!;
   }
 }
 

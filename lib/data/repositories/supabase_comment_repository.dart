@@ -2,8 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_icons.dart';
 import '../../domain/models/comment.dart';
+import '../../domain/models/post.dart' show EditResult;
 import '../../domain/repositories/comment_repository.dart';
 import '../api/api_exception.dart';
+import 'supabase_post_repository.dart';
 
 /// コメント・返信の取得(`member_comments`)と作成(`POST /functions/v1/comments`)。
 /// 一覧はログイン必須。ブロック・非表示・一時非表示は、サーバー側のビューが除外する
@@ -55,6 +57,38 @@ class SupabaseCommentRepository implements CommentRepository {
         id: data['id'] as String,
         createdAt: DateTime.parse(data['created_at'] as String).toLocal(),
         supportNotice: data['support_notice'] == true,
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// コメントの本文の編集(`PATCH /functions/v1/comments/{id}`)。
+  @override
+  Future<EditResult> editComment({
+    required String commentId,
+    required String body,
+    bool confirmed = false,
+  }) async {
+    try {
+      final response = await _client.functions.invoke(
+        'comments/$commentId',
+        method: HttpMethod.patch,
+        body: {'body': body.trim(), if (confirmed) 'confirmed': true},
+      );
+      return SupabasePostRepository.editResultFromResponse(response.data);
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// コメントの削除(`DELETE /functions/v1/comments/{id}`)。
+  @override
+  Future<void> deleteComment(String commentId) async {
+    try {
+      await _client.functions.invoke(
+        'comments/$commentId',
+        method: HttpMethod.delete,
       );
     } on FunctionException catch (error) {
       throw ApiException.fromFunction(error);

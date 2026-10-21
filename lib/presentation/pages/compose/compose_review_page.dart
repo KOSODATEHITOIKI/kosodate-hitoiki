@@ -28,12 +28,16 @@ class ComposeReviewPage extends ConsumerStatefulWidget {
     required this.responseMode,
     this.topic,
     this.editing = false,
+    this.postId,
   });
   final String body;
   final PostType postType;
   final ResponseMode responseMode;
   final String? topic;
   final bool editing;
+
+  /// 編集のとき、編集する投稿のID。
+  final String? postId;
   @override
   ConsumerState<ComposeReviewPage> createState() => _ComposeReviewPageState();
 }
@@ -53,36 +57,31 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
 
   Future<void> _submit() async {
     if (_busy) return;
-    if (widget.editing) {
-      showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('投稿の編集は準備中です'),
-          content: const Text('編集の内容は送信されません。'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('確認に戻る'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final created = await ref
-          .read(postRepositoryProvider)
-          .createPost(
-            type: widget.postType,
-            responseMode: widget.responseMode,
-            body: widget.body,
-            idempotencyKey: _key,
-            confirmed: _confirmed,
-          );
+      final repository = ref.read(postRepositoryProvider);
+      final bool support;
+      if (widget.editing) {
+        // 編集できるのは本文だけ。送信前チェックは作成と同じ。
+        final edited = await repository.editPost(
+          postId: widget.postId!,
+          body: widget.body,
+          confirmed: _confirmed,
+        );
+        support = edited.supportNotice;
+      } else {
+        final created = await repository.createPost(
+          type: widget.postType,
+          responseMode: widget.responseMode,
+          body: widget.body,
+          idempotencyKey: _key,
+          confirmed: _confirmed,
+        );
+        support = created.supportNotice;
+      }
       if (!mounted) return;
       // 一覧・検索・マイページを、新しい投稿を含めて取り直す。
       ref
@@ -91,7 +90,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
         ..invalidate(myPostsProvider);
       setState(() {
         _stage = _Stage.success;
-        _supportNotice = created.supportNotice;
+        _supportNotice = support;
       });
     } on ApiException catch (error) {
       if (!mounted) return;
@@ -146,7 +145,11 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_stage == _Stage.success ? '投稿しました' : '投稿の確認'),
+          title: Text(
+            _stage == _Stage.success
+                ? (widget.editing ? '変更しました' : '投稿しました')
+                : (widget.editing ? '変更の確認' : '投稿の確認'),
+          ),
         ),
         body: _stage == _Stage.success ? _success() : _content(),
       ),
@@ -154,8 +157,8 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
   }
 
   Widget _success() => ComfortPage(
-    title: '投稿しました。',
-    message: 'ここに書いてくれて、ありがとう。\nあなたのペースで大丈夫です。',
+    title: widget.editing ? '変更しました。' : '投稿しました。',
+    message: widget.editing ? '内容を直しました。' : 'ここに書いてくれて、ありがとう。\nあなたのペースで大丈夫です。',
     children: [
       if (_supportNotice) ...[
         const Text(
@@ -179,7 +182,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
       FilledButton(
         key: const ValueKey('compose-done'),
         onPressed: () => Navigator.of(context).pop(true),
-        child: const Text('ホームへ'),
+        child: Text(widget.editing ? '戻る' : 'ホームへ'),
       ),
     ],
   );
