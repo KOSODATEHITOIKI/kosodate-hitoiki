@@ -1,3 +1,4 @@
+import '../models/picked_avatar.dart';
 import '../models/user_profile.dart';
 
 abstract class ProfileRepository {
@@ -15,6 +16,11 @@ abstract class ProfileRepository {
     String? childAgeRange,
     bool confirmed = false,
   });
+
+  /// 自分の画像をアカウント画像にする(`PUT profile-avatar`)。サーバーが位置情報などを
+  /// 取り除き、画像の判定を通してから保存する(不適切なら`ApiException`のisRejected)。
+  /// イラスト([updateProfile]のiconKey)とは、どちらか一方になる。
+  Future<void> uploadAvatar(PickedAvatar avatar);
 
   /// ニックネームを変える。初回は制限なし、以降は前回の変更から30日空ける
   /// (違反は`ApiException`)。送信前チェックを通る。変更前の名前は30日、ほかの人が使えない。

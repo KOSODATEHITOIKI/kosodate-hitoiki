@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_icons.dart';
+import '../../domain/models/picked_avatar.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../api/api_exception.dart';
@@ -36,6 +37,21 @@ class SupabaseProfileRepository implements ProfileRepository {
           childAgeRange: childAgeRange,
           confirmed: confirmed,
         ),
+      );
+    } on FunctionException catch (error) {
+      throw ApiException.fromFunction(error);
+    }
+  }
+
+  /// アカウント画像のアップロード(`PUT /functions/v1/profile-avatar`)。
+  @override
+  Future<void> uploadAvatar(PickedAvatar avatar) async {
+    try {
+      await _client.functions.invoke(
+        'profile-avatar',
+        method: HttpMethod.put,
+        headers: {'Content-Type': avatar.contentType},
+        body: avatar.bytes,
       );
     } on FunctionException catch (error) {
       throw ApiException.fromFunction(error);

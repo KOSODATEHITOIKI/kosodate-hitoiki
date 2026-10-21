@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/avatar_picker.dart';
 import '../../data/mock/mock_profile_repository.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -6,6 +7,11 @@ import 'auth_provider.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>(
   (ref) => MockProfileRepository(),
+);
+
+/// アカウント画像を選ぶ部品。テストでは差し替える。
+final avatarPickerProvider = Provider<AvatarPicker>(
+  (ref) => ImagePickerAvatarPicker(),
 );
 
 /// プロフィールがサンプルか。trueの間、保存せず「準備中」と案内する。

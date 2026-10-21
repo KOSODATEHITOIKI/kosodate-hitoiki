@@ -1,3 +1,4 @@
+import 'package:kosodate_hitoiki/domain/models/picked_avatar.dart';
 import 'package:kosodate_hitoiki/domain/models/user_profile.dart';
 import 'package:kosodate_hitoiki/domain/repositories/profile_repository.dart';
 
@@ -9,11 +10,13 @@ class ScriptedProfileRepository implements ProfileRepository {
     this.sample = false,
     List<Object?>? nicknameScript,
     List<Object?>? updateScript,
+    List<Object?>? avatarScript,
     this.fetchGate,
     List<Object>? fetchErrors,
   }) : fetchErrors = fetchErrors ?? [],
        nicknameScript = nicknameScript ?? [],
-       updateScript = updateScript ?? [];
+       updateScript = updateScript ?? [],
+       avatarScript = avatarScript ?? [];
 
   final UserProfile? profile;
   final bool sample;
@@ -29,6 +32,10 @@ class ScriptedProfileRepository implements ProfileRepository {
   /// それ以外は投げる。
   final List<Object?> nicknameScript;
   final List<Object?> updateScript;
+
+  /// 画像のアップロードの呼び出しごとに1つ使う(なくなったら成功)。nullでなければ投げる。
+  final List<Object?> avatarScript;
+  final avatarCalls = <PickedAvatar>[];
   final nicknameCalls = <({String nickname, bool confirmed})>[];
   final updateCalls =
       <({String? bio, String? iconKey, String? age, bool confirmed})>[];
@@ -42,6 +49,14 @@ class ScriptedProfileRepository implements ProfileRepository {
     if (fetchGate != null) await fetchGate;
     if (fetchErrors.isNotEmpty) throw fetchErrors.removeAt(0);
     return profile;
+  }
+
+  @override
+  Future<void> uploadAvatar(PickedAvatar avatar) async {
+    avatarCalls.add(avatar);
+    if (avatarScript.isEmpty) return;
+    final next = avatarScript.removeAt(0);
+    if (next != null) throw next;
   }
 
   @override

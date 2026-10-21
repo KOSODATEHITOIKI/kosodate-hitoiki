@@ -1,4 +1,5 @@
 import '../../core/constants/app_icons.dart';
+import '../../domain/models/picked_avatar.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 
@@ -43,6 +44,9 @@ class MockProfileRepository implements ProfileRepository {
     String? childAgeRange,
     bool confirmed = false,
   }) async {}
+
+  @override
+  Future<void> uploadAvatar(PickedAvatar avatar) async {}
 
   @override
   Future<void> changeNickname({
