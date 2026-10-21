@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,9 +39,14 @@ void main() {
   late _MockAuth auth;
   late _MockProfiles profiles;
 
+  /// ログイン状態の変化(Googleの認証から戻ったときなど)を流す。
+  late StreamController<AuthState> authEvents;
+
   setUp(() {
     auth = _MockAuth();
     profiles = _MockProfiles();
+    authEvents = StreamController<AuthState>.broadcast();
+    addTearDown(authEvents.close);
     when(() => auth.signOut()).thenAnswer((_) async {});
   });
 
@@ -52,6 +59,7 @@ void main() {
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(auth),
+          authStateChangesProvider.overrideWith((ref) => authEvents.stream),
           profileRegistrationRepositoryProvider.overrideWithValue(profiles),
         ],
         child: MaterialApp(
@@ -139,6 +147,79 @@ void main() {
     await pumpAuth(tester);
     expect(find.text('Appleで続ける'), findsNothing);
     expect(find.text('Googleで続ける'), findsOneWidget);
+  });
+
+  group('Googleで続ける', () {
+    Future<void> tapGoogle(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(const ValueKey('auth-google')));
+      await tester.tap(find.byKey(const ValueKey('auth-google')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('認証画面を開き、戻るまで待つ(案内を出す)', (tester) async {
+      when(() => auth.signInWithGoogle()).thenAnswer((_) async => true);
+      await pumpAuth(tester);
+      await tapGoogle(tester);
+
+      verify(() => auth.signInWithGoogle()).called(1);
+      expect(find.byKey(const ValueKey('auth-google-waiting')), findsOneWidget);
+      expect(find.byType(AuthPage), findsOneWidget);
+    });
+
+    testWidgets('認証画面を開けなかったら、案内して、待たない', (tester) async {
+      when(() => auth.signInWithGoogle()).thenAnswer((_) async => false);
+      await pumpAuth(tester);
+      await tapGoogle(tester);
+
+      expect(find.text('Googleの認証画面を開けませんでした。もう一度お試しください。'), findsOneWidget);
+      expect(find.byKey(const ValueKey('auth-google-waiting')), findsNothing);
+    });
+
+    testWidgets('戻ってログインできたら、プロフィールがあれば画面を閉じる', (tester) async {
+      when(() => auth.signInWithGoogle()).thenAnswer((_) async => true);
+      when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => true);
+      await pumpAuth(tester);
+      await tapGoogle(tester);
+
+      authEvents.add(AuthState(AuthChangeEvent.signedIn, _signedIn().session));
+      await tester.pumpAndSettle();
+
+      verify(() => profiles.hasProfile('user-1')).called(1);
+      expect(find.byType(AuthPage), findsNothing);
+    });
+
+    testWidgets('初めての利用者は、ニックネームと同意の画面へ進む', (tester) async {
+      when(() => auth.signInWithGoogle()).thenAnswer((_) async => true);
+      when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+      await pumpAuth(tester);
+      await tapGoogle(tester);
+
+      authEvents.add(AuthState(AuthChangeEvent.signedIn, _signedIn().session));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ProfileSetupPage), findsOneWidget);
+    });
+
+    testWidgets('待っていないときのログインの通知では、何もしない', (tester) async {
+      await pumpAuth(tester);
+      authEvents.add(AuthState(AuthChangeEvent.signedIn, _signedIn().session));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => profiles.hasProfile(any()));
+      expect(find.byType(AuthPage), findsOneWidget);
+    });
+
+    testWidgets('認証が失敗して戻ったら、案内する', (tester) async {
+      when(() => auth.signInWithGoogle()).thenAnswer((_) async => true);
+      await pumpAuth(tester);
+      await tapGoogle(tester);
+
+      authEvents.addError(const AuthException('access_denied'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Googleでのログインを完了できませんでした。もう一度お試しください。'), findsOneWidget);
+      expect(find.byKey(const ValueKey('auth-google-waiting')), findsNothing);
+    });
   });
 
   testWidgets('ログインの入力検証とパスワード表示切替', (tester) async {

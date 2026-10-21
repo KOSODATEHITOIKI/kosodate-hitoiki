@@ -18,8 +18,9 @@ import 'profile_creation.dart';
 import 'profile_setup_page.dart';
 
 /// S-10。メール+パスワードの登録・ログインはSupabase Authに接続済み。
-/// Googleとパスワード再設定は、アプリへ戻るためのディープリンクの
-/// 設定が済むまで未接続(バックエンド docs/Flutter結合ガイド.md 4節)。Appleは、フェーズ2で追加する。
+/// Googleは、認証画面(ブラウザ)からリンクでアプリへ戻って続ける(Supabase側のプロバイダ
+/// 設定が必要)。Appleは、フェーズ2で追加する。パスワード再設定は、メールのリンクから
+/// 戻って新しいパスワードを決める(new_password_page.dart)。
 enum AuthMode { login, register, reset }
 
 class AuthPage extends ConsumerStatefulWidget {
@@ -58,6 +59,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   /// 再設定メールの送信先。登録の有無にかかわらず、送信後は同じ画面を出す。
   String? _resetSentTo;
+
+  /// Googleの認証画面(ブラウザ)を開いて、アプリへ戻るのを待っている間。
+  bool _googleWaiting = false;
 
   /// 確認メールを再送できるまでの残り秒数。連続で押せないようにする。
   static const _resendCooldownSeconds = 60;
@@ -169,20 +173,54 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     });
   }
 
-  void _notice(String title, String message) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('閉じる'),
-          ),
-        ],
-      ),
-    );
+  /// Googleで続ける。認証画面(ブラウザ)を開き、戻ってきたときのログイン状態の変化を
+  /// [build]の`ref.listen`で受ける。同意・ニックネームは、初めての利用者だけ、
+  /// ログイン後のプロフィール作成の画面で決める。
+  Future<void> _google() async {
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final opened = await ref.read(authRepositoryProvider).signInWithGoogle();
+      if (!mounted) return;
+      setState(() {
+        _googleWaiting = opened;
+        if (!opened) _error = 'Googleの認証画面を開けませんでした。もう一度お試しください。';
+      });
+    } catch (error) {
+      if (mounted) setState(() => _error = authErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Googleの認証から戻ったとき(ログイン状態の変化)。待っていないときは、何もしない。
+  Future<void> _onAuthState(AsyncValue<AuthState> next) async {
+    if (!_googleWaiting) return;
+    if (next.hasError) {
+      setState(() {
+        _googleWaiting = false;
+        _error = 'Googleでのログインを完了できませんでした。もう一度お試しください。';
+      });
+      return;
+    }
+    final state = next.valueOrNull;
+    if (state?.event != AuthChangeEvent.signedIn || state?.session == null) {
+      return;
+    }
+    setState(() {
+      _googleWaiting = false;
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await _afterSignedInSafely(state!.session!.user);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -336,6 +374,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<AuthState>>(
+      authStateChangesProvider,
+      (_, next) => _onAuthState(next),
+    );
     final resetSentTo = _resetSentTo;
     if (resetSentTo != null) return _resetSentPage();
     final sentTo = _sentTo;
@@ -506,8 +548,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     // Appleでのログインは、フェーズ2で追加する(それまでは出さない)。
                     for (final provider in ['Google']) ...[
                       OutlinedButton.icon(
-                        onPressed: () =>
-                            _notice('$providerでの認証は準備中です', 'この画面では認証は行われません。'),
+                        key: const ValueKey('auth-google'),
+                        onPressed: _busy ? null : _google,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.textPrimary,
                           backgroundColor: AppColors.white,
@@ -517,6 +559,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         icon: const Icon(Icons.g_mobiledata, size: 26),
                         label: Text('$providerで続ける'),
                       ),
+                      if (_googleWaiting)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'ブラウザでGoogleの認証を進めてください。戻ってもログインできないときは、もう一度押してください。',
+                            key: ValueKey('auth-google-waiting'),
+                            style: TextStyle(fontSize: 12, height: 1.6),
+                          ),
+                        ),
                       const SizedBox(height: 12),
                     ],
                     const Padding(

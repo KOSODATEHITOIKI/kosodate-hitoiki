@@ -47,12 +47,21 @@ class AuthRepository {
     return _client.auth.updateUser(UserAttributes(password: newPassword));
   }
 
+  /// Googleの認証画面(ブラウザ)を開く。開けたら`true`。認証が済むと、リンク
+  /// ([authCallbackUrl])でアプリへ戻り、ログイン状態の変化として届く。
   Future<bool> signInWithGoogle() {
-    return _client.auth.signInWithOAuth(OAuthProvider.google);
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: authCallbackUrl,
+    );
   }
 
+  /// フェーズ2で、画面に出して使う。
   Future<bool> signInWithApple() {
-    return _client.auth.signInWithOAuth(OAuthProvider.apple);
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.apple,
+      redirectTo: authCallbackUrl,
+    );
   }
 
   Future<void> signOut() => _client.auth.signOut();
