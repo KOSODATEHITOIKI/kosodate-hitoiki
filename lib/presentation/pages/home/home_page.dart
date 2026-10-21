@@ -120,11 +120,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         ],
       ),
       const SizedBox(height: 24),
-      const Text(
-        'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
-        style: TextStyle(fontSize: 11, height: 1.6),
-      ),
-      const SizedBox(height: 12),
+      if (ref.watch(postsAreSampleProvider)) ...[
+        const Text(
+          'サンプル投稿です。保存状態はアプリ終了時にリセットされます。',
+          style: TextStyle(fontSize: 11, height: 1.6),
+        ),
+        const SizedBox(height: 12),
+      ],
       ..._buildFeed(),
     ];
     return SafeArea(
@@ -163,7 +165,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   .where((post) => post.type == _typeByLabel[_postType])
                   .toList();
         if (filtered.isEmpty) {
-          return [_emptyFeedCard('投稿一覧は準備中です')];
+          return [
+            _emptyFeedCard(
+              ref.watch(postsAreSampleProvider) ? '投稿一覧は準備中です' : 'まだ投稿がありません',
+            ),
+          ];
         }
         return [
           for (final post in filtered) ...[

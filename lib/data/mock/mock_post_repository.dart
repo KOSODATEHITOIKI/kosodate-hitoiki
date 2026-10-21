@@ -9,6 +9,9 @@ class MockPostRepository implements PostRepository {
 
   final List<Post> _posts;
 
+  @override
+  bool get isSample => true;
+
   static final DateTime _now = DateTime.now();
 
   static final List<Post> _seed = [

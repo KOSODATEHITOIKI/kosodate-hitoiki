@@ -135,6 +135,18 @@ class AppAvatars {
   static const defaultYellowFlower = '$_base/avatar-yellow-flower.png';
   static const defaultTulip = '$_base/avatar-tulip.png';
   static const defaultBlueFlowers = '$_base/avatar-blue-flowers.png';
+
+  /// プロフィールの`icon_key`に対応するアカウント画像。
+  /// icon_keyのマスタは未決定(バックエンド 未決事項)のため、いまは画像のファイル名に
+  /// 合わせた仮のkeyを使う。未設定・未知のkeyは既定(芽)にする。
+  static String forIconKey(String? key) => switch (key) {
+    'sun' => defaultSun,
+    'little_bird' => defaultLittleBird,
+    'yellow_flower' => defaultYellowFlower,
+    'tulip' => defaultTulip,
+    'blue_flowers' => defaultBlueFlowers,
+    _ => defaultSprout,
+  };
 }
 
 /// 共感リアクションの定型文アイコン(240×240)。

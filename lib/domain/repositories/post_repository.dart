@@ -3,6 +3,9 @@ import '../models/post.dart';
 /// 投稿データ取得の抽象。バックエンド接続時はSupabase実装に差し替える
 /// (現在はMockPostRepositoryのみ。docs/全体設計書.md F-01〜F-09参照)。
 abstract class PostRepository {
+  /// サンプルデータか。trueの間、画面に「サンプル投稿です」の注記を出す。
+  bool get isSample;
+
   /// ホームの投稿一覧(新着順)。
   Future<List<Post>> fetchFeed();
 
