@@ -44,6 +44,7 @@ dependencies:
   # アイコン・イラスト表示(assets/配下のSVG)
   flutter_svg: ^2.0.10+1
   url_launcher: ^6.3.2
+  image_picker: ^1.2.4
 
 dev_dependencies:
   flutter_test:

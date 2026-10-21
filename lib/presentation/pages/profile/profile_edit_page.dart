@@ -4,17 +4,20 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../data/api/api_exception.dart';
+import '../../../domain/models/picked_avatar.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../widgets/comfort_page.dart';
 import '../compose/moderated_action.dart';
+import '../compose/post_messages.dart';
 
 /// S-09。プロフィールの取得・保存に接続している。
 /// - ニックネーム: `profile-nickname`(30日に1回。送信前チェックあり)
 /// - 自己紹介・アイコン: `profile-update`(自己紹介は送信前チェックあり)
 /// 子どもの年齢帯は、選択肢が未決定のため、サンプル(モック)のときだけ出す。
-/// アカウント画像のアップロードは、未対応(用意したイラストの選択だけ)。
+/// アカウント画像は、用意したイラストを選ぶか、自分の写真を選ぶ(`profile-avatar`。保存を押したときに送る)。
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key});
   @override
@@ -27,6 +30,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   final _bio = TextEditingController();
   String _avatar = AppAvatars.defaultSprout;
   String? _nameError;
+
+  /// 選んだ自分の写真。イラストとは、どちらか一方。保存を押したときに送る。
+  PickedAvatar? _picked;
+
+  /// [_picked]を送り終えたか(保存が途中で失敗しても、二重に送らない)。
+  bool _pickedUploaded = false;
   String _ageBand = '';
 
   /// 読み込んだときの値。変わった項目だけを送るために持つ。
@@ -116,8 +125,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final bio = _bio.text.trim();
     final nicknameChanged = nickname != _origNickname;
     final bioChanged = bio != _origBio.trim();
-    final iconChanged = _avatar != _origAvatar;
-    if (!nicknameChanged && !bioChanged && !iconChanged) {
+    final iconChanged = _picked == null && _avatar != _origAvatar;
+    final photoChanged = _picked != null && !_pickedUploaded;
+    if (!nicknameChanged && !bioChanged && !iconChanged && !photoChanged) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('変更はありません')));
@@ -147,6 +157,18 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         _origNickname = nickname;
         _refreshCaches(container);
       }
+      if (photoChanged) {
+        try {
+          await repository.uploadAvatar(_picked!);
+          _pickedUploaded = true;
+          // 以後にイラストを選んだら、(元と同じ絵でも)変更として送る。写真が外れるため。
+          _origAvatar = '';
+          _refreshCaches(container);
+        } catch (error) {
+          if (mounted) setState(() => _error = _photoFailure(error));
+          return;
+        }
+      }
       if (bioChanged || iconChanged) {
         if (!mounted) return;
         final error = await runModerated(
@@ -171,6 +193,38 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// 写真を選ぶ。選べたら、保存を押すまで、画面の表示だけを変える。
+  Future<void> _pickPhoto() async {
+    try {
+      final picked = await ref.read(avatarPickerProvider).pick();
+      if (picked == null || !mounted) return;
+      setState(() {
+        _picked = picked;
+        _pickedUploaded = false;
+        // 写真を選んだら、イラストの選択は取り消す(どちらか一方)。
+        _avatar = _origAvatar;
+        _error = null;
+      });
+    } on AvatarPickException catch (error) {
+      if (mounted) setState(() => _error = error.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = '画像を選べませんでした。もう一度お試しください。');
+    }
+  }
+
+  /// 写真の送信が失敗したときの文言。
+  String _photoFailure(Object error) {
+    if (error is ApiException) {
+      if (error.isRejected) {
+        return '選んだ画像は使えませんでした。別の画像を選んでください。';
+      }
+      if (error.code == 'VALIDATION_FAILED') {
+        return '画像を保存できませんでした。JPEG・PNG・WebPの、2MB以下の画像を選んでください。';
+      }
+    }
+    return postFailureMessage(error);
   }
 
   @override
@@ -233,12 +287,24 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
               'アイコンを選ぶ',
               Column(
                 children: [
-                  AppAsset(
-                    _avatar,
-                    width: 96,
-                    height: 96,
-                    semanticsLabel: '選択中のアイコン',
-                  ),
+                  if (_picked != null)
+                    ClipOval(
+                      child: Image.memory(
+                        _picked!.bytes,
+                        key: const ValueKey('profile-photo-preview'),
+                        width: 96,
+                        height: 96,
+                        fit: BoxFit.cover,
+                        semanticLabel: '選んだ写真',
+                      ),
+                    )
+                  else
+                    AppAsset(
+                      _avatar,
+                      width: 96,
+                      height: 96,
+                      semanticsLabel: '選択中のアイコン',
+                    ),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 16,
@@ -252,14 +318,17 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       ])
                         Semantics(
                           button: true,
-                          selected: _avatar == item.$1,
+                          selected: _picked == null && _avatar == item.$1,
                           label: '${item.$2}のアイコン',
                           child: Tooltip(
                             message: '${item.$2}のアイコン',
                             child: InkWell(
                               onTap: !editable
                                   ? null
-                                  : () => setState(() => _avatar = item.$1),
+                                  : () => setState(() {
+                                      _avatar = item.$1;
+                                      _picked = null;
+                                    }),
                               borderRadius: BorderRadius.circular(40),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
@@ -267,7 +336,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                                   shape: BoxShape.circle,
                                   color: AppColors.surface,
                                   border: Border.all(
-                                    color: _avatar == item.$1
+                                    color: _picked == null && _avatar == item.$1
                                         ? AppColors.primary
                                         : AppColors.divider,
                                     width: 2,
@@ -284,6 +353,19 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                           ),
                         ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    key: const ValueKey('profile-pick-photo'),
+                    onPressed: editable ? _pickPhoto : null,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('自分の写真から選ぶ'),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '顔写真やお子さんの写真は、避けてください。選んだ画像は、投稿やコメントの横に、ニックネームと一緒に公開されます。',
+                    key: ValueKey('profile-photo-notice'),
+                    style: TextStyle(fontSize: 12, height: 1.7),
                   ),
                 ],
               ),
