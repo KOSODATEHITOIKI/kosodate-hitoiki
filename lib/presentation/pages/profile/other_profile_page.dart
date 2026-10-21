@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/child_age_range.dart';
 import '../../../domain/models/user_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_providers.dart';
@@ -111,7 +112,7 @@ class OtherProfilePage extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              profile.childAgeBand ?? '未設定',
+              ChildAgeRange.labelFor(profile.childAgeBand),
               style: const TextStyle(fontSize: 14),
             ),
           ],

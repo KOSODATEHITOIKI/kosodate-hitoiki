@@ -1,3 +1,4 @@
+import 'package:kosodate_hitoiki/core/constants/child_age_range.dart';
 import 'package:kosodate_hitoiki/domain/models/picked_avatar.dart';
 import 'package:kosodate_hitoiki/domain/models/user_profile.dart';
 import 'package:kosodate_hitoiki/domain/repositories/profile_repository.dart';
@@ -38,7 +39,15 @@ class ScriptedProfileRepository implements ProfileRepository {
   final avatarCalls = <PickedAvatar>[];
   final nicknameCalls = <({String nickname, bool confirmed})>[];
   final updateCalls =
-      <({String? bio, String? iconKey, String? age, bool confirmed})>[];
+      <
+        ({
+          String? bio,
+          String? iconKey,
+          ChildAgeRange? age,
+          bool clearAge,
+          bool confirmed,
+        })
+      >[];
 
   @override
   bool get isSample => sample;
@@ -74,13 +83,15 @@ class ScriptedProfileRepository implements ProfileRepository {
   Future<void> updateProfile({
     String? bio,
     String? iconKey,
-    String? childAgeRange,
+    ChildAgeRange? childAgeRange,
+    bool clearChildAgeRange = false,
     bool confirmed = false,
   }) async {
     updateCalls.add((
       bio: bio,
       iconKey: iconKey,
       age: childAgeRange,
+      clearAge: clearChildAgeRange,
       confirmed: confirmed,
     ));
     final next = updateScript.removeAt(0);

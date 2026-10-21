@@ -4,6 +4,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/child_age_range.dart';
 import '../../../data/api/api_exception.dart';
 import '../../../domain/models/picked_avatar.dart';
 import '../../providers/auth_provider.dart';
@@ -16,7 +17,7 @@ import '../compose/post_messages.dart';
 /// S-09。プロフィールの取得・保存に接続している。
 /// - ニックネーム: `profile-nickname`(30日に1回。送信前チェックあり)
 /// - 自己紹介・アイコン: `profile-update`(自己紹介は送信前チェックあり)
-/// 子どもの年齢帯は、選択肢が未決定のため、サンプル(モック)のときだけ出す。
+/// 子どもの年齢帯: 決まった5つ(`ChildAgeRange`)から選ぶか、未選択に戻す(`profile-update`)。
 /// アカウント画像は、用意したイラストを選ぶか、自分の写真を選ぶ(`profile-avatar`。保存を押したときに送る)。
 class ProfileEditPage extends ConsumerStatefulWidget {
   const ProfileEditPage({super.key});
@@ -36,19 +37,19 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   /// [_picked]を送り終えたか(保存が途中で失敗しても、二重に送らない)。
   bool _pickedUploaded = false;
+
+  /// 選んだ年齢帯のコード(未選択は空)。
   String _ageBand = '';
 
   /// 読み込んだときの値。変わった項目だけを送るために持つ。
   String _origNickname = '';
   String _origBio = '';
   String _origAvatar = AppAvatars.defaultSprout;
+  String _origAgeBand = '';
   bool _filled = false;
 
   bool _busy = false;
   String? _error;
-
-  // 年齢帯の区分は未確定。画面確認用のサンプルとして扱う(サンプルのときだけ出す)。
-  static const _sampleAgeBands = ['', '乳児', '未就学児', '小学生', '中学生以上'];
 
   @override
   void initState() {
@@ -57,12 +58,17 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     ref.listenManual(myProfileProvider, (_, next) {
       final profile = next.valueOrNull;
       if (profile != null) {
-        _fill(profile.nickname, profile.bio, profile.avatarAsset);
+        _fill(
+          profile.nickname,
+          profile.bio,
+          profile.avatarAsset,
+          ChildAgeRange.fromCode(profile.childAgeBand)?.code ?? '',
+        );
       }
     }, fireImmediately: true);
   }
 
-  void _fill(String nickname, String bio, String avatar) {
+  void _fill(String nickname, String bio, String avatar, String ageBand) {
     if (_filled) return;
     _filled = true;
     setState(() {
@@ -72,6 +78,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
       _origNickname = nickname;
       _origBio = bio;
       _origAvatar = avatar;
+      _ageBand = ageBand;
+      _origAgeBand = ageBand;
     });
   }
 
@@ -127,7 +135,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final bioChanged = bio != _origBio.trim();
     final iconChanged = _picked == null && _avatar != _origAvatar;
     final photoChanged = _picked != null && !_pickedUploaded;
-    if (!nicknameChanged && !bioChanged && !iconChanged && !photoChanged) {
+    final ageChanged = _ageBand != _origAgeBand;
+    if (!nicknameChanged &&
+        !bioChanged &&
+        !iconChanged &&
+        !photoChanged &&
+        !ageChanged) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('変更はありません')));
@@ -169,13 +182,16 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
           return;
         }
       }
-      if (bioChanged || iconChanged) {
+      if (bioChanged || iconChanged || ageChanged) {
         if (!mounted) return;
         final error = await runModerated(
           context: context,
           action: (confirmed) => repository.updateProfile(
             bio: bioChanged ? bio : null,
             iconKey: iconChanged ? AppAvatars.keyFor(_avatar) : null,
+            childAgeRange: ageChanged ? ChildAgeRange.fromCode(_ageBand) : null,
+            // 未選択に戻したときだけ、解除する。
+            clearChildAgeRange: ageChanged && _ageBand.isEmpty,
             confirmed: confirmed,
           ),
         );
@@ -315,6 +331,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                         (AppAvatars.defaultYellowFlower, '花'),
                         (AppAvatars.defaultTulip, 'チューリップ'),
                         (AppAvatars.defaultLittleBird, '鳥'),
+                        (AppAvatars.defaultSun, '太陽'),
+                        (AppAvatars.defaultBlueFlowers, '青い花'),
                       ])
                         Semantics(
                           button: true,
@@ -419,7 +437,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                 ),
               ),
             ),
-            if (sample) ...[
+            ...[
               const SizedBox(height: 16),
               _section(
                 '子どもの年齢帯（任意）',
@@ -438,25 +456,36 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                             context,
                           ).textTheme.bodyMedium?.copyWith(fontSize: 14),
                           items: [
-                            for (final age in _sampleAgeBands)
+                            for (final age in [
+                              '',
+                              ...ChildAgeRange.values.map(
+                                (range) => range.code,
+                              ),
+                            ])
                               DropdownMenuItem(
                                 value: age,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 8,
                                   ),
-                                  child: Text(age.isEmpty ? '未選択' : age),
+                                  child: Text(
+                                    age.isEmpty
+                                        ? '未選択'
+                                        : ChildAgeRange.labelFor(age),
+                                  ),
                                 ),
                               ),
                           ],
-                          onChanged: (value) =>
-                              setState(() => _ageBand = value ?? ''),
+                          onChanged: !editable
+                              ? null
+                              : (value) =>
+                                    setState(() => _ageBand = value ?? ''),
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      '選ばなくても構いません。選択肢は画面確認用のサンプルです。',
+                      '選ばなくても構いません。いちばん下のお子さんの年齢で選んでください。',
                       style: TextStyle(fontSize: 12, height: 1.7),
                     ),
                   ],

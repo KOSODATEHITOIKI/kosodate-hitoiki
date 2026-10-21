@@ -1,9 +1,9 @@
 import '../../core/constants/app_icons.dart';
+import '../../core/constants/child_age_range.dart';
 import '../../domain/models/picked_avatar.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 
-/// 年齢帯は画面確認用のサンプル。選択肢の確定仕様ではない。
 class MockProfileRepository implements ProfileRepository {
   static const _profiles = [
     UserProfile(
@@ -11,14 +11,14 @@ class MockProfileRepository implements ProfileRepository {
       nickname: 'はな',
       avatarAsset: AppAvatars.defaultTulip,
       bio: '慌ただしい毎日、\nここでひと息ついています。',
-      childAgeBand: '未就学児',
+      childAgeBand: 'age_4_6',
     ),
     UserProfile(
       id: 'sample-komorebi',
       nickname: 'こもれび',
       avatarAsset: AppAvatars.defaultSprout,
       bio: '子育ての気持ちを、少しずつ。',
-      childAgeBand: '乳児',
+      childAgeBand: 'age_0_1',
     ),
     UserProfile(
       id: 'sample-mimi',
@@ -41,7 +41,8 @@ class MockProfileRepository implements ProfileRepository {
   Future<void> updateProfile({
     String? bio,
     String? iconKey,
-    String? childAgeRange,
+    ChildAgeRange? childAgeRange,
+    bool clearChildAgeRange = false,
     bool confirmed = false,
   }) async {}
 

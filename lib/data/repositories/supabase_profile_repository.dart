@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_icons.dart';
+import '../../core/constants/child_age_range.dart';
 import '../../domain/models/picked_avatar.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -24,7 +25,8 @@ class SupabaseProfileRepository implements ProfileRepository {
   Future<void> updateProfile({
     String? bio,
     String? iconKey,
-    String? childAgeRange,
+    ChildAgeRange? childAgeRange,
+    bool clearChildAgeRange = false,
     bool confirmed = false,
   }) async {
     try {
@@ -35,6 +37,7 @@ class SupabaseProfileRepository implements ProfileRepository {
           bio: bio,
           iconKey: iconKey,
           childAgeRange: childAgeRange,
+          clearChildAgeRange: clearChildAgeRange,
           confirmed: confirmed,
         ),
       );
@@ -78,14 +81,22 @@ class SupabaseProfileRepository implements ProfileRepository {
   static Map<String, dynamic> updateBody({
     String? bio,
     String? iconKey,
-    String? childAgeRange,
+    ChildAgeRange? childAgeRange,
+    bool clearChildAgeRange = false,
     bool confirmed = false,
-  }) => {
-    'bio': ?bio?.trim(),
-    'icon_key': ?iconKey,
-    'child_age_range': ?childAgeRange,
-    if (confirmed) 'confirmed': true,
-  };
+  }) {
+    if (childAgeRange != null && clearChildAgeRange) {
+      throw ArgumentError('年齢帯の設定と解除は、同時に指定できません');
+    }
+    return {
+      'bio': ?bio?.trim(),
+      'icon_key': ?iconKey,
+      // 解除は、nullを送る(送らないと「変えない」になる)。
+      if (childAgeRange != null) 'child_age_range': childAgeRange.code,
+      if (clearChildAgeRange) 'child_age_range': null,
+      if (confirmed) 'confirmed': true,
+    };
+  }
 
   @override
   Future<UserProfile?> fetchProfile(String userId) async {

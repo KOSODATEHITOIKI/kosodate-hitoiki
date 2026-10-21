@@ -43,7 +43,7 @@ void main() {
     container.read(session.notifier).state = false;
     await tester.pumpAndSettle();
     expect(find.text('はな'), findsNothing);
-    expect(find.text('未就学児'), findsNothing);
+    expect(find.text('4〜6歳(未就学)'), findsNothing);
     expect(find.text('ログイン'), findsOneWidget);
   });
   testWidgets('直接開いてもゲストのプロフィール取得は0回・ログイン画面から戻れる', (tester) async {
@@ -67,7 +67,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(repository.calls, 0);
     expect(find.text('はな'), findsNothing);
-    expect(find.text('未就学児'), findsNothing);
+    expect(find.text('4〜6歳(未就学)'), findsNothing);
     // 画面以外からProviderを読んでも、取得しない。
     expect(
       await container.read(otherProfileProvider('sample-hana').future),
@@ -117,7 +117,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(OtherProfilePage), findsOneWidget);
         expect(find.text('慌ただしい毎日、\nここでひと息ついています。'), findsOneWidget);
-        expect(find.text('未就学児'), findsOneWidget);
+        expect(find.text('4〜6歳(未就学)'), findsOneWidget);
         expect(find.byType(PostCard), findsNothing);
         await tester.scrollUntilVisible(
           find.text('通報'),

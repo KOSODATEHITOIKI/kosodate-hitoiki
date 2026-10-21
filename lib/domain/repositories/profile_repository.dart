@@ -1,3 +1,4 @@
+import '../../core/constants/child_age_range.dart';
 import '../models/picked_avatar.dart';
 import '../models/user_profile.dart';
 
@@ -10,10 +11,13 @@ abstract class ProfileRepository {
   /// プロフィールを更新する(指定した項目だけ。何も指定しないと失敗する)。
   /// 自己紹介は送信前チェックを通る(確認が必要なときは`ApiException`。[confirmed]を
   /// trueにして再送する)。[iconKey]を指定すると、アップロード画像は外れる。
+  /// 年齢帯は、[childAgeRange]で設定し、[clearChildAgeRange]を`true`にすると未選択に戻す
+  /// (どちらも指定しなければ変えない。両方を指定すると失敗する)。
   Future<void> updateProfile({
     String? bio,
     String? iconKey,
-    String? childAgeRange,
+    ChildAgeRange? childAgeRange,
+    bool clearChildAgeRange = false,
     bool confirmed = false,
   });
 
