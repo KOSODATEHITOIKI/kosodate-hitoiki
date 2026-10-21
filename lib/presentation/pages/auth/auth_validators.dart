@@ -1,12 +1,15 @@
 /// 登録・ログイン画面の入力チェック。問題があれば「何が足りないか」を日本語で返し、
 /// 問題がなければnullを返す。
 ///
-/// パスワードの条件(文字数など)は要件が未決定のため、ここでは決めない。
-/// 空欄のチェックだけを行い、条件を満たさない場合はSupabase Authの判定結果を
-/// 送信後に表示する(auth_messages.dart)。
+/// パスワードの条件は要件が未決定のため、ここでは決めない。ログインでは空欄だけ
+/// 確認する(登録済みのパスワードは、今の条件を満たさないかもしれない)。登録では、
+/// 現在のSupabase Authの設定(password_policy.dart)に合わせて足りないことを案内する。
+/// 最終判定はSupabase Authが行う(auth_messages.dart)。
 library;
 
 import 'package:flutter/widgets.dart';
+
+import '../../../core/config/password_policy.dart';
 
 const nicknameMinLength = 2;
 const nicknameMaxLength = 12;
@@ -41,3 +44,24 @@ String? emailProblem(String value) {
 
 String? passwordProblem(String value) =>
     value.isEmpty ? 'パスワードを入力してください。' : null;
+
+/// 登録時のパスワード。足りないことをまとめて案内する(例: 「あと3文字・英大文字が必要です。」)。
+String? passwordRegisterProblem(String value) {
+  if (value.isEmpty) return 'パスワードを入力してください。';
+  final length = value.characters.length;
+  final missing = [
+    if (length < PasswordPolicy.minLength)
+      'あと${PasswordPolicy.minLength - length}文字',
+    if (!PasswordPolicy.upper.hasMatch(value)) '英大文字',
+    if (!PasswordPolicy.lower.hasMatch(value)) '英小文字',
+    if (!PasswordPolicy.digit.hasMatch(value)) '数字',
+  ];
+  return missing.isEmpty ? null : '${missing.join('・')}が必要です。';
+}
+
+/// 確認用のパスワード。もとのパスワードと同じか。
+String? passwordConfirmProblem(String password, String confirm) {
+  if (confirm.isEmpty) return '確認のため、もう一度入力してください。';
+  if (confirm != password) return 'パスワードが一致しません。';
+  return null;
+}

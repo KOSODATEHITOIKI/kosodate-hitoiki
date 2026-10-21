@@ -54,9 +54,13 @@ class _Row extends StatelessWidget {
 
   /// 本文を開く。最後まで読んで戻ったときだけ、チェックをつける。
   Future<void> _read(BuildContext context) async {
+    // 入力中の欄からフォーカスを外してから開く。外さないと、戻ったときに
+    // その入力欄へフォーカスが戻って、キーボードが出てしまう。
+    FocusManager.instance.primaryFocus?.unfocus();
     final read = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => LegalDocumentPage(document: document)),
     );
+    FocusManager.instance.primaryFocus?.unfocus();
     if (read == true) onChanged(true);
   }
 
