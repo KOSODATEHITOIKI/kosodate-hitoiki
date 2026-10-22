@@ -47,7 +47,8 @@ class _RealLikeRepository implements PostRepository {
   Future<List<ReactionType>> fetchReactionTypes() async => const [];
 
   @override
-  Future<Map<String, int>> fetchMyReactions() async => const {};
+  Future<Map<String, int>> fetchMyReactions(List<String> postIds) async =>
+      const {};
 
   @override
   Future<void> setReaction({

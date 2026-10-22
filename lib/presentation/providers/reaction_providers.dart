@@ -25,22 +25,42 @@ final reactionCountProvider = FutureProvider.autoDispose.family<int, String>(
 
 /// 自分の共感。画面にはすぐ反映し、サーバーへ送る。送れなかったときは、元に戻す。
 class MyReactionsNotifier extends StateNotifier<Map<String, int>> {
-  MyReactionsNotifier(this._repository) : super(const {}) {
-    _load();
-  }
+  MyReactionsNotifier(this._repository) : super(const {});
 
   final PostRepository _repository;
+
+  /// すでに取得を依頼した投稿(同じ投稿を、何度も取得しない)。
+  final _requested = <String>{};
+
+  /// まとめて取得するための、取得待ちの投稿。
+  final _queue = <String>{};
+  bool _flushScheduled = false;
 
   /// 送信中の投稿(同じ投稿への操作を、続けて送らない)。
   final _pending = <String>{};
 
-  Future<void> _load() async {
+  /// 表示する投稿への、自分の共感を取得する。同じ画面で表示する投稿の分は、1回にまとめて
+  /// 取得し、一度取得した投稿は取得し直さない(共感の操作は、状態へ直接反映される)。
+  void request(String postId) {
+    if (!_requested.add(postId)) return;
+    _queue.add(postId);
+    if (_flushScheduled) return;
+    _flushScheduled = true;
+    Future<void>.microtask(_flush);
+  }
+
+  Future<void> _flush() async {
+    _flushScheduled = false;
+    final ids = _queue.toList();
+    _queue.clear();
+    if (ids.isEmpty) return;
     try {
-      final loaded = await _repository.fetchMyReactions();
+      final loaded = await _repository.fetchMyReactions(ids);
       // 読み込み中に操作した分は、操作を優先する。
       if (mounted) state = {...loaded, ...state};
     } catch (_) {
-      // 読めなくても、操作はできる(選択の表示だけが出ない)。
+      // 読めなくても、操作はできる(選択の表示だけが出ない)。次に表示したとき、取得し直す。
+      _requested.removeAll(ids);
     }
   }
 

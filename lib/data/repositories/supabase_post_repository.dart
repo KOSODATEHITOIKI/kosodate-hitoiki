@@ -346,17 +346,16 @@ class SupabasePostRepository implements PostRepository {
     return [for (final row in rows) reactionTypeFromRow(row)];
   }
 
-  /// 自分の共感(`GET /rest/v1/reactions`。自分の行だけが読める)。
+  /// 自分の共感(`GET /rest/v1/reactions`。自分の行だけが読める)。表示する投稿の分だけ取得する。
   @override
-  Future<Map<String, int>> fetchMyReactions() async {
+  Future<Map<String, int>> fetchMyReactions(List<String> postIds) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) return {};
+    if (userId == null || postIds.isEmpty) return {};
     final rows = await _client
         .from('reactions')
         .select('post_id,reaction_type_id')
         .eq('user_id', userId)
-        .order('updated_at', ascending: false)
-        .limit(1000);
+        .inFilter('post_id', postIds);
     return {
       for (final row in rows)
         row['post_id'] as String: (row['reaction_type_id'] as num).toInt(),

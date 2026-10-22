@@ -62,6 +62,8 @@ class PostCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // この投稿への自分の共感を取得する(表示している投稿の分を、まとめて取得する)。
+    ref.read(myReactionsProvider.notifier).request(post.id);
     // この投稿への自分の共感だけを監視し、他の投稿への操作で再構築しない。
     final reactionId = ref.watch(
       myReactionsProvider.select((reactions) => reactions[post.id]),
