@@ -9,6 +9,7 @@ import '../../../core/utils/accessibility.dart';
 import '../../../domain/models/post.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/post_card.dart';
+import '../../widgets/topic_picker.dart';
 import '../support/support_resources_page.dart';
 
 /// S-02。投稿取得(Issue #7)はMockPostRepositoryで仮接続済み。
@@ -70,29 +71,10 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
       const SizedBox(height: 24),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Row(
-          children: [
-            _illustration(AppDecorations.leavesSprout, 36),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text('話題を選ぶ', style: TextStyle(fontSize: 12.5)),
-            ),
-            IconButton(
-              tooltip: '話題の絞り込みは準備中です',
-              onPressed: () => ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('話題の絞り込みは準備中です'))),
-              icon: const Icon(Icons.keyboard_arrow_down),
-            ),
-          ],
-        ),
+      TopicFilterRow(
+        selected: ref.watch(feedTopicProvider),
+        onChanged: (topic) =>
+            ref.read(feedTopicProvider.notifier).state = topic,
       ),
       const SizedBox(height: 16),
       Wrap(
@@ -167,7 +149,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         if (filtered.isEmpty) {
           return [
             _emptyFeedCard(
-              ref.watch(postsAreSampleProvider) ? '投稿一覧は準備中です' : 'まだ投稿がありません',
+              ref.watch(postsAreSampleProvider)
+                  ? '投稿一覧は準備中です'
+                  : (ref.watch(feedTopicProvider) != null
+                        ? 'この話題の投稿は、まだありません'
+                        : 'まだ投稿がありません'),
             ),
           ];
         }

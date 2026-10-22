@@ -1,6 +1,7 @@
 import '../models/blocked_user.dart';
 import '../models/post.dart';
 import '../models/reaction_type.dart';
+import '../models/topic.dart';
 
 /// 投稿データ取得の抽象。バックエンド接続時はSupabase実装に差し替える
 /// (現在はMockPostRepositoryのみ。docs/全体設計書.md F-01〜F-09参照)。
@@ -8,11 +9,18 @@ abstract class PostRepository {
   /// サンプルデータか。trueの間、画面に「サンプル投稿です」の注記を出す。
   bool get isSample;
 
-  /// ホームの投稿一覧(新着順)。
-  Future<List<Post>> fetchFeed();
+  /// 投稿の話題(並び順どおり。未ログインでも読める)。
+  Future<List<Topic>> fetchTopics();
 
-  /// キーワード・投稿種類で絞り込んだ検索結果。
-  Future<List<Post>> search({required String query, PostType? type});
+  /// ホームの投稿一覧(新着順)。[topicId]を指定すると、その話題の投稿だけ。
+  Future<List<Post>> fetchFeed({int? topicId});
+
+  /// キーワード・投稿種類・話題で絞り込んだ検索結果。
+  Future<List<Post>> search({
+    required String query,
+    PostType? type,
+    int? topicId,
+  });
 
   /// 投稿1件(ID指定)。見えない投稿(削除・一時非表示・ブロックなど)や、存在しない投稿は
   /// `null`(どちらも同じ。存在を知る手がかりにしない)。ログイン必須。
@@ -32,6 +40,7 @@ abstract class PostRepository {
     required ResponseMode responseMode,
     required String body,
     required String idempotencyKey,
+    int? topicId,
     bool confirmed = false,
   });
 

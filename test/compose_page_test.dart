@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
+import 'package:kosodate_hitoiki/domain/models/topic.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/compose/compose_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
@@ -188,6 +189,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('確認して書く'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byType(TextField),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(
       find.descendant(
         of: find.byType(TextField),
@@ -201,6 +207,11 @@ void main() {
         .focusNode
         .hasFocus;
     expect(fieldFocused(), isFalse);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('compose-submit')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const ValueKey('compose-submit')));
     await tester.pumpAndSettle();
     expect(find.text('投稿の確認'), findsOneWidget);
@@ -211,6 +222,11 @@ void main() {
     );
     await tester.tap(find.text('書き直す'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byType(TextField),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(fieldFocused(), isFalse);
   });
 
@@ -331,30 +347,71 @@ void main() {
     expect(draft(), isEmpty);
   });
 
-  testWidgets('話題は、サンプルのときだけ選べる(実データには送れないため)', (tester) async {
-    for (final sample in [false, true]) {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            postRepositoryProvider.overrideWithValue(
-              ScriptedPostRepository([], sample: sample),
-            ),
-          ],
-          child: MaterialApp(
-            key: ValueKey(sample),
-            theme: AppTheme.light,
-            home: const Scaffold(body: ComposePage()),
-          ),
+  testWidgets('話題は、投稿を作るときだけ選べて、選ぶとその話題を送る(あとから変えられない)', (tester) async {
+    final repository = ScriptedPostRepository([created()]);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          _loggedIn,
+          postRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
         ),
-      );
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.byKey(const ValueKey('compose-submit')),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('話題（任意・1つ）'), sample ? findsOneWidget : findsNothing);
-    }
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('compose-topic-2')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('compose-topic-2')));
+    await tester.pumpAndSettle();
+
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    await tester.tap(find.text('確認して書く'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    // 確認画面にも、選んだ話題が出る。
+    expect(find.text('食事・離乳食'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('compose-send')));
+    await tester.pumpAndSettle();
+    expect(repository.calls.single.topicId, 2);
+  });
+
+  testWidgets('話題を選ばなければ、話題なしで送る。読み込めなくても投稿できる', (tester) async {
+    final repository = _TopicsFailRepository([created()]);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          _loggedIn,
+          postRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('compose-topics-failed')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const ValueKey('compose-topics-failed')), findsOneWidget);
+
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    await tester.tap(find.text('確認して書く'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-send')));
+    await tester.pumpAndSettle();
+    expect(repository.calls.single.topicId, isNull);
   });
 
   testWidgets('小さい画面と拡大文字で種類・反応の希望を変更できる', (tester) async {
@@ -396,4 +453,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+}
+
+/// 話題を読み込めない。
+class _TopicsFailRepository extends ScriptedPostRepository {
+  _TopicsFailRepository(super.script);
+
+  @override
+  Future<List<Topic>> fetchTopics() async => throw Exception('network');
 }

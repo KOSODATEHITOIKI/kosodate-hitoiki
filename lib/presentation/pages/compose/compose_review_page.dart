@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/api/api_exception.dart';
 import '../../../data/api/idempotency_key.dart';
 import '../../../domain/models/post.dart';
+import '../../../domain/models/topic.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/comfort_page.dart';
@@ -33,7 +34,7 @@ class ComposeReviewPage extends ConsumerStatefulWidget {
   final String body;
   final PostType postType;
   final ResponseMode responseMode;
-  final String? topic;
+  final Topic? topic;
   final bool editing;
 
   /// 編集のとき、編集する投稿のID。
@@ -78,6 +79,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
           responseMode: widget.responseMode,
           body: widget.body,
           idempotencyKey: _key,
+          topicId: widget.topic?.id,
           confirmed: _confirmed,
         );
         support = created.supportNotice;
@@ -209,7 +211,8 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
                 children: [
                   Chip(label: Text(widget.postType.label)),
                   Chip(label: Text(widget.responseMode.label)),
-                  if (widget.topic != null) Chip(label: Text(widget.topic!)),
+                  if (widget.topic != null)
+                    Chip(label: Text(widget.topic!.label)),
                 ],
               ),
               const SizedBox(height: 12),

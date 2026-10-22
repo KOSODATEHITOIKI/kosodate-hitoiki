@@ -62,6 +62,7 @@ class Post {
     this.isSaved = false,
     this.commentsOpen = true,
     this.underReview = false,
+    this.topicId,
   });
 
   final String id;
@@ -84,6 +85,9 @@ class Post {
   /// 通報による一時非表示で、運営が確認中。投稿者本人にだけ見える(「確認中」と表示する)。
   final bool underReview;
 
+  /// 話題のID(付いていなければ`null`)。
+  final int? topicId;
+
   Post copyWith({bool? isSaved, ResponseMode? responseMode, String? body}) =>
       Post(
         id: id,
@@ -100,5 +104,6 @@ class Post {
         isSaved: isSaved ?? this.isSaved,
         commentsOpen: commentsOpen,
         underReview: underReview,
+        topicId: topicId,
       );
 }

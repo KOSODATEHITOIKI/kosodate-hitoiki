@@ -9,7 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/comfort_page.dart';
 import '../../widgets/main_navigation_shell.dart';
-import '../../widgets/topic_picker.dart';
+import '../../../domain/models/topic.dart';
 import '../auth/auth_page.dart';
 import 'compose_review_page.dart';
 
@@ -27,7 +27,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
   final _body = TextEditingController();
   String _postType = 'ぐち';
   _ResponseMode _mode = _ResponseMode.listening;
-  String? _topic;
+  Topic? _topic;
   bool _guideSeen = false;
 
   @override
@@ -240,36 +240,61 @@ class _ComposePageState extends ConsumerState<ComposePage> {
           ],
         ),
       ),
-      // 話題のマスタは未決定(バックエンド 未決事項)で、実データには送れない。
-      // 選べるようにするのは、サンプル(モック)のときだけにする。
-      if (ref.watch(postsAreSampleProvider)) ...[
+      // 話題は、投稿を作るときだけ付けられる(あとから変えられない)。編集では出さない。
+      if (widget.initialPost == null) ...[
         const SizedBox(height: 16),
         _section(
           '話題（任意・1つ）',
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final topic in kMockTopics)
-                ChoiceChip(
-                  label: Text(topic, maxLines: 1, softWrap: false),
-                  labelStyle: const TextStyle(fontSize: 12),
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                  selected: _topic == topic,
-                  onSelected: (selected) =>
-                      setState(() => _topic = selected ? topic : null),
-                  showCheckmark: false,
-                  selectedColor: AppColors.secondary,
-                  backgroundColor: AppColors.background,
-                  shape: const StadiumBorder(),
-                  side: const BorderSide(color: AppColors.divider),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
-                  ),
+          ref
+              .watch(topicsProvider)
+              .when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-            ],
-          ),
+                // 話題は任意。読み込めなくても、話題なしで投稿できる。
+                error: (_, _) => Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        '話題を読み込めませんでした。話題なしでも投稿できます。',
+                        key: ValueKey('compose-topics-failed'),
+                        style: TextStyle(fontSize: 12, height: 1.6),
+                      ),
+                    ),
+                    TextButton(
+                      key: const ValueKey('compose-topics-retry'),
+                      onPressed: () => ref.invalidate(topicsProvider),
+                      child: const Text('再読み込み'),
+                    ),
+                  ],
+                ),
+                data: (topics) => Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final topic in topics)
+                      ChoiceChip(
+                        key: ValueKey('compose-topic-${topic.id}'),
+                        label: Text(topic.label, maxLines: 1, softWrap: false),
+                        labelStyle: const TextStyle(fontSize: 12),
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                        selected: _topic == topic,
+                        onSelected: (selected) =>
+                            setState(() => _topic = selected ? topic : null),
+                        showCheckmark: false,
+                        selectedColor: AppColors.secondary,
+                        backgroundColor: AppColors.background,
+                        shape: const StadiumBorder(),
+                        side: const BorderSide(color: AppColors.divider),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 4,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
         ),
       ],
       const SizedBox(height: 24),

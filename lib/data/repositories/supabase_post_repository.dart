@@ -5,6 +5,7 @@ import '../api/api_exception.dart';
 import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
 import '../../domain/models/reaction_type.dart';
+import '../../domain/models/topic.dart';
 import '../../domain/repositories/post_repository.dart';
 
 /// 投稿の読み取り(新着一覧・検索)をSupabaseから取得する。
@@ -29,13 +30,36 @@ class SupabasePostRepository implements PostRepository {
   bool get isSample => false;
 
   @override
-  Future<List<Post>> fetchFeed() => search(query: '');
+  Future<List<Post>> fetchFeed({int? topicId}) =>
+      search(query: '', topicId: topicId);
+
+  /// 投稿の話題(`GET /rest/v1/topics`。未ログインでも読める)。
+  @override
+  Future<List<Topic>> fetchTopics() async {
+    final rows = await _client
+        .from('topics')
+        .select('id,label,sort_order')
+        .eq('is_active', true)
+        // order()の既定は降順。並び順(sort_order)どおり、昇順にする。
+        .order('sort_order', ascending: true);
+    return [for (final row in rows) topicFromRow(row)];
+  }
+
+  /// `topics`の行を、話題にする。
+  static Topic topicFromRow(Map<String, dynamic> row) => Topic(
+    id: (row['id'] as num).toInt(),
+    label: row['label'] as String? ?? '',
+  );
 
   @override
-  Future<List<Post>> search({required String query, PostType? type}) async {
+  Future<List<Post>> search({
+    required String query,
+    PostType? type,
+    int? topicId,
+  }) async {
     final rows = await _client.rpc<List<dynamic>>(
       'search_posts',
-      params: searchParams(query: query, type: type),
+      params: searchParams(query: query, type: type, topicId: topicId),
     );
     final myId = _client.auth.currentUser?.id;
     final saved = await _savedIds([
@@ -69,6 +93,7 @@ class SupabasePostRepository implements PostRepository {
     required ResponseMode responseMode,
     required String body,
     required String idempotencyKey,
+    int? topicId,
     bool confirmed = false,
   }) async {
     try {
@@ -79,6 +104,7 @@ class SupabasePostRepository implements PostRepository {
           type: type,
           responseMode: responseMode,
           body: body,
+          topicId: topicId,
           confirmed: confirmed,
         ),
       );
@@ -165,16 +191,19 @@ class SupabasePostRepository implements PostRepository {
     );
   }
 
-  /// 投稿作成APIのリクエスト本文。話題は、マスタが未決定のため送らない。
+  /// 投稿作成APIのリクエスト本文。
   static Map<String, dynamic> createBody({
     required PostType type,
     required ResponseMode responseMode,
     required String body,
+    int? topicId,
     bool confirmed = false,
   }) => {
     'post_type': postTypeCode(type),
     'body': body.trim(),
     'reaction_mode': reactionModeCode(responseMode),
+    // 話題は任意。付けないときは、送らない(話題なし)。
+    'topic_id': ?topicId,
     if (confirmed) 'confirmed': true,
   };
 
@@ -307,7 +336,8 @@ class SupabasePostRepository implements PostRepository {
         .from('reaction_types')
         .select('id,code,label,sort_order')
         .eq('is_active', true)
-        .order('sort_order');
+        // order()の既定は降順。並び順(sort_order)どおり、昇順にする。
+        .order('sort_order', ascending: true);
     return [for (final row in rows) reactionTypeFromRow(row)];
   }
 
@@ -453,12 +483,14 @@ class SupabasePostRepository implements PostRepository {
   static Map<String, dynamic> searchParams({
     required String query,
     PostType? type,
+    int? topicId,
     int limit = pageSize,
   }) {
     final trimmed = query.trim();
     return {
       if (trimmed.isNotEmpty) 'p_query': trimmed,
       if (type != null) 'p_post_type': postTypeCode(type),
+      'p_topic_id': ?topicId,
       'p_limit': limit,
     };
   }
@@ -492,6 +524,7 @@ class SupabasePostRepository implements PostRepository {
       isSaved: isSaved,
       underReview: underReview,
       commentsOpen: row['comment_acceptance'] != 'closed',
+      topicId: (row['topic_id'] as num?)?.toInt(),
     );
   }
 
