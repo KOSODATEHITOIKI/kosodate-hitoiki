@@ -114,7 +114,9 @@ class MockPostRepository implements PostRepository {
   Future<List<Topic>> fetchTopics() async => _topics;
 
   @override
-  Future<List<Post>> fetchFeed({int? topicId}) async {
+  Future<List<Post>> fetchFeed({int? topicId, Post? before}) async {
+    // サンプルは1ページだけ。
+    if (before != null) return const [];
     final posts =
         _posts
             .where((post) => topicId == null || post.topicId == topicId)
@@ -128,7 +130,9 @@ class MockPostRepository implements PostRepository {
     required String query,
     PostType? type,
     int? topicId,
+    Post? before,
   }) async {
+    if (before != null) return const [];
     final trimmed = query.trim();
     return _posts.where((post) {
       final matchesQuery = trimmed.isEmpty || post.body.contains(trimmed);

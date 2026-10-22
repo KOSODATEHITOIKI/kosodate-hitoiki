@@ -120,6 +120,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         const SizedBox(height: 16),
         MockPostList(
           posts: ref.watch(searchResultsProvider),
+          pagedProvider: searchResultsProvider,
           emptyAsset: AppIllustrations.emptySearch,
           emptyTitle: '条件に合うサンプル投稿がありません',
           onRetry: () => ref.invalidate(searchResultsProvider),

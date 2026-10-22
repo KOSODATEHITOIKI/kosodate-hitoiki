@@ -4,6 +4,7 @@ import '../../core/constants/app_icons.dart';
 import '../../domain/models/post.dart';
 import '../providers/post_providers.dart';
 import 'comfort_page.dart';
+import 'load_more_button.dart';
 import 'post_card.dart';
 
 /// API未接続の画面確認用一覧。実際の投稿と区別して表示する。
@@ -14,8 +15,12 @@ class MockPostList extends ConsumerWidget {
     required this.emptyAsset,
     required this.emptyTitle,
     required this.onRetry,
+    this.pagedProvider,
   });
   final AsyncValue<List<Post>> posts;
+
+  /// ページ送りのある一覧のとき、その一覧。「もっと見る」を出す。
+  final AsyncNotifierProvider<PagedPosts, List<Post>>? pagedProvider;
   final String emptyAsset;
   final String emptyTitle;
   final VoidCallback onRetry;
@@ -55,6 +60,8 @@ class MockPostList extends ConsumerWidget {
                     PostCard(post: post),
                     const SizedBox(height: 12),
                   ],
+                  if (pagedProvider != null)
+                    LoadMoreButton(provider: pagedProvider!),
                 ],
               ),
       ),

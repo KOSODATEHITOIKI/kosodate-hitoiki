@@ -22,14 +22,16 @@ class _RealLikeRepository implements PostRepository {
   Future<List<Topic>> fetchTopics() async => const [];
 
   @override
-  Future<List<Post>> fetchFeed({int? topicId}) async => posts;
+  Future<List<Post>> fetchFeed({int? topicId, Post? before}) async =>
+      before == null ? posts : const [];
 
   @override
   Future<List<Post>> search({
     required String query,
     PostType? type,
     int? topicId,
-  }) async => posts;
+    Post? before,
+  }) async => before == null ? posts : const [];
 
   @override
   Future<Post?> fetchPost(String postId) async => null;

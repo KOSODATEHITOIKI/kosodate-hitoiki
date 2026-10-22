@@ -13,14 +13,20 @@ abstract class PostRepository {
   Future<List<Topic>> fetchTopics();
 
   /// ホームの投稿一覧(新着順)。[topicId]を指定すると、その話題の投稿だけ。
-  Future<List<Post>> fetchFeed({int? topicId});
+  /// [before]を指定すると、その投稿より古い投稿(次のページ)。
+  Future<List<Post>> fetchFeed({int? topicId, Post? before});
 
-  /// キーワード・投稿種類・話題で絞り込んだ検索結果。
+  /// キーワード・投稿種類・話題で絞り込んだ検索結果。[before]を指定すると、その投稿より
+  /// 古い結果(次のページ)。1ページの件数は[pageSize]。
   Future<List<Post>> search({
     required String query,
     PostType? type,
     int? topicId,
+    Post? before,
   });
+
+  /// 1ページの件数。返ってきた件数がこれ未満なら、最後のページ。
+  static const pageSize = 30;
 
   /// 投稿1件(ID指定)。見えない投稿(削除・一時非表示・ブロックなど)や、存在しない投稿は
   /// `null`(どちらも同じ。存在を知る手がかりにしない)。ログイン必須。

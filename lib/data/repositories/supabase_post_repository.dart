@@ -22,16 +22,15 @@ class SupabasePostRepository implements PostRepository {
 
   final SupabaseClient _client;
 
-  /// 1回に取得する件数(API契約の上限は50)。ページ送りは未実装で、新着から
-  /// この件数だけを表示する。
-  static const pageSize = 30;
+  /// 1ページの件数(API契約の上限は50)。
+  static const pageSize = PostRepository.pageSize;
 
   @override
   bool get isSample => false;
 
   @override
-  Future<List<Post>> fetchFeed({int? topicId}) =>
-      search(query: '', topicId: topicId);
+  Future<List<Post>> fetchFeed({int? topicId, Post? before}) =>
+      search(query: '', topicId: topicId, before: before);
 
   /// 投稿の話題(`GET /rest/v1/topics`。未ログインでも読める)。
   @override
@@ -56,10 +55,16 @@ class SupabasePostRepository implements PostRepository {
     required String query,
     PostType? type,
     int? topicId,
+    Post? before,
   }) async {
     final rows = await _client.rpc<List<dynamic>>(
       'search_posts',
-      params: searchParams(query: query, type: type, topicId: topicId),
+      params: searchParams(
+        query: query,
+        type: type,
+        topicId: topicId,
+        before: before,
+      ),
     );
     final myId = _client.auth.currentUser?.id;
     final saved = await _savedIds([
@@ -484,6 +489,7 @@ class SupabasePostRepository implements PostRepository {
     required String query,
     PostType? type,
     int? topicId,
+    Post? before,
     int limit = pageSize,
   }) {
     final trimmed = query.trim();
@@ -491,6 +497,11 @@ class SupabasePostRepository implements PostRepository {
       if (trimmed.isNotEmpty) 'p_query': trimmed,
       if (type != null) 'p_post_type': postTypeCode(type),
       'p_topic_id': ?topicId,
+      // 次のページ: 最後の投稿の(時刻, ID)の組。両方を渡す(片方だけは400)。
+      if (before != null) ...{
+        'p_before_created_at': before.createdAt.toUtc().toIso8601String(),
+        'p_before_id': before.id,
+      },
       'p_limit': limit,
     };
   }
