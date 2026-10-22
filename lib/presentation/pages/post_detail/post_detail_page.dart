@@ -112,13 +112,14 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    ref.watch(postsAreSampleProvider)
-                        ? 'サンプル投稿です。共感は準備中です。'
-                        : '共感は準備中です。',
-                    style: const TextStyle(fontSize: 11, height: 1.6),
-                  ),
-                  const SizedBox(height: 12),
+                  // 共感は接続済み。サンプルのときだけ、実際には送られないことを伝える。
+                  if (ref.watch(postsAreSampleProvider)) ...[
+                    const Text(
+                      'サンプル投稿です。共感は実際には送信されません。',
+                      style: TextStyle(fontSize: 11, height: 1.6),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   PostCard(
                     post: current,
                     showOpenButton: false,
@@ -152,7 +153,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                         Text(
                           loggedIn
                               ? (current.responseMode == ResponseMode.listening
-                                    ? 'この投稿にはコメントを送れません。定型文で気持ちを届ける機能は準備中です。'
+                                    ? 'この投稿にはコメントを送れません。「わかる」や定型文で、気持ちを届けられます。'
                                     : 'あなたの経験を、やさしく。')
                               : 'コメント欄の閲覧や気持ちを届けるには、登録・ログインが必要です。',
                           style: const TextStyle(fontSize: 14, height: 1.7),
