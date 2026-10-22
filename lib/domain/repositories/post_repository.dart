@@ -33,10 +33,11 @@ abstract class PostRepository {
   Future<Post?> fetchPost(String postId);
 
   /// 自分が投稿したもの。
-  Future<List<Post>> fetchMyPosts();
+  /// [offset]は、すでに読み込んだ件数(次のページを取得する)。1ページの件数は[pageSize]。
+  Future<List<Post>> fetchMyPosts({int offset = 0});
 
   /// 自分が保存したもの。
-  Future<List<Post>> fetchSavedPosts();
+  Future<List<Post>> fetchSavedPosts({int offset = 0});
 
   /// 投稿を作る。送信前チェックはサーバー側で行われ、確認が必要なとき・送信不可のときは
   /// `ApiException`(`isConfirmRequired`・`isRejected`)で失敗する。確認後は[confirmed]を

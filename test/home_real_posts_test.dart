@@ -68,10 +68,10 @@ class _RealLikeRepository implements PostRepository {
   Future<void> unblockUser(String userId) async {}
 
   @override
-  Future<List<Post>> fetchMyPosts() async => const [];
+  Future<List<Post>> fetchMyPosts({int offset = 0}) async => const [];
 
   @override
-  Future<List<Post>> fetchSavedPosts() async => const [];
+  Future<List<Post>> fetchSavedPosts({int offset = 0}) async => const [];
 
   @override
   Future<CreatedPost> createPost({

@@ -97,6 +97,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
             onRetry: () => ref.invalidate(
               _savedPosts ? savedPostsProvider : myPostsProvider,
             ),
+            pagedProvider: _savedPosts ? savedPostsProvider : myPostsProvider,
           ),
         ],
       ],
