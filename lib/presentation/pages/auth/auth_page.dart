@@ -11,6 +11,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/config/password_policy.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/profile_providers.dart';
 import 'auth_messages.dart';
 import 'auth_validators.dart';
 import 'legal_consent.dart';
@@ -342,6 +343,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   /// 完了しなければ、中途半端な状態を残さないようログアウトする。
   Future<void> _afterSignedIn(User? user) async {
     if (user == null) return;
+    // 待つ間に画面が閉じられても、プロフィールを取り直せるよう、先に取っておく。
+    final container = ProviderScope.containerOf(context);
     final profiles = ref.read(profileRegistrationRepositoryProvider);
     if (!await profiles.hasProfile(user.id)) {
       if (!mounted) return;
@@ -369,6 +372,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         }
       }
     }
+    // ログイン時に読み込んだ自分のプロフィールは、作成前の(空の)ものかもしれない。取り直す。
+    container.invalidate(myProfileProvider);
     if (mounted) Navigator.of(context).maybePop();
   }
 
