@@ -256,7 +256,10 @@ class MockPostRepository implements PostRepository {
   Future<List<ReactionType>> fetchReactionTypes() async => _reactionTypes;
 
   @override
-  Future<Map<String, int>> fetchMyReactions() async => Map.of(_reactions);
+  Future<Map<String, int>> fetchMyReactions(List<String> postIds) async => {
+    for (final id in postIds)
+      if (_reactions.containsKey(id)) id: _reactions[id]!,
+  };
 
   @override
   Future<void> setReaction({

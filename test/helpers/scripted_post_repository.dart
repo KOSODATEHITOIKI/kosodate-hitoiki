@@ -72,8 +72,17 @@ class ScriptedPostRepository implements PostRepository {
   @override
   Future<List<ReactionType>> fetchReactionTypes() async => reactionTypes;
 
+  /// 共感の取得の記録(取得した投稿IDの組ごと)。
+  final reactionFetches = <List<String>>[];
+
   @override
-  Future<Map<String, int>> fetchMyReactions() async => Map.of(myReactions);
+  Future<Map<String, int>> fetchMyReactions(List<String> postIds) async {
+    reactionFetches.add(List.of(postIds));
+    return {
+      for (final id in postIds)
+        if (myReactions.containsKey(id)) id: myReactions[id]!,
+    };
+  }
 
   @override
   Future<void> setReaction({

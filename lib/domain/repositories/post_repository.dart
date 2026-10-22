@@ -84,8 +84,9 @@ abstract class PostRepository {
   /// 共感の定型文(並び順どおり。未ログインでも読める)。
   Future<List<ReactionType>> fetchReactionTypes();
 
-  /// 自分の共感(投稿ID→定型文のID)。未ログインは空。
-  Future<Map<String, int>> fetchMyReactions();
+  /// [postIds]の投稿への、自分の共感(投稿ID→定型文のID)。共感していない投稿は含まれない。
+  /// 未ログインは空。
+  Future<Map<String, int>> fetchMyReactions(List<String> postIds);
 
   /// 共感する(登録・選び直しを1操作で扱う。1投稿1人1つ)。自分の投稿・ブロックされている
   /// 投稿・見えない投稿などは`ApiException`で失敗する。

@@ -115,6 +115,46 @@ void main() {
     expect(find.text('わかる'), findsOneWidget);
   });
 
+  testWidgets('自分の共感は、表示している投稿の分だけ、1回にまとめて取得する', (tester) async {
+    final repository = ScriptedPostRepository([], myReactions: {'p-2': 3});
+    tester.view.physicalSize = const Size(390, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isLoggedInProvider.overrideWithValue(true),
+          postRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  PostCard(post: _post(id: 'p-1'), showOpenButton: false),
+                  PostCard(post: _post(id: 'p-2'), showOpenButton: false),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 2枚のカードの分を、1回の取得にまとめる。全件は取得しない。
+    expect(repository.reactionFetches, [
+      ['p-1', 'p-2'],
+    ]);
+    expect(find.text('聞いているよ ✓'), findsOneWidget);
+
+    // 作り直しても、同じ投稿を取得し直さない。
+    await tester.pumpAndSettle();
+    expect(repository.reactionFetches, hasLength(1));
+  });
+
   testWidgets('すでに選んでいる定型文が、読み込まれて表示される', (tester) async {
     final repository = ScriptedPostRepository([], myReactions: {'p-1': 3});
     await pumpCard(tester, repository, _post());
