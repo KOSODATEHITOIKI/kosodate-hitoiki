@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
@@ -8,6 +7,7 @@ import '../../../domain/models/post.dart';
 import '../../providers/post_providers.dart';
 import '../../widgets/comfort_page.dart';
 import '../../widgets/mock_post_list.dart';
+import '../../widgets/topic_picker.dart';
 
 /// S-05。検索(Issue #10)はMockPostRepositoryで仮接続済み。
 /// バックエンド実装後はpostRepositoryProviderの差し替えのみで切り替わる。
@@ -100,26 +100,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ],
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.divider),
-          ),
-          child: Row(
-            children: [
-              AppAsset(
-                AppDecorations.leavesSprout,
-                width: 36,
-                height: 36,
-                excludeFromSemantics: true,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(child: Text('話題を選ぶ')),
-              const Text('準備中', style: TextStyle(fontSize: 11)),
-            ],
-          ),
+        TopicFilterRow(
+          selected: query.topic,
+          onChanged: (topic) => ref.read(searchQueryProvider.notifier).state =
+              query.copyWith(topic: topic, clearTopic: topic == null),
         ),
         const SizedBox(height: 24),
         const Wrap(

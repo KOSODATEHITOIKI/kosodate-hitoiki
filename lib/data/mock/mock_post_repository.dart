@@ -2,6 +2,7 @@ import '../../core/constants/app_icons.dart';
 import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
 import '../../domain/models/reaction_type.dart';
+import '../../domain/models/topic.dart';
 import '../../domain/repositories/post_repository.dart';
 
 /// 画面確認・結合用のモック実装。docs/design/S-02・S-05のサンプル文言を使用。
@@ -29,6 +30,7 @@ class MockPostRepository implements PostRepository {
       empathyCount: 12,
       commentCount: 0,
       isMine: true,
+      topicId: 1,
     ),
     Post(
       id: 'p2',
@@ -42,6 +44,7 @@ class MockPostRepository implements PostRepository {
       empathyCount: 12,
       commentCount: 3,
       isSaved: true,
+      topicId: 2,
     ),
     Post(
       id: 'p3',
@@ -59,6 +62,7 @@ class MockPostRepository implements PostRepository {
       empathyCount: 9,
       commentCount: 5,
       isSaved: true,
+      topicId: 1,
     ),
     Post(
       id: 'p4',
@@ -74,6 +78,7 @@ class MockPostRepository implements PostRepository {
           'みなさんはどうやって乗り越えていますか？ちょっと聞いてほしいです。',
       empathyCount: 6,
       commentCount: 2,
+      topicId: 1,
     ),
     Post(
       id: 'p5',
@@ -87,23 +92,49 @@ class MockPostRepository implements PostRepository {
       empathyCount: 8,
       commentCount: 0,
       isMine: true,
+      topicId: 2,
     ),
   ];
 
+  /// サンプルの話題(本物のマスタと同じ文言)。
+  static const _topics = [
+    Topic(id: 1, label: '睡眠・夜泣き'),
+    Topic(id: 2, label: '食事・離乳食'),
+    Topic(id: 3, label: '保育園・幼稚園・学校'),
+    Topic(id: 4, label: '仕事と育児の両立'),
+    Topic(id: 5, label: '夫婦・パートナー'),
+    Topic(id: 6, label: '家族・親戚との関係'),
+    Topic(id: 7, label: '自分の時間・心の疲れ'),
+    Topic(id: 8, label: '健康・病気'),
+    Topic(id: 9, label: '成長・発達'),
+    Topic(id: 10, label: 'お金・暮らし'),
+  ];
+
   @override
-  Future<List<Post>> fetchFeed() async {
-    final posts = List.of(_posts)
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  Future<List<Topic>> fetchTopics() async => _topics;
+
+  @override
+  Future<List<Post>> fetchFeed({int? topicId}) async {
+    final posts =
+        _posts
+            .where((post) => topicId == null || post.topicId == topicId)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return posts;
   }
 
   @override
-  Future<List<Post>> search({required String query, PostType? type}) async {
+  Future<List<Post>> search({
+    required String query,
+    PostType? type,
+    int? topicId,
+  }) async {
     final trimmed = query.trim();
     return _posts.where((post) {
       final matchesQuery = trimmed.isEmpty || post.body.contains(trimmed);
       final matchesType = type == null || post.type == type;
-      return matchesQuery && matchesType;
+      final matchesTopic = topicId == null || post.topicId == topicId;
+      return matchesQuery && matchesType && matchesTopic;
     }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
@@ -127,6 +158,7 @@ class MockPostRepository implements PostRepository {
     required ResponseMode responseMode,
     required String body,
     required String idempotencyKey,
+    int? topicId,
     bool confirmed = false,
   }) async {
     final now = DateTime.now();
@@ -145,6 +177,7 @@ class MockPostRepository implements PostRepository {
         empathyCount: 0,
         commentCount: 0,
         isMine: true,
+        topicId: topicId,
       ),
     );
     return CreatedPost(id: id, createdAt: now);

@@ -5,6 +5,7 @@ import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/models/reaction_type.dart';
+import 'package:kosodate_hitoiki/domain/models/topic.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/home/home_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
@@ -18,11 +19,17 @@ class _RealLikeRepository implements PostRepository {
   bool get isSample => false;
 
   @override
-  Future<List<Post>> fetchFeed() async => posts;
+  Future<List<Topic>> fetchTopics() async => const [];
 
   @override
-  Future<List<Post>> search({required String query, PostType? type}) async =>
-      posts;
+  Future<List<Post>> fetchFeed({int? topicId}) async => posts;
+
+  @override
+  Future<List<Post>> search({
+    required String query,
+    PostType? type,
+    int? topicId,
+  }) async => posts;
 
   @override
   Future<Post?> fetchPost(String postId) async => null;
@@ -70,6 +77,7 @@ class _RealLikeRepository implements PostRepository {
     required ResponseMode responseMode,
     required String body,
     required String idempotencyKey,
+    int? topicId,
     bool confirmed = false,
   }) => throw UnimplementedError();
 

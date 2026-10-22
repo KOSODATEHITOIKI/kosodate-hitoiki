@@ -1,6 +1,7 @@
 import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/models/reaction_type.dart';
+import 'package:kosodate_hitoiki/domain/models/topic.dart';
 import 'package:kosodate_hitoiki/domain/repositories/post_repository.dart';
 
 /// 投稿の作成・編集・削除の呼び出しを記録し、決めた順に結果(成功・失敗)を返す偽のリポジトリ。
@@ -130,9 +131,19 @@ class ScriptedPostRepository implements PostRepository {
     required ResponseMode responseMode,
     required String body,
     required String idempotencyKey,
+    int? topicId,
     bool confirmed = false,
   }) async {
-    calls.add(CreateCall(type, responseMode, body, idempotencyKey, confirmed));
+    calls.add(
+      CreateCall(
+        type,
+        responseMode,
+        body,
+        idempotencyKey,
+        confirmed,
+        topicId: topicId,
+      ),
+    );
     final next = script.removeAt(0);
     if (next is CreatedPost) return next;
     if (next is Future<CreatedPost> Function()) return next();
@@ -157,12 +168,32 @@ class ScriptedPostRepository implements PostRepository {
     if (deleteError != null) throw deleteError!;
   }
 
-  @override
-  Future<List<Post>> fetchFeed() async => const [];
+  /// 話題(取得すると返る)と、絞り込みで渡された話題のID。
+  List<Topic> topics = const [
+    Topic(id: 1, label: '睡眠・夜泣き'),
+    Topic(id: 2, label: '食事・離乳食'),
+  ];
+  final feedTopicCalls = <int?>[];
+  final searchTopicCalls = <int?>[];
 
   @override
-  Future<List<Post>> search({required String query, PostType? type}) async =>
-      const [];
+  Future<List<Topic>> fetchTopics() async => topics;
+
+  @override
+  Future<List<Post>> fetchFeed({int? topicId}) async {
+    feedTopicCalls.add(topicId);
+    return const [];
+  }
+
+  @override
+  Future<List<Post>> search({
+    required String query,
+    PostType? type,
+    int? topicId,
+  }) async {
+    searchTopicCalls.add(topicId);
+    return const [];
+  }
 
   /// ID指定の取得で返す投稿(なければnull)。
   final fetchedPosts = <String, Post>{};
@@ -213,7 +244,15 @@ class EditCall {
 }
 
 class CreateCall {
-  CreateCall(this.type, this.responseMode, this.body, this.key, this.confirmed);
+  CreateCall(
+    this.type,
+    this.responseMode,
+    this.body,
+    this.key,
+    this.confirmed, {
+    this.topicId,
+  });
+  final int? topicId;
   final PostType type;
   final ResponseMode responseMode;
   final String body;
