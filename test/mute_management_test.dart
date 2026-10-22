@@ -59,6 +59,29 @@ class _ScriptedMute implements MuteRepository {
     if (removeError != null) throw removeError!;
     words.remove(word);
   }
+
+  /// ミュートしている話題(切り替えると変わる)。
+  final topicIds = <int>{};
+  Object? topicError;
+  final addedTopics = <int>[];
+  final removedTopics = <int>[];
+
+  @override
+  Future<Set<int>> fetchTopicIds() async => Set.of(topicIds);
+
+  @override
+  Future<void> addTopic(int topicId) async {
+    addedTopics.add(topicId);
+    if (topicError != null) throw topicError!;
+    topicIds.add(topicId);
+  }
+
+  @override
+  Future<void> removeTopic(int topicId) async {
+    removedTopics.add(topicId);
+    if (topicError != null) throw topicError!;
+    topicIds.remove(topicId);
+  }
 }
 
 Future<void> _pumpMute(
@@ -275,6 +298,51 @@ void main() {
     expect(SupabaseMuteRepository.wordRow('me', '  ネタバレ '), {
       'user_id': 'me',
       'word': 'ネタバレ',
+    });
+  });
+
+  group('話題のミュート', () {
+    Finder chip(int id) => find.byKey(ValueKey('mute-topic-$id'));
+
+    testWidgets('話題を並べ、ミュート中の話題は選ばれた状態で出す', (tester) async {
+      final repository = _ScriptedMute()..topicIds.add(2);
+      await _pumpMute(tester, repository);
+      expect(find.text('睡眠・夜泣き'), findsOneWidget);
+      expect(tester.widget<FilterChip>(chip(1)).selected, isFalse);
+      expect(tester.widget<FilterChip>(chip(2)).selected, isTrue);
+    });
+
+    testWidgets('押すとミュートし、もう一度押すと外す', (tester) async {
+      final repository = _ScriptedMute();
+      await _pumpMute(tester, repository);
+
+      await tester.tap(chip(1));
+      await tester.pumpAndSettle();
+      expect(repository.addedTopics, [1]);
+      expect(tester.widget<FilterChip>(chip(1)).selected, isTrue);
+
+      await tester.tap(chip(1));
+      await tester.pumpAndSettle();
+      expect(repository.removedTopics, [1]);
+      expect(tester.widget<FilterChip>(chip(1)).selected, isFalse);
+    });
+
+    testWidgets('切り替えられなかったら、案内して、表示は変えない', (tester) async {
+      final repository = _ScriptedMute()..topicError = Exception('network');
+      await _pumpMute(tester, repository);
+      await tester.tap(chip(3));
+      await tester.pumpAndSettle();
+
+      expect(repository.addedTopics, [3]);
+      expect(tester.widget<FilterChip>(chip(3)).selected, isFalse);
+      expect(find.byKey(const ValueKey('mute-error')), findsOneWidget);
+    });
+
+    test('話題のミュートの行には、自分のIDが必要', () {
+      expect(SupabaseMuteRepository.topicRow('u-1', 4), {
+        'user_id': 'u-1',
+        'topic_id': 4,
+      });
     });
   });
 

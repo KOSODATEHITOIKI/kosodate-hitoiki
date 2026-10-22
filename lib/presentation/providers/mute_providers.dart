@@ -9,6 +9,11 @@ final muteRepositoryProvider = Provider<MuteRepository>(
   (ref) => MockMuteRepository(),
 );
 
+/// ミュートしている話題のID。
+final mutedTopicIdsProvider = FutureProvider<Set<int>>(
+  (ref) => ref.watch(muteRepositoryProvider).fetchTopicIds(),
+);
+
 /// ミュートしている言葉(新しく追加した順)。
 final mutedWordsProvider = FutureProvider<List<String>>(
   (ref) => ref.watch(muteRepositoryProvider).fetchWords(),
