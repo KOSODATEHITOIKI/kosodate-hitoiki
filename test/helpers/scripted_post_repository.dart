@@ -226,10 +226,12 @@ class ScriptedPostRepository implements PostRepository {
   Future<Post?> fetchPost(String postId) async => fetchedPosts[postId];
 
   @override
-  Future<List<Post>> fetchMyPosts() async => myPosts;
+  Future<List<Post>> fetchMyPosts({int offset = 0}) async =>
+      myPosts.skip(offset).take(PostRepository.pageSize).toList();
 
   @override
-  Future<List<Post>> fetchSavedPosts() async => savedPosts;
+  Future<List<Post>> fetchSavedPosts({int offset = 0}) async =>
+      savedPosts.skip(offset).take(PostRepository.pageSize).toList();
 
   @override
   Future<void> updateReactionMode({

@@ -240,14 +240,14 @@ class SupabasePostRepository implements PostRepository {
   /// 自分の投稿(新しい順)。通報による一時非表示で運営が確認中の投稿も含み、
   /// `under_review`が`true`のものは「確認中」と表示する(本人にだけ見える。API契約7節)。
   @override
-  Future<List<Post>> fetchMyPosts() async {
+  Future<List<Post>> fetchMyPosts({int offset = 0}) async {
     final myId = _client.auth.currentUser?.id;
     if (myId == null) return const [];
     final rows = await _client
         .from('my_posts')
         .select()
         .order('created_at', ascending: false)
-        .limit(pageSize);
+        .range(offset, offset + pageSize - 1);
     final me = await _client
         .from('public_profiles')
         .select('nickname,icon_key,avatar_path')
@@ -293,12 +293,12 @@ class SupabasePostRepository implements PostRepository {
   /// 保存した投稿(新しく保存した順)。見えなくなった投稿(削除・一時非表示・ブロックなど)は
   /// 出ない(保存自体は残る)。ログイン必須。
   @override
-  Future<List<Post>> fetchSavedPosts() async {
+  Future<List<Post>> fetchSavedPosts({int offset = 0}) async {
     final rows = await _client
         .from('saved_post_list')
         .select()
         .order('saved_at', ascending: false)
-        .limit(pageSize);
+        .range(offset, offset + pageSize - 1);
     final myId = _client.auth.currentUser?.id;
     return [
       for (final row in rows) postFromRow(row, myUserId: myId, isSaved: true),

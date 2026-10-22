@@ -40,15 +40,15 @@ abstract class PagedPosts extends AsyncNotifier<List<Post>> {
   /// 次のページの読み込みに失敗したか(「もっと見る」を、もう一度押せるようにする)。
   bool loadMoreFailed = false;
 
-  /// [before]より古い投稿を1ページ分取得する。`null`なら最初のページ。
-  Future<List<Post>> fetchPage(Post? before);
+  /// すでに読み込んだ投稿[loaded]の、次の1ページを取得する。空なら最初のページ。
+  Future<List<Post>> fetchPage(List<Post> loaded);
 
   @override
   Future<List<Post>> build() async {
     final generation = ++_generation;
     isLoadingMore = false;
     loadMoreFailed = false;
-    final page = await fetchPage(null);
+    final page = await fetchPage(const []);
     if (generation == _generation) {
       hasMore = page.length >= PostRepository.pageSize;
     }
@@ -64,7 +64,7 @@ abstract class PagedPosts extends AsyncNotifier<List<Post>> {
     loadMoreFailed = false;
     state = AsyncData(current);
     try {
-      final page = await fetchPage(current.last);
+      final page = await fetchPage(current);
       // 読み込み中に条件が変わって作り直された場合は、足さない。
       if (generation != _generation) return;
       final known = {for (final post in current) post.id};
@@ -91,11 +91,14 @@ abstract class PagedPosts extends AsyncNotifier<List<Post>> {
 
 class _FeedPosts extends PagedPosts {
   @override
-  Future<List<Post>> fetchPage(Post? before) {
+  Future<List<Post>> fetchPage(List<Post> loaded) {
     final topic = ref.read(feedTopicProvider);
     return ref
         .read(postRepositoryProvider)
-        .fetchFeed(topicId: topic?.id, before: before);
+        .fetchFeed(
+          topicId: topic?.id,
+          before: loaded.isEmpty ? null : loaded.last,
+        );
   }
 
   @override
@@ -145,7 +148,7 @@ class _SearchResults extends PagedPosts {
   }
 
   @override
-  Future<List<Post>> fetchPage(Post? before) {
+  Future<List<Post>> fetchPage(List<Post> loaded) {
     final query = ref.read(searchQueryProvider);
     return ref
         .read(postRepositoryProvider)
@@ -153,7 +156,7 @@ class _SearchResults extends PagedPosts {
           query: query.keyword,
           type: query.type,
           topicId: query.topic?.id,
-          before: before,
+          before: loaded.isEmpty ? null : loaded.last,
         );
   }
 }
@@ -163,14 +166,38 @@ final searchResultsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
   _SearchResults.new,
 );
 
+class _MyPosts extends PagedPosts {
+  @override
+  Future<List<Post>> build() {
+    ref.watch(postRepositoryProvider);
+    return super.build();
+  }
+
+  @override
+  Future<List<Post>> fetchPage(List<Post> loaded) =>
+      ref.read(postRepositoryProvider).fetchMyPosts(offset: loaded.length);
+}
+
+class _SavedPosts extends PagedPosts {
+  @override
+  Future<List<Post>> build() {
+    ref.watch(postRepositoryProvider);
+    return super.build();
+  }
+
+  @override
+  Future<List<Post>> fetchPage(List<Post> loaded) =>
+      ref.read(postRepositoryProvider).fetchSavedPosts(offset: loaded.length);
+}
+
 /// マイページ: 自分の投稿。
-final myPostsProvider = FutureProvider<List<Post>>(
-  (ref) => ref.watch(postRepositoryProvider).fetchMyPosts(),
+final myPostsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
+  _MyPosts.new,
 );
 
 /// マイページ: 保存した投稿。
-final savedPostsProvider = FutureProvider<List<Post>>(
-  (ref) => ref.watch(postRepositoryProvider).fetchSavedPosts(),
+final savedPostsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
+  _SavedPosts.new,
 );
 
 /// 設定: ブロック中の相手。
