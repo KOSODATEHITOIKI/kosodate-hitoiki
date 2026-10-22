@@ -11,6 +11,7 @@ import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/legal_document_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/profile_setup_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
+import 'package:kosodate_hitoiki/presentation/providers/profile_providers.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -53,6 +54,7 @@ void main() {
   Future<void> pumpAuth(
     WidgetTester tester, {
     AuthMode mode = AuthMode.login,
+    List<Override> overrides = const [],
   }) async {
     // 戻り先が分かるよう、AuthPageは別の画面から開く。
     await tester.pumpWidget(
@@ -61,6 +63,7 @@ void main() {
           authRepositoryProvider.overrideWithValue(auth),
           authStateChangesProvider.overrideWith((ref) => authEvents.stream),
           profileRegistrationRepositoryProvider.overrideWithValue(profiles),
+          ...overrides,
         ],
         child: MaterialApp(
           theme: AppTheme.light,
@@ -494,6 +497,50 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('auth-to-login')));
     await tester.pumpAndSettle();
     expect(find.text('ログインする'), findsOneWidget);
+  });
+
+  testWidgets('プロフィールを作ったら、自分のプロフィールを取り直す(作成前の空の表示を残さない)', (tester) async {
+    when(
+      () => auth.signInWithEmail(
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer(
+      (_) async =>
+          _signedIn(metadata: {'nickname': 'はなこ', 'terms_agreed': true}),
+    );
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+    when(
+      () => profiles.create(
+        nickname: any(named: 'nickname'),
+        termsVersion: any(named: 'termsVersion'),
+        confirmed: any(named: 'confirmed'),
+      ),
+    ).thenAnswer((_) async {});
+    var loads = 0;
+
+    await pumpAuth(
+      tester,
+      overrides: [
+        myProfileProvider.overrideWith((ref) async {
+          loads++;
+          return null;
+        }),
+      ],
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AuthPage)),
+    );
+    // ログイン時に、(まだプロフィールのない)自分のプロフィールを読み込んでいる。
+    container.listen(myProfileProvider, (_, _) {});
+    await tester.pumpAndSettle();
+    expect(loads, 1);
+
+    await fillLogin(tester);
+    await submit(tester);
+    await tester.pumpAndSettle();
+
+    expect(loads, 2);
   });
 
   testWidgets('メール確認後の初回ログインで、控えたニックネームからプロフィールを作る', (tester) async {
