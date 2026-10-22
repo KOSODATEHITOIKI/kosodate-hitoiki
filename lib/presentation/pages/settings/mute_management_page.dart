@@ -13,7 +13,7 @@ import '../compose/post_messages.dart';
 
 /// 言葉のミュート管理。ミュートした言葉を含む投稿は、一覧・検索に出なくなる
 /// (投稿の本文にだけ適用し、コメントには適用しない)。相手には知らせない。
-/// 話題のミュートは、話題のマスタが未決定のため、まだ出さない。
+/// 話題のミュートも、ここで切り替える(ミュートした話題の投稿は、一覧・検索に出なくなる)。
 class MuteManagementPage extends ConsumerStatefulWidget {
   const MuteManagementPage({super.key});
 
@@ -37,6 +37,7 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
   static void _refresh(ProviderContainer container) {
     container
       ..invalidate(mutedWordsProvider)
+      ..invalidate(mutedTopicIdsProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider);
   }
@@ -67,6 +68,29 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
       await repository.addWord(word);
       _refresh(container);
       if (mounted) _word.clear();
+    } catch (error) {
+      if (mounted) setState(() => _error = _failure(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// 話題のミュートを切り替える。
+  Future<void> _toggleTopic(int topicId, {required bool mute}) async {
+    if (_busy) return;
+    final container = ProviderScope.containerOf(context);
+    final repository = ref.read(muteRepositoryProvider);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      if (mute) {
+        await repository.addTopic(topicId);
+      } else {
+        await repository.removeTopic(topicId);
+      }
+      _refresh(container);
     } catch (error) {
       if (mounted) setState(() => _error = _failure(error));
     } finally {
@@ -132,9 +156,26 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
     final sample = ref.watch(muteRepositoryProvider).isSample;
     final count = words.valueOrNull?.length;
     return ComfortPage(
-      title: '言葉のミュート',
-      message: '見たくない言葉を、\n自分の画面からだけ隠せます。',
+      title: 'ミュート管理',
+      message: '見たくない話題や言葉を、\n自分の画面からだけ隠せます。',
       children: [
+        const Text(
+          '話題のミュート',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'ミュートした話題の投稿が、一覧・検索に出なくなります。相手には知らせません。',
+          style: TextStyle(fontSize: 13, height: 1.7),
+        ),
+        const SizedBox(height: 12),
+        _topics(),
+        const SizedBox(height: 28),
+        const Text(
+          '言葉のミュート',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
         const Text(
           'ミュートした言葉を含む投稿が、一覧・検索に出なくなります。コメントには適用されません。相手には知らせません。',
           style: TextStyle(fontSize: 13, height: 1.7),
@@ -238,6 +279,70 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
       ],
     );
   }
+
+  /// 話題の一覧。押すと、ミュートを切り替える(ミュート中の話題が選ばれた状態)。
+  Widget _topics() {
+    final topics = ref.watch(topicsProvider);
+    final muted = ref.watch(mutedTopicIdsProvider);
+    return topics.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => _retry('mute-topics-retry', () {
+        ref.invalidate(topicsProvider);
+        ref.invalidate(mutedTopicIdsProvider);
+      }),
+      data: (items) => muted.when(
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        error: (_, _) => _retry(
+          'mute-topics-retry',
+          () => ref.invalidate(mutedTopicIdsProvider),
+        ),
+        data: (mutedIds) => Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final topic in items)
+              FilterChip(
+                key: ValueKey('mute-topic-${topic.id}'),
+                label: Text(topic.label),
+                selected: mutedIds.contains(topic.id),
+                onSelected: _busy
+                    ? null
+                    : (selected) => _toggleTopic(topic.id, mute: selected),
+                showCheckmark: false,
+                avatar: mutedIds.contains(topic.id)
+                    ? const Icon(Icons.volume_off, size: 16)
+                    : null,
+                selectedColor: AppColors.secondary,
+                backgroundColor: AppColors.white,
+                shape: const StadiumBorder(),
+                side: BorderSide(
+                  color: mutedIds.contains(topic.id)
+                      ? Colors.transparent
+                      : AppColors.divider,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _retry(String key, VoidCallback onPressed) => Column(
+    children: [
+      const Text('読み込めませんでした。', style: TextStyle(fontSize: 14)),
+      TextButton(
+        key: ValueKey(key),
+        onPressed: onPressed,
+        child: const Text('再読み込み'),
+      ),
+    ],
+  );
 
   void _auth(AuthMode mode) => Navigator.of(
     context,

@@ -39,6 +39,39 @@ class SupabaseMuteRepository implements MuteRepository {
     await _client.from('muted_words').delete().eq('word', word);
   }
 
+  /// ミュートしている話題(`GET /rest/v1/muted_topics`。自分の行だけが読める)。
+  @override
+  Future<Set<int>> fetchTopicIds() async {
+    final rows = await _client.from('muted_topics').select('topic_id');
+    return {for (final row in rows) (row['topic_id'] as num).toInt()};
+  }
+
+  /// 話題をミュートする(`POST /rest/v1/muted_topics`)。すでにミュートしていれば、成功と同じ。
+  @override
+  Future<void> addTopic(int topicId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('ログインが必要です');
+    try {
+      await _client.from('muted_topics').insert(topicRow(userId, topicId));
+    } on PostgrestException catch (error) {
+      if (apiExceptionFor(error).code != 'DUPLICATE') {
+        throw apiExceptionFor(error);
+      }
+    }
+  }
+
+  /// 話題のミュートを外す(`DELETE /rest/v1/muted_topics?topic_id=eq.<id>`)。
+  @override
+  Future<void> removeTopic(int topicId) async {
+    await _client.from('muted_topics').delete().eq('topic_id', topicId);
+  }
+
+  /// 話題のミュートの行。言葉と同じく、自分のIDが必要(権限の条件が`user_id = auth.uid()`)。
+  static Map<String, dynamic> topicRow(String userId, int topicId) => {
+    'user_id': userId,
+    'topic_id': topicId,
+  };
+
   /// 追加する行。自分のIDが必要(表に既定値がなく、権限の条件が`user_id = auth.uid()`のため、
   /// 付けないと「row-level security policyに違反」で拒否される)。前後の空白は除く。
   static Map<String, dynamic> wordRow(String userId, String word) => {

@@ -14,6 +14,15 @@ abstract class MuteRepository {
 
   /// 言葉を外す。登録していない言葉でも、エラーにならない。
   Future<void> removeWord(String word);
+
+  /// ミュートしている話題のID。ミュートした話題の投稿は、一覧・検索に出なくなる。ログイン必須。
+  Future<Set<int>> fetchTopicIds();
+
+  /// 話題をミュートする。すでにミュートしていても、エラーにならない。
+  Future<void> addTopic(int topicId);
+
+  /// 話題のミュートを外す。ミュートしていなくても、エラーにならない。
+  Future<void> removeTopic(int topicId);
 }
 
 /// 登録できる言葉の上限(件数)。サーバーの上限(暫定)と同じ。
