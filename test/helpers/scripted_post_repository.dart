@@ -179,10 +179,33 @@ class ScriptedPostRepository implements PostRepository {
   @override
   Future<List<Topic>> fetchTopics() async => topics;
 
+  /// 一覧・検索が返す投稿(新着順)。[before]があれば、その次から1ページ分を返す。
+  List<Post> pagedPosts = const [];
+
+  /// 次のページの取得で投げるエラー(1回だけ)。
+  Object? nextPageError;
+
+  /// ページ取得の記録(`before`の投稿ID。最初のページは`null`)。
+  final feedBeforeCalls = <String?>[];
+
+  List<Post> _page(Post? before) {
+    var start = 0;
+    if (before != null) {
+      start = pagedPosts.indexWhere((post) => post.id == before.id) + 1;
+    }
+    return pagedPosts.skip(start).take(PostRepository.pageSize).toList();
+  }
+
   @override
-  Future<List<Post>> fetchFeed({int? topicId}) async {
+  Future<List<Post>> fetchFeed({int? topicId, Post? before}) async {
     feedTopicCalls.add(topicId);
-    return const [];
+    feedBeforeCalls.add(before?.id);
+    if (before != null && nextPageError != null) {
+      final error = nextPageError!;
+      nextPageError = null;
+      throw error;
+    }
+    return _page(before);
   }
 
   @override
@@ -190,9 +213,10 @@ class ScriptedPostRepository implements PostRepository {
     required String query,
     PostType? type,
     int? topicId,
+    Post? before,
   }) async {
     searchTopicCalls.add(topicId);
-    return const [];
+    return _page(before);
   }
 
   /// ID指定の取得で返す投稿(なければnull)。

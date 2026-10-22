@@ -25,11 +25,92 @@ final topicsProvider = FutureProvider<List<Topic>>(
 /// ホームで選んでいる話題(選んでいなければ、すべて)。
 final feedTopicProvider = StateProvider<Topic?>((ref) => null);
 
+/// ページ送りのある投稿の一覧。最初のページを読み込み、[loadMore]で次のページを足す。
+/// 条件(話題・検索語など)が変わると、最初から読み込み直す。
+abstract class PagedPosts extends AsyncNotifier<List<Post>> {
+  /// 次のページがありそうか(直前のページが、1ページの件数に達していた)。
+  bool hasMore = false;
+
+  /// 次のページを読み込み中か(続けて読み込まない)。
+  bool isLoadingMore = false;
+
+  /// 条件が変わって作り直されるたびに増やす(古い読み込みの結果を捨てるため)。
+  int _generation = 0;
+
+  /// 次のページの読み込みに失敗したか(「もっと見る」を、もう一度押せるようにする)。
+  bool loadMoreFailed = false;
+
+  /// [before]より古い投稿を1ページ分取得する。`null`なら最初のページ。
+  Future<List<Post>> fetchPage(Post? before);
+
+  @override
+  Future<List<Post>> build() async {
+    final generation = ++_generation;
+    isLoadingMore = false;
+    loadMoreFailed = false;
+    final page = await fetchPage(null);
+    if (generation == _generation) {
+      hasMore = page.length >= PostRepository.pageSize;
+    }
+    return page;
+  }
+
+  /// 次のページを足す。失敗しても、いま出ている投稿は消さない。
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || current.isEmpty || !hasMore || isLoadingMore) return;
+    final generation = _generation;
+    isLoadingMore = true;
+    loadMoreFailed = false;
+    state = AsyncData(current);
+    try {
+      final page = await fetchPage(current.last);
+      // 読み込み中に条件が変わって作り直された場合は、足さない。
+      if (generation != _generation) return;
+      final known = {for (final post in current) post.id};
+      hasMore = page.length >= PostRepository.pageSize;
+      state = AsyncData([
+        ...current,
+        for (final post in page)
+          if (!known.contains(post.id)) post,
+      ]);
+    } catch (_) {
+      if (generation != _generation) return;
+      loadMoreFailed = true;
+      state = AsyncData(current);
+    } finally {
+      if (generation == _generation) {
+        isLoadingMore = false;
+        // 読み込み中の表示を消すため、状態を通知し直す。
+        final latest = state.valueOrNull;
+        if (latest != null) state = AsyncData(latest);
+      }
+    }
+  }
+}
+
+class _FeedPosts extends PagedPosts {
+  @override
+  Future<List<Post>> fetchPage(Post? before) {
+    final topic = ref.read(feedTopicProvider);
+    return ref
+        .read(postRepositoryProvider)
+        .fetchFeed(topicId: topic?.id, before: before);
+  }
+
+  @override
+  Future<List<Post>> build() {
+    // 話題・リポジトリが変わったら、最初から読み込み直す。
+    ref.watch(feedTopicProvider);
+    ref.watch(postRepositoryProvider);
+    return super.build();
+  }
+}
+
 /// ホームの投稿一覧。話題を選んでいれば、その話題だけ。
-final feedPostsProvider = FutureProvider<List<Post>>((ref) {
-  final topic = ref.watch(feedTopicProvider);
-  return ref.watch(postRepositoryProvider).fetchFeed(topicId: topic?.id);
-});
+final feedPostsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
+  _FeedPosts.new,
+);
 
 /// 検索条件(キーワード・投稿種類・話題)。
 class SearchQuery {
@@ -55,13 +136,32 @@ final searchQueryProvider = StateProvider<SearchQuery>(
   (ref) => const SearchQuery(),
 );
 
+class _SearchResults extends PagedPosts {
+  @override
+  Future<List<Post>> build() {
+    ref.watch(searchQueryProvider);
+    ref.watch(postRepositoryProvider);
+    return super.build();
+  }
+
+  @override
+  Future<List<Post>> fetchPage(Post? before) {
+    final query = ref.read(searchQueryProvider);
+    return ref
+        .read(postRepositoryProvider)
+        .search(
+          query: query.keyword,
+          type: query.type,
+          topicId: query.topic?.id,
+          before: before,
+        );
+  }
+}
+
 /// 検索結果。
-final searchResultsProvider = FutureProvider<List<Post>>((ref) {
-  final query = ref.watch(searchQueryProvider);
-  return ref
-      .watch(postRepositoryProvider)
-      .search(query: query.keyword, type: query.type, topicId: query.topic?.id);
-});
+final searchResultsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
+  _SearchResults.new,
+);
 
 /// マイページ: 自分の投稿。
 final myPostsProvider = FutureProvider<List<Post>>(

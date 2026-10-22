@@ -8,6 +8,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../../domain/models/post.dart';
 import '../../providers/post_providers.dart';
+import '../../widgets/load_more_button.dart';
 import '../../widgets/post_card.dart';
 import '../../widgets/topic_picker.dart';
 import '../support/support_resources_page.dart';
@@ -155,6 +156,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ? 'この話題の投稿は、まだありません'
                         : 'まだ投稿がありません'),
             ),
+            // 絞り込みで空でも、次のページに該当があるかもしれない。
+            LoadMoreButton(provider: feedPostsProvider),
           ];
         }
         return [
@@ -162,6 +165,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             PostCard(post: post),
             const SizedBox(height: 12),
           ],
+          LoadMoreButton(provider: feedPostsProvider),
         ];
       },
     );
