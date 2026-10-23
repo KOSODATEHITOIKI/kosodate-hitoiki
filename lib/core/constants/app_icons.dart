@@ -10,6 +10,9 @@ class AppIcons {
 
   static const _base = 'assets/icons';
 
+  // 外部サービスのブランドマーク(色を変えない)
+  static const googleG = '$_base/google-g.svg';
+
   // ナビゲーション
   static const navHome = '$_base/icon-nav-home.svg';
   static const navSearch = '$_base/icon-nav-search.svg';

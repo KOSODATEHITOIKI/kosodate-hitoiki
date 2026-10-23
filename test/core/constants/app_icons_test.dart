@@ -7,6 +7,7 @@ void main() {
   testWidgets('各カテゴリの画像アセットが読み込める', (tester) async {
     const paths = [
       AppIcons.navHome,
+      AppIcons.googleG,
       AppDecorations.sunSmiling,
       AppIllustrations.welcome,
       AppAvatars.defaultSprout,

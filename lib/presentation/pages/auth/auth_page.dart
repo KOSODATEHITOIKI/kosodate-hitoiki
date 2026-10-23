@@ -561,7 +561,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           minimumSize: const Size.fromHeight(52),
                           side: const BorderSide(color: AppColors.divider),
                         ),
-                        icon: const Icon(Icons.g_mobiledata, size: 26),
+                        // Googleの公式の「G」マーク(4色)。ひと目でGoogleと分かるよう、
+                        // 画面の配色には合わせず、そのままの色で出す。
+                        icon: const AppAsset(
+                          AppIcons.googleG,
+                          width: 20,
+                          height: 20,
+                          excludeFromSemantics: true,
+                        ),
                         label: Text('$providerで続ける'),
                       ),
                       if (_googleWaiting)
