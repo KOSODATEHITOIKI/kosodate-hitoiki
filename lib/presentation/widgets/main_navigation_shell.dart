@@ -14,6 +14,9 @@ import '../pages/search/search_page.dart';
 /// 画面下部タブ(ホーム/検索/書く/お知らせ/マイページ)の選択状態。
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
+/// 「お知らせ」タブの位置(通知をタップしたとき、ここを開く)。
+const notificationsTabIndex = 3;
+
 /// 5タブ構成のナビゲーションシェル(docs/全体設計書.md 4.1参照)。
 class MainNavigationShell extends ConsumerWidget {
   const MainNavigationShell({super.key});
