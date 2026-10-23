@@ -5,6 +5,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/push_providers.dart';
 import '../../widgets/comfort_page.dart';
 import 'withdrawal_page.dart';
 import 'notification_settings_page.dart';
@@ -67,8 +68,12 @@ class SettingsPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !context.mounted) return;
+    // 待つ間に画面が閉じられても使えるよう、先に取っておく。
+    final container = ProviderScope.containerOf(context);
     try {
+      // ログアウトのあとは、この端末への通知が、この人に届かないようにする(ログイン中に外す)。
+      await unregisterPushDevice(container);
       await ref.read(authRepositoryProvider).signOut();
     } catch (_) {
       if (context.mounted) {

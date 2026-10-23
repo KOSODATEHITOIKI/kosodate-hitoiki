@@ -8,6 +8,19 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Firebase(プッシュ通知)。設定ファイル(src/<flavor>/google-services.json。リポジトリには入れない)が
+// あるときだけ、有効にする。ないと、アプリは動くが、プッシュ通知だけが使えない。
+val buildTasks = gradle.startParameter.taskNames.joinToString(" ").lowercase()
+val firebaseFlavor =
+    when {
+        buildTasks.contains("prod") -> "prod"
+        buildTasks.contains("dev") -> "dev"
+        else -> null
+    }
+if (firebaseFlavor != null && file("src/$firebaseFlavor/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // 本番署名鍵はコミットせず、android/key.properties(.gitignore対象)があれば使う。
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
