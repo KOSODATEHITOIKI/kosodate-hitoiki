@@ -5,6 +5,7 @@ import '../../domain/models/blocked_user.dart';
 import '../../domain/models/post.dart';
 import '../../domain/models/topic.dart';
 import '../../domain/repositories/post_repository.dart';
+import 'auth_provider.dart';
 
 /// 投稿データの取得先。バックエンド接続時はここをSupabase実装に差し替える。
 /// 利用者ID変化時はlib/app.dartがinvalidateして作り直す(ここで直接authをwatchしないのは、認証未初期化の単体テストを壊さないため)。
@@ -199,6 +200,18 @@ final myPostsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
 final savedPostsProvider = AsyncNotifierProvider<PagedPosts, List<Post>>(
   _SavedPosts.new,
 );
+
+/// 投稿1件の最新の状態(投稿IDで取得)。詳細画面が使う。一覧に載っていない投稿
+/// (検索・保存一覧・通知から開いた投稿)でも、本文・投稿者・自分の投稿かを、最新にするため。
+/// 見えない投稿・取得できない場合は`null`(画面は、開いたときの投稿を使う)。
+final postDetailProvider = FutureProvider.autoDispose.family<Post?, String>((
+  ref,
+  postId,
+) async {
+  // 投稿の取得は、ログインが必要(ゲストは、開いたときの投稿を使う)。
+  if (!ref.watch(isLoggedInProvider)) return null;
+  return ref.watch(postRepositoryProvider).fetchPost(postId);
+});
 
 /// 設定: ブロック中の相手。
 final blockedUsersProvider = FutureProvider<List<BlockedUser>>(

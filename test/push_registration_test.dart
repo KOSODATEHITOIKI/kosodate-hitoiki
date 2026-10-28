@@ -46,8 +46,12 @@ class _FakeDevices implements PushDeviceRepository {
   final unregistered = <String>[];
   Object? registerError;
 
+  /// 登録の応答を、これが終わるまで待たせる(通信の遅れを作る)。
+  Future<void>? registerGate;
+
   @override
   Future<void> register(String token) async {
+    if (registerGate != null) await registerGate;
     if (registerError != null) throw registerError!;
     registered.add(token);
   }
@@ -155,6 +159,56 @@ void main() {
     await unregisterPushDevice(container);
     expect(devices.unregistered, ['token-1']);
     expect(container.read(registeredPushTokenProvider), isNull);
+  });
+
+  test('登録の応答を待つ間にログアウトしても、解除は、登録が終わるのを待って、外す', () async {
+    final messaging = _FakeMessaging();
+    final container = containerWith(messaging);
+    final gate = Completer<void>();
+    devices.registerGate = gate.future;
+    container.read(user.notifier).state = 'u-1';
+    await _settle();
+    await _settle();
+    // 登録の応答を待っている途中。トークンは、まだ記録されていない。
+    expect(container.read(registeredPushTokenProvider), isNull);
+
+    var unregisterDone = false;
+    final unregister = unregisterPushDevice(container).then((_) {
+      unregisterDone = true;
+    });
+    await _settle();
+    // 登録が終わるまで、解除は待つ(空振りして、あとで登録が残らないように)。
+    expect(unregisterDone, isFalse);
+    expect(devices.unregistered, isEmpty);
+
+    gate.complete();
+    await unregister;
+    expect(devices.registered, ['token-1']);
+    expect(devices.unregistered, ['token-1']);
+  });
+
+  test('登録の応答を待つ間に、利用者が変わったら、前の人の登録を記録しない', () async {
+    final messaging = _FakeMessaging();
+    final container = containerWith(messaging);
+    final gate = Completer<void>();
+    devices.registerGate = gate.future;
+    container.read(user.notifier).state = 'u-1';
+    await _settle();
+    await _settle();
+
+    // ログアウトした(解除はせずに、利用者が変わった)。
+    container.read(user.notifier).state = null;
+    await _settle();
+    gate.complete();
+    await _settle();
+    await _settle();
+
+    // 前の人のトークンは、記録しない。トークンの更新の監視も、始めない。
+    expect(container.read(registeredPushTokenProvider), isNull);
+    messaging.refresh.add('token-2');
+    await _settle();
+    await _settle();
+    expect(devices.registered.contains('token-2'), isFalse);
   });
 
   test('利用者が別の人に変わったら、新しい人として登録し直す', () async {

@@ -38,6 +38,7 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
     container
       ..invalidate(mutedWordsProvider)
       ..invalidate(mutedTopicIdsProvider)
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider);
   }

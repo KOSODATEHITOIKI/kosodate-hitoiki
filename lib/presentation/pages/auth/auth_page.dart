@@ -15,8 +15,7 @@ import '../../providers/profile_providers.dart';
 import 'auth_messages.dart';
 import 'auth_validators.dart';
 import 'legal_consent.dart';
-import 'profile_creation.dart';
-import 'profile_setup_page.dart';
+import 'ensure_profile.dart';
 
 /// S-10。メール+パスワードの登録・ログインはSupabase Authに接続済み。
 /// Googleは、認証画面(ブラウザ)からリンクでアプリへ戻って続ける(Supabase側のプロバイダ
@@ -27,6 +26,10 @@ enum AuthMode { login, register, reset }
 class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({super.key, this.initialMode = AuthMode.login});
   final AuthMode initialMode;
+
+  /// いま開いている認証画面の数。開いている間は、この画面が、ログイン後のプロフィールの
+  /// 確認・作成を行う(アプリ全体の確認と重ならないようにする)。
+  static int openCount = 0;
   @override
   ConsumerState<AuthPage> createState() => _AuthPageState();
 }
@@ -80,6 +83,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   @override
   void initState() {
     super.initState();
+    AuthPage.openCount++;
     for (final entry in {
       'nickname': _nicknameFocus,
       'email': _emailFocus,
@@ -144,6 +148,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   @override
   void dispose() {
+    AuthPage.openCount--;
     _cooldownTimer?.cancel();
     _nicknameFocus.dispose();
     _emailFocus.dispose();
@@ -348,31 +353,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     // 待つ間に画面が閉じられても、プロフィールを取り直せるよう、先に取っておく。
     final container = ProviderScope.containerOf(context);
     final profiles = ref.read(profileRegistrationRepositoryProvider);
-    if (!await profiles.hasProfile(user.id)) {
-      if (!mounted) return;
-      final metadata = user.userMetadata ?? const <String, dynamic>{};
-      final nickname = (metadata['nickname'] as String?)?.trim() ?? '';
-      final agreed = metadata['terms_agreed'] == true;
-      String? failure = 'ニックネームを決めてください。';
-      if (nickname.isNotEmpty && agreed) {
-        failure = await createProfileWithConfirmation(
-          context: context,
-          repository: profiles,
-          nickname: nickname,
-        );
-      }
-      if (failure != null) {
-        if (!mounted) return;
-        final created = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(
-            builder: (_) => ProfileSetupPage(initialNickname: nickname),
-          ),
-        );
-        if (created != true) {
-          await ref.read(authRepositoryProvider).signOut();
-          return;
-        }
-      }
+    final ready = await ensureProfile(
+      context: context,
+      profiles: profiles,
+      user: user,
+    );
+    if (!ready) {
+      await ref.read(authRepositoryProvider).signOut();
+      return;
     }
     // ログイン時に読み込んだ自分のプロフィールは、作成前の(空の)ものかもしれない。取り直す。
     container.invalidate(myProfileProvider);

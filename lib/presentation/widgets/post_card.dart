@@ -30,6 +30,7 @@ Future<void> togglePostSaved(
     await ref.read(postRepositoryProvider).toggleSaved(post.id);
     // await中に画面が閉じられている可能性があるため、refを使う前に確認する。
     if (!context.mounted) return;
+    ref.invalidate(postDetailProvider);
     ref.invalidate(feedPostsProvider);
     ref.invalidate(searchResultsProvider);
     ref.invalidate(myPostsProvider);

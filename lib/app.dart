@@ -8,6 +8,8 @@ import 'core/config/flavor.dart';
 import 'data/push/push_messaging.dart';
 import 'core/constants/app_theme.dart';
 import 'core/utils/accessibility.dart';
+import 'presentation/pages/auth/auth_page.dart';
+import 'presentation/pages/auth/ensure_profile.dart';
 import 'presentation/pages/auth/new_password_page.dart';
 import 'presentation/providers/notification_providers.dart';
 import 'presentation/pages/welcome/welcome_page.dart';
@@ -33,12 +35,52 @@ class _AppState extends ConsumerState<App> {
   /// 新しいパスワードの画面を開いている間(二重に開かない)。
   bool _newPasswordOpen = false;
 
+  /// プロフィールの確認・作成の途中か(重ねて行わない)。
+  bool _checkingProfile = false;
+
+  /// ログイン済みでプロフィールがなければ、作る(作らないなら、ログアウトする)。
+  /// 認証画面を開いている間は、その画面が行うので、ここでは行わない。メール確認・Googleの
+  /// リンクから、アプリを新しく起動したときのために、起動時とログインしたときに確認する。
+  Future<void> _ensureProfile() async {
+    if (_checkingProfile || !mounted || AuthPage.openCount > 0) return;
+    final navigatorContext = _navigatorKey.currentContext;
+    if (navigatorContext == null) {
+      // 画面が組み上がる前。組み上がってから確認する。
+      WidgetsBinding.instance.addPostFrameCallback((_) => _ensureProfile());
+      return;
+    }
+    _checkingProfile = true;
+    try {
+      final auth = ref.read(authRepositoryProvider);
+      final user = auth.currentUser;
+      if (user == null) return;
+      final ready = await ensureProfile(
+        context: navigatorContext,
+        profiles: ref.read(profileRegistrationRepositoryProvider),
+        user: user,
+      );
+      if (!mounted) return;
+      if (ready) {
+        ref.invalidate(myProfileProvider);
+      } else {
+        await auth.signOut();
+      }
+    } catch (_) {
+      // 通信できないなど。アプリは使える。次に起動したとき、また確認する。
+    } finally {
+      _checkingProfile = false;
+    }
+  }
+
   StreamSubscription<PushTap>? _pushTapSubscription;
   StreamSubscription<PushTap>? _pushForegroundSubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ref.read(isLoggedInProvider)) unawaited(_ensureProfile());
+    });
     final messaging = ref.read(pushMessagingProvider);
     _pushTapSubscription = messaging.onTap.listen(_openNotifications);
     _pushForegroundSubscription = messaging.onForeground.listen(
@@ -109,6 +151,12 @@ class _AppState extends ConsumerState<App> {
   Widget build(BuildContext context) {
     // ログインしたら、この端末をプッシュ通知の送り先として登録する。
     ref.watch(pushRegistrationProvider);
+    // ログインしたとき(認証画面の外で、ログインした場合も)、プロフィールを確認する。
+    ref.listen<bool>(isLoggedInProvider, (previous, next) {
+      if (next && previous != true) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _ensureProfile());
+      }
+    });
     ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, (_, next) {
       if (next.valueOrNull?.event == AuthChangeEvent.passwordRecovery) {
         _openNewPassword();

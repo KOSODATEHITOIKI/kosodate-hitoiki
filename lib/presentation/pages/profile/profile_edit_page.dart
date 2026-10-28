@@ -98,6 +98,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   static void _refreshCaches(ProviderContainer container) {
     container
       ..invalidate(myProfileProvider)
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider)
       ..invalidate(myPostsProvider)
