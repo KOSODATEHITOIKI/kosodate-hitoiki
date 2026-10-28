@@ -5,9 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/app.dart';
 import 'package:kosodate_hitoiki/data/push/push_messaging.dart';
+import 'package:kosodate_hitoiki/data/repositories/auth_repository.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/presentation/providers/push_providers.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/main_navigation_shell.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockAuth extends Mock implements AuthRepository {}
 
 class _Messaging implements PushMessaging {
   final taps = StreamController<PushTap>.broadcast();
@@ -36,6 +40,14 @@ class _Messaging implements PushMessaging {
   Future<PushTap?> getInitialTap() async => initial;
 }
 
+/// ログイン状態は、isLoggedInProviderで決める。プロフィールの確認は、利用者なしとして、行わない。
+_MockAuth _auth() {
+  final auth = _MockAuth();
+  when(() => auth.currentUser).thenReturn(null);
+  when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+  return auth;
+}
+
 void main() {
   late _Messaging messaging;
 
@@ -51,6 +63,7 @@ void main() {
         overrides: [
           isLoggedInProvider.overrideWithValue(login),
           pushMessagingProvider.overrideWithValue(messaging),
+          authRepositoryProvider.overrideWithValue(_auth()),
         ],
         child: const App(),
       ),
@@ -99,6 +112,7 @@ void main() {
         overrides: [
           isLoggedInProvider.overrideWithValue(true),
           pushMessagingProvider.overrideWithValue(messaging),
+          authRepositoryProvider.overrideWithValue(_auth()),
         ],
         child: const App(),
       ),

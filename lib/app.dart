@@ -66,7 +66,18 @@ class _AppState extends ConsumerState<App> {
         await auth.signOut();
       }
     } catch (_) {
-      // 通信できないなど。アプリは使える。次に起動したとき、また確認する。
+      // 通信できないなど。確認できなかったことを伝え、やり直せるようにする(アプリは使える。
+      // プロフィールがないまま投稿などをしても、サーバーが断る)。
+      _messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: const Text('プロフィールを確認できませんでした'),
+          duration: const Duration(seconds: 10),
+          action: SnackBarAction(
+            label: '再確認',
+            onPressed: () => unawaited(_ensureProfile()),
+          ),
+        ),
+      );
     } finally {
       _checkingProfile = false;
     }
