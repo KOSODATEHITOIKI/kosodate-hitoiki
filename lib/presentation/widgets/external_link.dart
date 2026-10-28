@@ -8,8 +8,9 @@ final externalLinkOpenerProvider = Provider<Future<bool> Function(Uri url)>(
       (url) => launchUrl(url, mode: LaunchMode.externalApplication),
 );
 
-/// 外部のブラウザで、ページを開く。開けなければ、アドレスを出して、控えられるようにする。
-Future<void> openExternalLink(
+/// 外部のブラウザで、ページを開く。開けたら`true`。開けなければ、アドレスを出して、
+/// 控えられるようにして、`false`を返す。
+Future<bool> openExternalLink(
   BuildContext context,
   WidgetRef ref,
   Uri url, {
@@ -18,11 +19,11 @@ Future<void> openExternalLink(
   // 入力中の欄からフォーカスを外してから開く(戻ったときに、キーボードが出ないように)。
   FocusManager.instance.primaryFocus?.unfocus();
   try {
-    if (await ref.read(externalLinkOpenerProvider)(url)) return;
+    if (await ref.read(externalLinkOpenerProvider)(url)) return true;
   } catch (_) {
     // 下の案内を出す。
   }
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
   await showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
@@ -40,4 +41,5 @@ Future<void> openExternalLink(
     ),
   );
   FocusManager.instance.primaryFocus?.unfocus();
+  return false;
 }
