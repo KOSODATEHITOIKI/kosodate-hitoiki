@@ -3,21 +3,26 @@ import 'package:flutter/material.dart';
 import 'legal_document_page.dart';
 import 'legal_documents.dart';
 
-/// 利用規約とプライバシーポリシーへの同意。2つとも、本文を最後まで読んでから
-/// チェックがつく。両方にチェックがつくと登録できる(呼び出し側で判定する)。
+/// 利用規約とプライバシーポリシーへの同意と、18歳以上であることの確認(自己申告)。
+/// 規約・ポリシーは、本文を最後まで読んでからチェックがつく。3つすべてにチェックが
+/// つくと登録できる(呼び出し側で判定する)。
 class LegalConsent extends StatelessWidget {
   const LegalConsent({
     super.key,
     required this.termsAgreed,
     required this.privacyAgreed,
+    required this.ageConfirmed,
     required this.onTermsChanged,
     required this.onPrivacyChanged,
+    required this.onAgeChanged,
   });
 
   final bool termsAgreed;
   final bool privacyAgreed;
+  final bool ageConfirmed;
   final ValueChanged<bool> onTermsChanged;
   final ValueChanged<bool> onPrivacyChanged;
+  final ValueChanged<bool> onAgeChanged;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -34,6 +39,18 @@ class LegalConsent extends StatelessWidget {
         document: LegalDocument.privacy,
         agreed: privacyAgreed,
         onChanged: onPrivacyChanged,
+      ),
+      // 自己申告。読む文書はないので、そのままチェックできる。
+      CheckboxListTile(
+        key: const ValueKey('consent-age'),
+        contentPadding: EdgeInsets.zero,
+        controlAffinity: ListTileControlAffinity.leading,
+        value: ageConfirmed,
+        onChanged: (value) => onAgeChanged(value ?? false),
+        title: const Text(
+          '18歳以上です',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
       ),
     ],
   );

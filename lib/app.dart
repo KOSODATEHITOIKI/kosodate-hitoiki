@@ -20,6 +20,7 @@ import 'presentation/providers/push_providers.dart';
 import 'presentation/providers/post_providers.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
+final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -33,12 +34,16 @@ class _AppState extends ConsumerState<App> {
   bool _newPasswordOpen = false;
 
   StreamSubscription<PushTap>? _pushTapSubscription;
+  StreamSubscription<PushTap>? _pushForegroundSubscription;
 
   @override
   void initState() {
     super.initState();
     final messaging = ref.read(pushMessagingProvider);
     _pushTapSubscription = messaging.onTap.listen(_openNotifications);
+    _pushForegroundSubscription = messaging.onForeground.listen(
+      _onForegroundPush,
+    );
     // 通知をタップして起動したときの、その1回。画面が組み上がってから開く。
     unawaited(
       messaging.getInitialTap().then((tap) {
@@ -54,7 +59,24 @@ class _AppState extends ConsumerState<App> {
   @override
   void dispose() {
     unawaited(_pushTapSubscription?.cancel());
+    unawaited(_pushForegroundSubscription?.cancel());
     super.dispose();
+  }
+
+  /// アプリを開いているときに通知が届いたら、お知らせを取り直し、短く知らせる
+  /// (端末の通知欄には出ないため)。ログインしていなければ、何もしない。
+  void _onForegroundPush(PushTap tap) {
+    if (!mounted || !ref.read(isLoggedInProvider)) return;
+    ref.invalidate(notificationsProvider);
+    _messengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: const Text('新しいお知らせがあります'),
+        action: SnackBarAction(
+          label: '見る',
+          onPressed: () => _openNotifications(tap),
+        ),
+      ),
+    );
   }
 
   /// 通知をタップしたとき、お知らせの一覧を開く(最新の状態に取り直す)。ログインしていなければ、
@@ -104,6 +126,7 @@ class _AppState extends ConsumerState<App> {
     });
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      scaffoldMessengerKey: _messengerKey,
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
