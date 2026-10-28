@@ -231,8 +231,18 @@ class ScriptedPostRepository implements PostRepository {
   /// ID指定の取得で返す投稿(なければnull)。
   final fetchedPosts = <String, Post>{};
 
+  /// 見つからない(削除された・見えなくなった)投稿のID。取得すると`null`が返る。
+  final missingPostIds = <String>{};
+
+  /// 投稿の取得。用意していない投稿は、取得できない(通信の失敗と同じ)として、例外を投げる
+  /// (画面は、開いたときの投稿を使う)。見つからない投稿は、[missingPostIds]で用意する。
   @override
-  Future<Post?> fetchPost(String postId) async => fetchedPosts[postId];
+  Future<Post?> fetchPost(String postId) async {
+    if (missingPostIds.contains(postId)) return null;
+    final post = fetchedPosts[postId];
+    if (post == null) throw Exception('network');
+    return post;
+  }
 
   @override
   Future<List<Post>> fetchMyPosts({int offset = 0}) async =>

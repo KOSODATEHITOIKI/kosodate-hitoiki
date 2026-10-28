@@ -97,10 +97,20 @@ void main() {
     expect(repository.blockCalls, ['author-1']);
   });
 
-  testWidgets('取得できない(見えない投稿など)ときは、開いたときの投稿を使う', (tester) async {
+  testWidgets('通信の失敗で取得できないときは、開いたときの投稿を使う', (tester) async {
     final repository = ScriptedPostRepository([]);
     await pumpDetail(tester, repository, _post(body: '開いたときの本文'));
     expect(find.text('開いたときの本文'), findsOneWidget);
+    expect(find.byKey(const ValueKey('post-not-found')), findsNothing);
+  });
+
+  testWidgets('見つからない(削除・一時非表示・ブロックなど)ときは、古い内容を出さず、案内する', (tester) async {
+    final repository = ScriptedPostRepository([])..missingPostIds.add('p-1');
+    await pumpDetail(tester, repository, _post(body: '開いたときの本文'));
+
+    expect(find.byKey(const ValueKey('post-not-found')), findsOneWidget);
+    expect(find.text('開いたときの本文'), findsNothing);
+    expect(find.byTooltip('投稿メニュー'), findsNothing);
   });
 
   testWidgets('ゲストは、取得せず、開いたときの投稿を使う', (tester) async {

@@ -211,6 +211,32 @@ void main() {
     expect(devices.registered.contains('token-2'), isFalse);
   });
 
+  test('解除が登録の完了を待ちきれなかったら、続いている登録を打ち切る(あとから記録しない)', () async {
+    final messaging = _FakeMessaging();
+    final container = containerWith(messaging);
+    final gate = Completer<void>();
+    devices.registerGate = gate.future;
+    container.read(user.notifier).state = 'u-1';
+    await _settle();
+    await _settle();
+
+    // 登録が終わらないまま、解除が待ちきれなかった(実際は10秒。ここでは、世代を進める)。
+    await unregisterPushDevice(
+      container,
+      waitLimit: const Duration(milliseconds: 20),
+    );
+    gate.complete();
+    await _settle();
+    await _settle();
+
+    // 続いていた登録は、トークンを記録しない。トークンの更新の監視も、始めない。
+    expect(container.read(registeredPushTokenProvider), isNull);
+    messaging.refresh.add('token-2');
+    await _settle();
+    await _settle();
+    expect(devices.registered.contains('token-2'), isFalse);
+  });
+
   test('利用者が別の人に変わったら、新しい人として登録し直す', () async {
     final messaging = _FakeMessaging();
     final container = containerWith(messaging);

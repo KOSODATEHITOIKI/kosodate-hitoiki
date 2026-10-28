@@ -138,7 +138,8 @@ void main() {
     final notifications = ScriptedNotificationRepository(
       items: [notification('n1', NotificationType.comment, postId: 'gone')],
     );
-    await pumpNotifications(tester, notifications);
+    final posts = ScriptedPostRepository([])..missingPostIds.add('gone');
+    await pumpNotifications(tester, notifications, posts: posts);
     await tapCard(tester, 'n1');
     expect(find.text('投稿が見つかりません'), findsOneWidget);
     expect(find.byType(PostDetailPage), findsNothing);

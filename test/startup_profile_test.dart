@@ -79,12 +79,25 @@ void main() {
     verifyNever(() => profiles.hasProfile(any()));
   });
 
-  testWidgets('確認できなくても(通信の失敗)、アプリは使える。ログアウトもしない', (tester) async {
-    when(() => profiles.hasProfile('user-1')).thenThrow(Exception('network'));
+  testWidgets('確認できなくても(通信の失敗)、アプリは使える。ログアウトもしない。やり直せる', (tester) async {
+    var calls = 0;
+    when(() => profiles.hasProfile('user-1')).thenAnswer((_) async {
+      calls++;
+      if (calls == 1) throw Exception('network');
+      return false;
+    });
     await pumpApp(tester, user: _user());
 
     expect(find.byType(ProfileSetupPage), findsNothing);
     verifyNever(() => auth.signOut());
+    // 確認できなかったことを伝える。
+    expect(find.text('プロフィールを確認できませんでした'), findsOneWidget);
+
+    // 「再確認」で、もう一度確認する(今度は確認できて、プロフィールがないので、登録へ進む)。
+    await tester.tap(find.text('再確認'));
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+    expect(find.byType(ProfileSetupPage), findsOneWidget);
   });
 
   testWidgets('控えたニックネームと同意があれば、自動で作る', (tester) async {

@@ -38,6 +38,9 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
   bool? _closedOverride;
   bool _changingMode = false;
 
+  /// この画面を閉じる途中(自分の操作で、投稿が見えなくなった)。「見つかりません」を出さない。
+  bool _leaving = false;
+
   /// 編集できたあとの本文。一覧に載っていない古い投稿でも、詳細にすぐ反映する。
   String? _editedBody;
 
@@ -76,7 +79,30 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     // 投稿IDで取得した最新の状態を使う(一覧に載っていない投稿でも、本文・投稿者・自分の
     // 投稿かが、最新になる)。取得できるまで・取得できないときは、一覧の投稿、開いたときの
     // 投稿の順に使う。
-    final fetched = ref.watch(postDetailProvider(post.id)).valueOrNull;
+    final fetchedAsync = ref.watch(postDetailProvider(post.id));
+    final fetched = fetchedAsync.valueOrNull;
+    // 取得できて「見つからない」(削除された・一時非表示・ブロックなどで、見えなくなった)ときは、
+    // 古い内容を出さない。通信の失敗・取得中は、開いたときの投稿を使う。
+    if (loggedIn &&
+        !_leaving &&
+        fetchedAsync.hasValue &&
+        fetched == null &&
+        !ref.watch(postsAreSampleProvider)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('投稿の詳細')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'この投稿は、見つかりません。\n削除されたか、見られなくなった可能性があります。',
+              key: ValueKey('post-not-found'),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, height: 1.8),
+            ),
+          ),
+        ),
+      );
+    }
     final items = ref.watch(feedPostsProvider).valueOrNull;
     final current =
         (fetched ??
@@ -474,6 +500,8 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       );
       return;
     }
+    // 自分の操作で、この投稿が見えなくなる。閉じるまでの間、「見つかりません」を出さない。
+    _leaving = true;
     ref
       ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
@@ -514,6 +542,8 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       );
       return;
     }
+    // 自分の操作で、この投稿が見えなくなる。閉じるまでの間、「見つかりません」を出さない。
+    _leaving = true;
     ref
       ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
