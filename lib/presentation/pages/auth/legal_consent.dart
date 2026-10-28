@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'legal_document_page.dart';
-import 'legal_documents.dart';
+import '../../../core/config/legal_links.dart';
+import '../../widgets/external_link.dart';
 
-/// 利用規約とプライバシーポリシーへの同意と、18歳以上であることの確認(自己申告)。
-/// 規約・ポリシーは、本文を最後まで読んでからチェックがつく。3つすべてにチェックが
+/// 利用規約・プライバシーポリシーへの同意と、18歳以上であることの確認(自己申告)。
+/// 規約・ポリシーの本文は、公開ページ(外部のブラウザ)で読む。3つすべてにチェックが
 /// つくと登録できる(呼び出し側で判定する)。
-class LegalConsent extends StatelessWidget {
+class LegalConsent extends ConsumerWidget {
   const LegalConsent({
     super.key,
     required this.termsAgreed,
@@ -25,22 +26,31 @@ class LegalConsent extends StatelessWidget {
   final ValueChanged<bool> onAgeChanged;
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context, WidgetRef ref) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       _Row(
         fieldKey: const ValueKey('consent-terms'),
-        document: LegalDocument.terms,
+        openKey: const ValueKey('consent-terms-open'),
+        label: '利用規約に同意する',
         agreed: termsAgreed,
         onChanged: onTermsChanged,
+        onOpen: () =>
+            openExternalLink(context, ref, LegalLinks.terms, title: '利用規約'),
       ),
       _Row(
         fieldKey: const ValueKey('consent-privacy'),
-        document: LegalDocument.privacy,
+        openKey: const ValueKey('consent-privacy-open'),
+        label: 'プライバシーポリシーに同意する',
         agreed: privacyAgreed,
         onChanged: onPrivacyChanged,
+        onOpen: () => openExternalLink(
+          context,
+          ref,
+          LegalLinks.privacy,
+          title: 'プライバシーポリシー',
+        ),
       ),
-      // 自己申告。読む文書はないので、そのままチェックできる。
       CheckboxListTile(
         key: const ValueKey('consent-age'),
         contentPadding: EdgeInsets.zero,
@@ -56,42 +66,41 @@ class LegalConsent extends StatelessWidget {
   );
 }
 
+/// 同意のチェックと、「読む」(公開ページを開く)。
 class _Row extends StatelessWidget {
   const _Row({
     required this.fieldKey,
-    required this.document,
+    required this.openKey,
+    required this.label,
     required this.agreed,
     required this.onChanged,
+    required this.onOpen,
   });
 
   final Key fieldKey;
-  final LegalDocument document;
+  final Key openKey;
+  final String label;
   final bool agreed;
   final ValueChanged<bool> onChanged;
-
-  /// 本文を開く。最後まで読んで戻ったときだけ、チェックをつける。
-  Future<void> _read(BuildContext context) async {
-    // 入力中の欄からフォーカスを外してから開く。外さないと、戻ったときに
-    // その入力欄へフォーカスが戻って、キーボードが出てしまう。
-    FocusManager.instance.primaryFocus?.unfocus();
-    final read = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => LegalDocumentPage(document: document)),
-    );
-    FocusManager.instance.primaryFocus?.unfocus();
-    if (read == true) onChanged(true);
-  }
+  final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) => CheckboxListTile(
-    key: fieldKey,
-    contentPadding: EdgeInsets.zero,
-    controlAffinity: ListTileControlAffinity.leading,
-    value: agreed,
-    // 未読のときは、チェックを押すと本文が開く。読んだあとは、外すこともできる。
-    onChanged: (value) => agreed ? onChanged(false) : _read(context),
-    title: Text(
-      document.title,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-    ),
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: CheckboxListTile(
+          key: fieldKey,
+          contentPadding: EdgeInsets.zero,
+          controlAffinity: ListTileControlAffinity.leading,
+          value: agreed,
+          onChanged: (value) => onChanged(value ?? false),
+          title: Text(
+            label,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+      TextButton(key: openKey, onPressed: onOpen, child: const Text('読む')),
+    ],
   );
 }

@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
-import 'package:kosodate_hitoiki/presentation/pages/auth/legal_document_page.dart';
+import 'package:kosodate_hitoiki/core/config/legal_links.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/external_link.dart';
 import 'package:kosodate_hitoiki/presentation/pages/settings/settings_page.dart';
 
 void main() {
@@ -108,28 +109,58 @@ void main() {
     });
   });
 
-  for (final title in ['利用規約', 'プライバシーポリシー']) {
-    testWidgets('$titleを開いて読める(同意の操作は出さない)', (tester) async {
+  for (final entry in {
+    '利用規約': LegalLinks.terms,
+    'プライバシーポリシー': LegalLinks.privacy,
+  }.entries) {
+    testWidgets('${entry.key}は、公開ページを、外部のブラウザで開く', (tester) async {
       tester.view.physicalSize = const Size(390, 1600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
+      Uri? opened;
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [isLoggedInProvider.overrideWithValue(false)],
+          overrides: [
+            isLoggedInProvider.overrideWithValue(false),
+            externalLinkOpenerProvider.overrideWithValue((url) async {
+              opened = url;
+              return true;
+            }),
+          ],
           child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
         ),
       );
-      await tester.ensureVisible(find.text(title));
+      await tester.ensureVisible(find.text(entry.key));
       await tester.pumpAndSettle();
       expect(find.text('準備中'), findsNothing);
-      await tester.tap(find.text(title));
+      await tester.tap(find.text(entry.key));
       await tester.pumpAndSettle();
-      expect(find.byType(LegalDocumentPage), findsOneWidget);
-      expect(find.byKey(const ValueKey('legal-done')), findsNothing);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      expect(find.byType(SettingsPage), findsOneWidget);
+
+      expect(opened, entry.value);
+      expect(opened.toString(), startsWith('https://'));
     });
   }
+
+  testWidgets('公開ページを開けなければ、アドレスを出す', (tester) async {
+    tester.view.physicalSize = const Size(390, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isLoggedInProvider.overrideWithValue(false),
+          externalLinkOpenerProvider.overrideWithValue((url) async => false),
+        ],
+        child: MaterialApp(theme: AppTheme.light, home: const SettingsPage()),
+      ),
+    );
+    await tester.ensureVisible(find.text('利用規約'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('利用規約'));
+    await tester.pumpAndSettle();
+    expect(find.text('利用規約を開けませんでした'), findsOneWidget);
+    expect(find.textContaining(LegalLinks.terms.toString()), findsOneWidget);
+  });
 }

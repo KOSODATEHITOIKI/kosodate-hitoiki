@@ -8,7 +8,8 @@ import 'package:kosodate_hitoiki/data/api/api_exception.dart';
 import 'package:kosodate_hitoiki/data/repositories/auth_repository.dart';
 import 'package:kosodate_hitoiki/data/repositories/profile_registration_repository.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
-import 'package:kosodate_hitoiki/presentation/pages/auth/legal_document_page.dart';
+import 'package:kosodate_hitoiki/core/config/legal_links.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/external_link.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/profile_setup_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/presentation/providers/profile_providers.dart';
@@ -107,20 +108,10 @@ void main() {
     );
   }
 
-  /// 本文を開いて最後までスクロールし、「同意する」で戻る。
+  /// 同意のチェックを押す(本文は、公開ページで読む。チェックは、直接つけられる)。
   Future<void> readDocument(WidgetTester tester, Key consentKey) async {
     await tester.ensureVisible(find.byKey(consentKey));
     await tester.tap(find.byKey(consentKey));
-    await tester.pumpAndSettle();
-    expect(find.byType(LegalDocumentPage), findsOneWidget);
-    for (var i = 0; i < 10; i++) {
-      await tester.drag(
-        find.byType(SingleChildScrollView),
-        const Offset(0, -600),
-      );
-      await tester.pumpAndSettle();
-    }
-    await tester.tap(find.byKey(const ValueKey('legal-done')));
     await tester.pumpAndSettle();
   }
 
@@ -229,6 +220,35 @@ void main() {
     });
   });
 
+  testWidgets('規約・ポリシーの「読む」で、公開ページを外部のブラウザで開く', (tester) async {
+    final opened = <Uri>[];
+    await pumpAuth(
+      tester,
+      mode: AuthMode.register,
+      overrides: [
+        externalLinkOpenerProvider.overrideWithValue((url) async {
+          opened.add(url);
+          return true;
+        }),
+      ],
+    );
+    for (final key in ['consent-terms-open', 'consent-privacy-open']) {
+      await tester.ensureVisible(find.byKey(ValueKey(key)));
+      await tester.tap(find.byKey(ValueKey(key)));
+      await tester.pumpAndSettle();
+    }
+    expect(opened, [LegalLinks.terms, LegalLinks.privacy]);
+    // 開いても、同意のチェックは、つかない(同意は、利用者が自分でつける)。
+    expect(
+      tester
+          .widget<CheckboxListTile>(find.byKey(const ValueKey('consent-terms')))
+          .value,
+      isFalse,
+    );
+    // 仮の文面の表示は、もうない。
+    expect(find.textContaining('仮の文面'), findsNothing);
+  });
+
   testWidgets('ログインの入力検証とパスワード表示切替', (tester) async {
     await pumpAuth(tester);
     await submit(tester);
@@ -294,13 +314,23 @@ void main() {
     expect(find.text('パスワードが一致しません。'), findsNothing);
   });
 
-  testWidgets('規約・プライバシーから戻っても、入力欄にフォーカスが戻らずキーボードが出ない', (tester) async {
-    await pumpAuth(tester, mode: AuthMode.register);
+  testWidgets('規約を開いて戻っても、入力欄にフォーカスが戻らずキーボードが出ない', (tester) async {
+    await pumpAuth(
+      tester,
+      mode: AuthMode.register,
+      overrides: [
+        externalLinkOpenerProvider.overrideWithValue((url) async => true),
+      ],
+    );
     await tester.tap(find.byKey(const ValueKey('auth-nickname')));
     await tester.pumpAndSettle();
     expect(FocusManager.instance.primaryFocus?.hasFocus, isTrue);
 
-    await readDocument(tester, const ValueKey('consent-terms'));
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('consent-terms-open')),
+    );
+    await tester.tap(find.byKey(const ValueKey('consent-terms-open')));
+    await tester.pumpAndSettle();
 
     // 入力欄(EditableText)にフォーカスが戻っていない。
     final focus = FocusManager.instance.primaryFocus;
@@ -385,7 +415,7 @@ void main() {
     expect(find.text('他の人には公開されません'), findsOneWidget);
   });
 
-  testWidgets('登録は、利用規約とプライバシーポリシーを最後まで読んで2つチェックがつくまで押せない', (tester) async {
+  testWidgets('登録は、利用規約・プライバシーポリシーへの同意と18歳以上の確認がそろうまで押せない', (tester) async {
     await pumpAuth(tester, mode: AuthMode.register);
 
     FilledButton submitButton() =>
@@ -400,22 +430,7 @@ void main() {
     expect(checked('consent-privacy'), isFalse);
     expect(checked('consent-age'), isFalse);
 
-    // 本文を開いても、最後まで読まずに戻ればチェックはつかない。
-    await tester.ensureVisible(find.byKey(const ValueKey('consent-terms')));
-    await tester.tap(find.byKey(const ValueKey('consent-terms')));
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<FilledButton>(find.byKey(const ValueKey('legal-done')))
-          .onPressed,
-      isNull,
-    );
-    expect(find.byKey(const ValueKey('legal-draft-banner')), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    expect(checked('consent-terms'), isFalse);
-
-    // 1つ読んでも、残りの1つがまだなら登録できない。
+    // 1つチェックしても、残りがまだなら登録できない。
     await readDocument(tester, const ValueKey('consent-terms'));
     expect(checked('consent-terms'), isTrue);
     expect(checked('consent-privacy'), isFalse);
