@@ -30,7 +30,7 @@ if (hasReleaseSigning) {
 }
 
 android {
-    namespace = "com.kosodatehitoiki.kosodate_hitoiki"
+    namespace = "com.kosodatehitoiki"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -45,7 +45,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.kosodatehitoiki.kosodate_hitoiki"
+        applicationId = "com.kosodatehitoiki"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
