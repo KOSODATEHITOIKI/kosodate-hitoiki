@@ -5,17 +5,17 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/config/contact_config.dart';
+import '../../../core/config/legal_links.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/push_providers.dart';
 import '../../widgets/comfort_page.dart';
+import '../../widgets/external_link.dart';
 import 'withdrawal_page.dart';
 import 'notification_settings_page.dart';
 import 'block_management_page.dart';
 import 'mute_management_page.dart';
-import '../auth/legal_document_page.dart';
-import '../auth/legal_documents.dart';
 import '../support/support_resources_page.dart';
 
 /// S-11。未接続の設定操作は案内だけを表示する。
@@ -229,15 +229,14 @@ class SettingsPage extends ConsumerWidget {
                         _contact(context);
                       } else if (group[index].$2 == '利用規約' ||
                           group[index].$2 == 'プライバシーポリシー') {
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute(
-                            builder: (_) => LegalDocumentPage(
-                              readOnly: true,
-                              document: group[index].$2 == '利用規約'
-                                  ? LegalDocument.terms
-                                  : LegalDocument.privacy,
-                            ),
-                          ),
+                        // 公開ページを、外部のブラウザで開く。
+                        openExternalLink(
+                          context,
+                          ref,
+                          group[index].$2 == '利用規約'
+                              ? LegalLinks.terms
+                              : LegalLinks.privacy,
+                          title: group[index].$2,
                         );
                       } else {
                         _showNotice(context, group[index].$2);
