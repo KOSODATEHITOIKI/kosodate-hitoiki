@@ -1,4 +1,4 @@
-package com.kosodatehitoiki.kosodate_hitoiki
+package com.kosodatehitoiki
 
 import io.flutter.embedding.android.FlutterActivity
 
