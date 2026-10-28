@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../core/config/contact_config.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../providers/auth_provider.dart';
@@ -17,7 +20,38 @@ import '../support/support_resources_page.dart';
 
 /// S-11。未接続の設定操作は案内だけを表示する。
 class SettingsPage extends ConsumerWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.openMail});
+
+  /// メールを開く処理(テストで差し替える)。
+  final Future<bool> Function(Uri url)? openMail;
+
+  /// お問い合わせ。メールアプリを開く。開けなければ、宛先を出して、控えられるようにする。
+  Future<void> _contact(BuildContext context) async {
+    try {
+      if (await (openMail?.call(ContactConfig.mailto) ??
+          launchUrl(ContactConfig.mailto))) {
+        return;
+      }
+    } catch (_) {
+      // 下の案内を出す。
+    }
+    if (!context.mounted) return;
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('メールアプリを開けませんでした'),
+        content: const SelectableText(
+          'お問い合わせは、次のアドレスへ、メールでお送りください。\n\n${ContactConfig.email}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showNotice(BuildContext context, String title) {
     showDialog<void>(
@@ -147,6 +181,7 @@ class SettingsPage extends ConsumerWidget {
                           '困ったときの相談先',
                           '利用規約',
                           'プライバシーポリシー',
+                          'お問い合わせ',
                         ].contains(group[index].$2)
                         ? null
                         : const Text('準備中', style: TextStyle(fontSize: 11)),
@@ -190,6 +225,8 @@ class SettingsPage extends ConsumerWidget {
                             builder: (_) => const SupportResourcesPage(),
                           ),
                         );
+                      } else if (group[index].$2 == 'お問い合わせ') {
+                        _contact(context);
                       } else if (group[index].$2 == '利用規約' ||
                           group[index].$2 == 'プライバシーポリシー') {
                         Navigator.of(context).push<void>(

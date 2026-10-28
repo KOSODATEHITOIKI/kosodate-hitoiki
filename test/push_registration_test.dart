@@ -35,6 +35,9 @@ class _FakeMessaging implements PushMessaging {
   Stream<PushTap> get onTap => const Stream.empty();
 
   @override
+  Stream<PushTap> get onForeground => const Stream.empty();
+
+  @override
   Future<PushTap?> getInitialTap() async => null;
 }
 

@@ -127,6 +127,10 @@ void main() {
   Future<void> agreeBoth(WidgetTester tester) async {
     await readDocument(tester, const ValueKey('consent-terms'));
     await readDocument(tester, const ValueKey('consent-privacy'));
+    // 18歳以上の確認(自己申告)。
+    await tester.ensureVisible(find.byKey(const ValueKey('consent-age')));
+    await tester.tap(find.byKey(const ValueKey('consent-age')));
+    await tester.pumpAndSettle();
   }
 
   Future<void> fillRegister(WidgetTester tester) async {
@@ -389,11 +393,12 @@ void main() {
     bool checked(String key) =>
         tester.widget<CheckboxListTile>(find.byKey(ValueKey(key))).value!;
 
-    // 最初は登録できず、2つとも未チェック。
+    // 最初は登録できず、すべて未チェック。
     await tester.ensureVisible(find.byKey(const ValueKey('auth-submit')));
     expect(submitButton().onPressed, isNull);
     expect(checked('consent-terms'), isFalse);
     expect(checked('consent-privacy'), isFalse);
+    expect(checked('consent-age'), isFalse);
 
     // 本文を開いても、最後まで読まずに戻ればチェックはつかない。
     await tester.ensureVisible(find.byKey(const ValueKey('consent-terms')));
@@ -416,9 +421,17 @@ void main() {
     expect(checked('consent-privacy'), isFalse);
     expect(submitButton().onPressed, isNull);
 
-    // 2つともチェックがつくと、登録できる。
+    // 規約・ポリシーの2つがついても、18歳以上の確認がなければ登録できない。
     await readDocument(tester, const ValueKey('consent-privacy'));
     expect(checked('consent-privacy'), isTrue);
+    expect(checked('consent-age'), isFalse);
+    expect(submitButton().onPressed, isNull);
+
+    // 3つすべてにチェックがつくと、登録できる。
+    await tester.ensureVisible(find.byKey(const ValueKey('consent-age')));
+    await tester.tap(find.byKey(const ValueKey('consent-age')));
+    await tester.pumpAndSettle();
+    expect(checked('consent-age'), isTrue);
     expect(submitButton().onPressed, isNotNull);
 
     // チェックは外せて、外すと登録できなくなる。
@@ -852,7 +865,7 @@ void main() {
     await tester.tap(find.text('会員登録へ'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('auth-nickname')), findsOneWidget);
-    expect(find.byType(CheckboxListTile), findsNWidgets(2));
+    expect(find.byType(CheckboxListTile), findsNWidgets(3));
     await tester.ensureVisible(find.text('ログインへ'));
     await tester.tap(find.text('ログインへ'));
     await tester.pumpAndSettle();

@@ -41,6 +41,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   bool _obscure = true;
   bool _agreeTerms = false;
   bool _agreePrivacy = false;
+  bool _confirmedAge = false;
   bool _busy = false;
   String? _error;
 
@@ -165,6 +166,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _obscure = true;
       _agreeTerms = false;
       _agreePrivacy = false;
+      _confirmedAge = false;
       _error = null;
       _sentTo = null;
       _resetSentTo = null;
@@ -726,10 +728,13 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     LegalConsent(
                       termsAgreed: _agreeTerms,
                       privacyAgreed: _agreePrivacy,
+                      ageConfirmed: _confirmedAge,
                       onTermsChanged: (value) =>
                           setState(() => _agreeTerms = value),
                       onPrivacyChanged: (value) =>
                           setState(() => _agreePrivacy = value),
+                      onAgeChanged: (value) =>
+                          setState(() => _confirmedAge = value),
                     ),
                   ],
                   if (_error != null)
@@ -748,12 +753,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   const SizedBox(height: 16),
                   FilledButton(
                     key: const ValueKey('auth-submit'),
-                    // 登録は、利用規約とプライバシーポリシーの両方を読んで
-                    // チェックがついてから押せる。
+                    // 登録は、利用規約とプライバシーポリシーの両方を読み、18歳以上の
+                    // 確認にもチェックがついてから押せる。
                     onPressed:
                         _busy ||
                             (_mode == AuthMode.register &&
-                                !(_agreeTerms && _agreePrivacy))
+                                !(_agreeTerms &&
+                                    _agreePrivacy &&
+                                    _confirmedAge))
                         ? null
                         : _submit,
                     child: Text(

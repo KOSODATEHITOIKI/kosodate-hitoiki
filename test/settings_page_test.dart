@@ -58,6 +58,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  group('お問い合わせ', () {
+    Future<void> pumpSettings(
+      WidgetTester tester,
+      Future<bool> Function(Uri url) openMail,
+    ) async {
+      tester.view.physicalSize = const Size(390, 1800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [isLoggedInProvider.overrideWithValue(false)],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: SettingsPage(openMail: openMail),
+          ),
+        ),
+      );
+      await tester.ensureVisible(find.text('お問い合わせ'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('押すと、運営のアドレス宛てのメールを開く', (tester) async {
+      Uri? opened;
+      await pumpSettings(tester, (url) async {
+        opened = url;
+        return true;
+      });
+      await tester.tap(find.text('お問い合わせ'));
+      await tester.pumpAndSettle();
+
+      expect(opened?.scheme, 'mailto');
+      expect(opened?.path, 'contact@kosodate-hitoiki.com');
+      expect(opened.toString(), contains('subject=%E3%80%90'));
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
+    testWidgets('メールアプリを開けなければ、アドレスを出す', (tester) async {
+      await pumpSettings(tester, (url) async => false);
+      await tester.tap(find.text('お問い合わせ'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('メールアプリを開けませんでした'), findsOneWidget);
+      expect(
+        find.textContaining('contact@kosodate-hitoiki.com'),
+        findsOneWidget,
+      );
+    });
+  });
+
   for (final title in ['利用規約', 'プライバシーポリシー']) {
     testWidgets('$titleを開いて読める(同意の操作は出さない)', (tester) async {
       tester.view.physicalSize = const Size(390, 1600);
@@ -72,8 +122,7 @@ void main() {
       );
       await tester.ensureVisible(find.text(title));
       await tester.pumpAndSettle();
-      // 残る「準備中」は、お問い合わせだけ。
-      expect(find.text('準備中'), findsOneWidget);
+      expect(find.text('準備中'), findsNothing);
       await tester.tap(find.text(title));
       await tester.pumpAndSettle();
       expect(find.byType(LegalDocumentPage), findsOneWidget);

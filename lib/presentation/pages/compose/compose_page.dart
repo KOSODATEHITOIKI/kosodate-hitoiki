@@ -219,7 +219,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '名前・学校や園・住んでいる場所は書かないでね。',
+                      '名前・学校や園・住んでいる場所は書かないでね。健康に関することは、必要な範囲で。',
                       style: TextStyle(fontSize: 12.5, height: 1.6),
                     ),
                   ),

@@ -27,6 +27,9 @@ abstract class PushMessaging {
   /// 通知をタップして、アプリを開いたとき(起動中・背景から)。
   Stream<PushTap> get onTap;
 
+  /// アプリが前面にあるときに、通知が届いたとき(端末の通知欄には、出ない)。
+  Stream<PushTap> get onForeground;
+
   /// 通知をタップして、アプリを起動したとき(その1回)。なければ`null`。
   Future<PushTap?> getInitialTap();
 }
@@ -49,6 +52,9 @@ class NoopPushMessaging implements PushMessaging {
 
   @override
   Stream<PushTap> get onTap => const Stream.empty();
+
+  @override
+  Stream<PushTap> get onForeground => const Stream.empty();
 
   @override
   Future<PushTap?> getInitialTap() async => null;
@@ -90,6 +96,9 @@ class FirebasePushMessaging implements PushMessaging {
 
   @override
   Stream<PushTap> get onTap => FirebaseMessaging.onMessageOpenedApp.map(_tapOf);
+
+  @override
+  Stream<PushTap> get onForeground => FirebaseMessaging.onMessage.map(_tapOf);
 
   @override
   Future<PushTap?> getInitialTap() async {

@@ -21,6 +21,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   late final _nickname = TextEditingController(text: widget.initialNickname);
   bool _agreeTerms = false;
   bool _agreePrivacy = false;
+  bool _confirmedAge = false;
   bool _busy = false;
   String? _error;
 
@@ -105,6 +106,11 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                         _agreePrivacy = value;
                         _error = null;
                       }),
+                      ageConfirmed: _confirmedAge,
+                      onAgeChanged: (value) => setState(() {
+                        _confirmedAge = value;
+                        _error = null;
+                      }),
                     ),
                     if (_error != null)
                       Padding(
@@ -120,7 +126,9 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                     const SizedBox(height: 8),
                     FilledButton(
                       key: const ValueKey('setup-submit'),
-                      onPressed: _busy || !(_agreeTerms && _agreePrivacy)
+                      onPressed:
+                          _busy ||
+                              !(_agreeTerms && _agreePrivacy && _confirmedAge)
                           ? null
                           : _submit,
                       child: Text(_busy ? '登録しています…' : '登録する'),
