@@ -1,0 +1,7 @@
+# android/key.properties の雛形。コピーして key.properties にし、値を入れる。
+# key.properties と、鍵のファイル(.jks)は、リポジトリに入れない(.gitignoreで除外済み)。
+# 手順: docs/リリース手順.md
+keyAlias=upload
+keyPassword=<鍵のパスワード>
+storeFile=C:/Users/<あなた>/keys/hitoiki-upload.jks
+storePassword=<キーストアのパスワード>
