@@ -44,9 +44,15 @@ void main() {
   /// ログイン状態の変化(Googleの認証から戻ったときなど)を流す。
   late StreamController<AuthState> authEvents;
 
+  /// 開いた公開ページ(テストの既定では、開けたことにする)。
+  final openedLinks = <Uri>[];
+  var linksOpenable = true;
+
   setUp(() {
     auth = _MockAuth();
     profiles = _MockProfiles();
+    openedLinks.clear();
+    linksOpenable = true;
     authEvents = StreamController<AuthState>.broadcast();
     addTearDown(authEvents.close);
     when(() => auth.signOut()).thenAnswer((_) async {});
@@ -64,6 +70,10 @@ void main() {
           authRepositoryProvider.overrideWithValue(auth),
           authStateChangesProvider.overrideWith((ref) => authEvents.stream),
           profileRegistrationRepositoryProvider.overrideWithValue(profiles),
+          externalLinkOpenerProvider.overrideWithValue((url) async {
+            openedLinks.add(url);
+            return linksOpenable;
+          }),
           ...overrides,
         ],
         child: MaterialApp(
@@ -108,11 +118,24 @@ void main() {
     );
   }
 
-  /// 同意のチェックを押す(本文は、公開ページで読む。チェックは、直接つけられる)。
+  /// ブラウザへ移って、アプリに戻ったことにする。
+  Future<void> returnFromBrowser(WidgetTester tester) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+  }
+
+  /// 同意の項目を押して、公開ページを開き、アプリから離れて、戻る(戻ると、チェックがつく)。
   Future<void> readDocument(WidgetTester tester, Key consentKey) async {
     await tester.ensureVisible(find.byKey(consentKey));
     await tester.tap(find.byKey(consentKey));
     await tester.pumpAndSettle();
+    await returnFromBrowser(tester);
   }
 
   Future<void> agreeBoth(WidgetTester tester) async {
@@ -220,33 +243,51 @@ void main() {
     });
   });
 
-  testWidgets('規約・ポリシーの「読む」で、公開ページを外部のブラウザで開く', (tester) async {
-    final opened = <Uri>[];
-    await pumpAuth(
-      tester,
-      mode: AuthMode.register,
-      overrides: [
-        externalLinkOpenerProvider.overrideWithValue((url) async {
-          opened.add(url);
-          return true;
-        }),
-      ],
-    );
-    for (final key in ['consent-terms-open', 'consent-privacy-open']) {
+  testWidgets('規約・ポリシーは、読まずにチェックできない。押すと公開ページが開き、戻るとチェックがつく', (tester) async {
+    await pumpAuth(tester, mode: AuthMode.register);
+    bool checked(String key) =>
+        tester.widget<CheckboxListTile>(find.byKey(ValueKey(key))).value!;
+
+    // 押すと、公開ページが開く。まだ、チェックはつかない(戻ってくるまで)。
+    for (final key in ['consent-terms', 'consent-privacy']) {
       await tester.ensureVisible(find.byKey(ValueKey(key)));
       await tester.tap(find.byKey(ValueKey(key)));
       await tester.pumpAndSettle();
+      expect(checked(key), isFalse);
     }
-    expect(opened, [LegalLinks.terms, LegalLinks.privacy]);
-    // 開いても、同意のチェックは、つかない(同意は、利用者が自分でつける)。
+    expect(openedLinks, [LegalLinks.terms, LegalLinks.privacy]);
+
+    // ブラウザへ移らずに(戻る動きだけでは)、チェックはつかない。
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(checked('consent-privacy'), isFalse);
+
+    // ブラウザへ移って、戻ると、最後に開いた文書に、チェックがつく。
+    await returnFromBrowser(tester);
+    expect(checked('consent-privacy'), isTrue);
+    expect(checked('consent-terms'), isFalse);
+
+    // 仮の文面の表示は、もうない。「読む」のボタンも、ない。
+    expect(find.textContaining('仮の文面'), findsNothing);
+    expect(find.text('読む'), findsNothing);
+  });
+
+  testWidgets('公開ページを開けなかったら、チェックはつかない', (tester) async {
+    linksOpenable = false;
+    await pumpAuth(tester, mode: AuthMode.register);
+    await tester.ensureVisible(find.byKey(const ValueKey('consent-terms')));
+    await tester.tap(find.byKey(const ValueKey('consent-terms')));
+    await tester.pumpAndSettle();
+    expect(find.text('利用規約を開けませんでした'), findsOneWidget);
+    await tester.tap(find.text('閉じる'));
+    await tester.pumpAndSettle();
+    await returnFromBrowser(tester);
     expect(
       tester
           .widget<CheckboxListTile>(find.byKey(const ValueKey('consent-terms')))
           .value,
       isFalse,
     );
-    // 仮の文面の表示は、もうない。
-    expect(find.textContaining('仮の文面'), findsNothing);
   });
 
   testWidgets('ログインの入力検証とパスワード表示切替', (tester) async {
@@ -315,22 +356,12 @@ void main() {
   });
 
   testWidgets('規約を開いて戻っても、入力欄にフォーカスが戻らずキーボードが出ない', (tester) async {
-    await pumpAuth(
-      tester,
-      mode: AuthMode.register,
-      overrides: [
-        externalLinkOpenerProvider.overrideWithValue((url) async => true),
-      ],
-    );
+    await pumpAuth(tester, mode: AuthMode.register);
     await tester.tap(find.byKey(const ValueKey('auth-nickname')));
     await tester.pumpAndSettle();
     expect(FocusManager.instance.primaryFocus?.hasFocus, isTrue);
 
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('consent-terms-open')),
-    );
-    await tester.tap(find.byKey(const ValueKey('consent-terms-open')));
-    await tester.pumpAndSettle();
+    await readDocument(tester, const ValueKey('consent-terms'));
 
     // 入力欄(EditableText)にフォーカスが戻っていない。
     final focus = FocusManager.instance.primaryFocus;
