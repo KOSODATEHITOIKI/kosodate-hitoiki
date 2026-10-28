@@ -101,6 +101,7 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
       // コメント一覧と、投稿のコメント件数を、取り直す。
       ref
         ..invalidate(commentsProvider(widget.postId))
+        ..invalidate(postDetailProvider)
         ..invalidate(feedPostsProvider)
         ..invalidate(searchResultsProvider);
       setState(() {
@@ -178,6 +179,7 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
     }
     ref
       ..invalidate(commentsProvider(widget.postId))
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider);
   }

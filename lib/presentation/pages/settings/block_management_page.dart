@@ -68,6 +68,7 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
     // 解除した相手の投稿が、一覧・検索に戻る。
     container
       ..invalidate(blockedUsersProvider)
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider)
       ..invalidate(myPostsProvider)

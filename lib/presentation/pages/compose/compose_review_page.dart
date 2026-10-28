@@ -87,6 +87,7 @@ class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
       if (!mounted) return;
       // 一覧・検索・マイページを、新しい投稿を含めて取り直す。
       ref
+        ..invalidate(postDetailProvider)
         ..invalidate(feedPostsProvider)
         ..invalidate(searchResultsProvider)
         ..invalidate(myPostsProvider);

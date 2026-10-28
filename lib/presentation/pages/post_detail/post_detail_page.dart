@@ -73,10 +73,15 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
         });
       }
     });
-    // 一覧側で保存を切り替えた後も、詳細を開いた時点の状態を反映する。
+    // 投稿IDで取得した最新の状態を使う(一覧に載っていない投稿でも、本文・投稿者・自分の
+    // 投稿かが、最新になる)。取得できるまで・取得できないときは、一覧の投稿、開いたときの
+    // 投稿の順に使う。
+    final fetched = ref.watch(postDetailProvider(post.id)).valueOrNull;
     final items = ref.watch(feedPostsProvider).valueOrNull;
     final current =
-        (items?.where((item) => item.id == post.id).firstOrNull ?? post)
+        (fetched ??
+                items?.where((item) => item.id == post.id).firstOrNull ??
+                post)
             .copyWith(responseMode: _previewMode, body: _editedBody);
     final commentsClosed = _closedOverride ?? !current.commentsOpen;
     return Scaffold(
@@ -419,6 +424,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
     }
     _changingMode = false;
     container
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider)
       ..invalidate(myPostsProvider)
@@ -469,6 +475,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       return;
     }
     ref
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider)
       ..invalidate(myPostsProvider)
@@ -508,6 +515,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       return;
     }
     ref
+      ..invalidate(postDetailProvider)
       ..invalidate(feedPostsProvider)
       ..invalidate(searchResultsProvider)
       ..invalidate(myPostsProvider)
