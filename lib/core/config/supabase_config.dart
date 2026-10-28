@@ -12,12 +12,10 @@ import 'flavor.dart';
 class SupabaseConfig {
   SupabaseConfig._();
 
-  /// prodのSupabaseプロジェクトは未作成(2026-10-21時点)。作成後に差し替える。
-  static const _prodPlaceholderUrl = 'https://your-project.supabase.co';
-
   static String get _url => switch (AppConfig.flavor) {
     Flavor.dev => 'https://djbizophhqtlqmlabhdo.supabase.co',
-    Flavor.prod => _prodPlaceholderUrl,
+    // 本番のプロジェクト(2026-10-28。運営から受け取った公開してよい値)。
+    Flavor.prod => 'https://yaggicrvzykkfcdhsjlm.supabase.co',
   };
 
   /// アップロードされたアカウント画像の公開URL(Storageの`avatars`バケット)。
@@ -27,13 +25,10 @@ class SupabaseConfig {
 
   static String get _publishableKey => switch (AppConfig.flavor) {
     Flavor.dev => 'sb_publishable_e9JHW9PnR1fb3qNVQVkwsQ_30-GHwsk',
-    Flavor.prod => 'your-publishable-key',
+    Flavor.prod => 'sb_publishable_A5dfGH4Rdu2VUC4kA8uxWg_tWkSPYcE',
   };
 
   static Future<void> initialize() async {
-    if (_url == _prodPlaceholderUrl) {
-      throw StateError('prodのSupabase接続先が未設定です(supabase_config.dart)');
-    }
     await Supabase.initialize(
       url: _url,
       // supabase_flutterのパラメーター名は旧称のanonKey。publishable keyもここに渡す。
