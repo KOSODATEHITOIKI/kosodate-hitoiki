@@ -44,7 +44,7 @@ Future<void> togglePostSaved(
   }
 }
 
-/// 投稿一覧・検索結果・マイページ共通の投稿カード(docs/design S-02・S-05参照)。
+/// 投稿一覧・検索結果・マイページ共通の投稿カード(確定デザインS-02・S-05参照)。
 class PostCard extends ConsumerWidget {
   const PostCard({
     super.key,

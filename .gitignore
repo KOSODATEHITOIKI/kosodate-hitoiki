@@ -179,3 +179,9 @@ vite.config.ts.timestamp-*
 # Firebaseの設定ファイル(環境ごとに、ローカルに置く。リポジトリには入れない)
 **/google-services.json
 **/GoogleService-Info.plist
+
+# モバイル(Android・iOS)だけを出す。Flutterが自動生成するデスクトップ用のファイルは、入れない
+/linux/
+/macos/
+/windows/
+/web/

@@ -196,7 +196,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   );
 }
 
-/// docs/design S-02と同じ、大きな太陽+葉のアクセントを使う見出し。
+/// 確定デザインS-02と同じ、大きな太陽+葉のアクセントを使う見出し。
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader();
 

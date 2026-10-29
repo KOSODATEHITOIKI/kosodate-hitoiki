@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 確定カラーパレット(docs/design/svg-assets/README.md参照、2026-09-29確定)。
+/// 確定カラーパレット(2026-09-29確定)。
 class AppColors {
   AppColors._();
 

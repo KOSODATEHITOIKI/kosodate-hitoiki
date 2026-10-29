@@ -63,7 +63,7 @@ class ComfortPage extends StatelessWidget {
   );
 }
 
-/// docs/design のS-02/S-04〜S-07/S-11共通の見出し(大きな太陽+葉のアクセント)。
+/// 確定デザインのS-02/S-04〜S-07/S-11共通の見出し(大きな太陽+葉のアクセント)。
 class _ComfortHeader extends StatelessWidget {
   const _ComfortHeader({
     required this.title,

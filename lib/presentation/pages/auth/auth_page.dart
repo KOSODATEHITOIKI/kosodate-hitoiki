@@ -780,7 +780,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   );
 }
 
-/// docs/design S-10と同じ、ロゴ+大きな太陽を使う見出し。
+/// 確定デザインS-10と同じ、ロゴ+大きな太陽を使う見出し。
 class _AuthHeader extends StatelessWidget {
   const _AuthHeader({required this.title, required this.mode});
   final String title;
