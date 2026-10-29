@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 
@@ -182,7 +183,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
             FilledButton(
               onPressed: () => Navigator.of(
                 context,
-              ).push(MaterialPageRoute<void>(builder: (_) => const AuthPage())),
+              ).push(fullWidthRoute<void>(builder: (_) => const AuthPage())),
               child: const Text('登録・ログイン'),
             ),
         ],

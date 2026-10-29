@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
@@ -68,7 +69,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     if (!ref.read(isLoggedInProvider)) {
       await Navigator.of(
         context,
-      ).push<void>(MaterialPageRoute(builder: (_) => const AuthPage()));
+      ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage()));
       return;
     }
     if (!_guideSeen && widget.initialPost == null) {

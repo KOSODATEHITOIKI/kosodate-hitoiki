@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/api/api_exception.dart';
 import '../../providers/account_providers.dart';
@@ -152,7 +153,9 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
       return;
     }
     navigator.popUntil((route) => route.isFirst);
-    navigator.push<void>(MaterialPageRoute(builder: (_) => const AuthPage()));
+    navigator.push<void>(
+      fullWidthRoute<void>(builder: (_) => const AuthPage()),
+    );
   }
 
   @override
@@ -190,7 +193,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
       OutlinedButton(
         onPressed: () => Navigator.of(
           context,
-        ).push<void>(MaterialPageRoute(builder: (_) => const AuthPage())),
+        ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage())),
         child: const Text('ログイン'),
       ),
     ],

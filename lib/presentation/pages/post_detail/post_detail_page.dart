@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -576,7 +577,7 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
 
   void _openAuth(BuildContext context, AuthMode mode) {
     Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => AuthPage(initialMode: mode)),
+      fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
     );
   }
 }

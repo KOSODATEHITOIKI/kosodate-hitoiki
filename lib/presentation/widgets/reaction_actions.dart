@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../pages/auth/auth_page.dart';
@@ -16,7 +17,7 @@ Future<void> changeReaction(
   if (!ref.read(isLoggedInProvider)) {
     Navigator.of(
       context,
-    ).push<void>(MaterialPageRoute(builder: (_) => const AuthPage()));
+    ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage()));
     return;
   }
   final messenger = ScaffoldMessenger.of(context);

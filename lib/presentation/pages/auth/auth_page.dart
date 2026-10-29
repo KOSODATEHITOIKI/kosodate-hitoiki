@@ -10,6 +10,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/config/password_policy.dart';
 import '../../../core/utils/accessibility.dart';
+import '../../../core/constants/app_layout.dart';
+import '../../widgets/desktop_hero_panel.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_providers.dart';
 import 'auth_messages.dart';
@@ -374,10 +376,25 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       (_, next) => _onAuthState(next),
     );
     final resetSentTo = _resetSentTo;
-    if (resetSentTo != null) return _resetSentPage();
     final sentTo = _sentTo;
-    if (sentTo != null) return _checkEmailPage(sentTo);
-    return _formPage();
+    final Widget page;
+    if (resetSentTo != null) {
+      page = _resetSentPage();
+    } else if (sentTo != null) {
+      page = _checkEmailPage(sentTo);
+    } else {
+      page = _formPage();
+    }
+    // パソコン向けの広い画面は、左に絵の面、右にフォーム。
+    if (!AppLayout.isDesktop(MediaQuery.sizeOf(context).width)) return page;
+    return Scaffold(
+      body: Row(
+        children: [
+          const Expanded(flex: 11, child: DesktopHeroPanel()),
+          Expanded(flex: 9, child: page),
+        ],
+      ),
+    );
   }
 
   /// 登録後の「確認メールを送りました」。メール確認が必要な設定のときだけ表示する。
@@ -788,7 +805,8 @@ class _AuthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showDecoration = fitsDecoration(context);
+    final desktop = AppLayout.isDesktop(MediaQuery.sizeOf(context).width);
+    final showDecoration = fitsDecoration(context) && !desktop;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -822,32 +840,31 @@ class _AuthHeader extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
-              child: showDecoration
-                  ? Semantics(
-                      header: true,
-                      label: 'ひと息',
-                      child: Image.asset(
-                        AppBrand.logo,
-                        width: (MediaQuery.sizeOf(context).width * 0.36).clamp(
-                          110.0,
-                          150.0,
+            if (!desktop)
+              Padding(
+                padding: EdgeInsets.only(right: showDecoration ? 72 : 0),
+                child: showDecoration
+                    ? Semantics(
+                        header: true,
+                        label: 'ひと息',
+                        child: Image.asset(
+                          AppBrand.logo,
+                          width: (MediaQuery.sizeOf(context).width * 0.36)
+                              .clamp(110.0, 150.0),
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          excludeFromSemantics: true,
                         ),
-                        fit: BoxFit.contain,
-                        alignment: Alignment.centerLeft,
-                        excludeFromSemantics: true,
+                      )
+                    : const Text(
+                        'ひと息',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    )
-                  : const Text(
-                      'ひと息',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-            ),
-            const SizedBox(height: 12),
+              ),
+            if (!desktop) const SizedBox(height: 12),
             Text(switch (mode) {
               AuthMode.login => 'おかえりなさい。',
               AuthMode.register => 'がんばる毎日に、\nやさしいつながりを。',

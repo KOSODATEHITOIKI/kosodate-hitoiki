@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/flavor.dart';
-import 'core/widgets/centered_page_transitions.dart';
 import 'core/widgets/wide_screen_frame.dart';
 import 'data/push/push_messaging.dart';
 import 'core/constants/app_theme.dart';
@@ -217,7 +216,7 @@ class _AppState extends ConsumerState<App> {
       // ログイン状態が保持されていれば、案内画面を飛ばしてホームから始める(要件定義書6.2.4)。
       home: ref.watch(isLoggedInProvider)
           ? const MainNavigationShell()
-          : const DesktopCentered(child: WelcomePage()),
+          : const WelcomePage(),
     );
   }
 }

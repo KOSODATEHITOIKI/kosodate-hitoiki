@@ -6,6 +6,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../../core/widgets/centered_page_transitions.dart';
+import '../../../core/constants/app_layout.dart';
+import '../../widgets/desktop_hero_panel.dart';
 import '../../widgets/main_navigation_shell.dart';
 import '../auth/auth_page.dart';
 
@@ -24,7 +26,7 @@ class WelcomePage extends StatelessWidget {
 
   void _openAuth(BuildContext context, String title) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      fullWidthRoute<void>(
         builder: (_) => AuthPage(
           initialMode: title == '会員登録' ? AuthMode.register : AuthMode.login,
         ),
@@ -34,166 +36,165 @@ class WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          const Positioned.fill(child: _WelcomeBackground()),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) => SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 480),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
+    final desktop = AppLayout.isDesktop(MediaQuery.sizeOf(context).width);
+    final content = Stack(
+      children: [
+        const Positioned.fill(child: _WelcomeBackground()),
+        SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // 広い画面では、ロゴと太陽は、左の絵の面にある。
+                          if (!desktop) ...[
                             const _WelcomeHeader(),
                             const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: const Column(
-                                children: [
-                                  _Guideline(
-                                    asset: AppDecorations.leavesSprout,
-                                    background: AppColors.surface,
-                                    title: '名前や個人情報は書かない',
-                                    description:
-                                        '安心して気持ちを話せるように、個人が特定される情報は書かないでください。',
-                                  ),
-                                  SizedBox(height: 12),
-                                  _Guideline(
-                                    asset: AppDecorations.heartWarm,
-                                    background: AppColors.accentPink,
-                                    title: '気持ちを否定しない',
-                                    description: 'どんな気持ちも、否定せずに受けとめ合いましょう。',
-                                  ),
-                                  SizedBox(height: 12),
-                                  _Guideline(
-                                    asset: AppDecorations.sunSimple,
-                                    background: AppColors.surface,
-                                    title: '自分のペースで大丈夫',
-                                    description: '見るだけでも、書くのは後でも。あなたのペースで使えます。',
-                                  ),
-                                ],
-                              ),
+                          ],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 14,
                             ),
-                            const SizedBox(height: 16),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(40),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.textPrimary
-                                              .withValues(alpha: 0.08),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Column(
+                              children: [
+                                _Guideline(
+                                  asset: AppDecorations.leavesSprout,
+                                  background: AppColors.surface,
+                                  title: '名前や個人情報は書かない',
+                                  description:
+                                      '安心して気持ちを話せるように、個人が特定される情報は書かないでください。',
+                                ),
+                                SizedBox(height: 12),
+                                _Guideline(
+                                  asset: AppDecorations.heartWarm,
+                                  background: AppColors.accentPink,
+                                  title: '気持ちを否定しない',
+                                  description: 'どんな気持ちも、否定せずに受けとめ合いましょう。',
+                                ),
+                                SizedBox(height: 12),
+                                _Guideline(
+                                  asset: AppDecorations.sunSimple,
+                                  background: AppColors.surface,
+                                  title: '自分のペースで大丈夫',
+                                  description: '見るだけでも、書くのは後でも。あなたのペースで使えます。',
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(40),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.textPrimary.withValues(
+                                          alpha: 0.08,
                                         ),
-                                      ],
-                                    ),
-                                    child: FilledButton(
-                                      style: FilledButton.styleFrom(
-                                        minimumSize: const Size.fromHeight(52),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 24,
-                                          vertical: 12,
-                                        ),
-                                        shape: const StadiumBorder(),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 4),
                                       ),
-                                      onPressed: () =>
-                                          _openAuth(context, '会員登録'),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Flexible(
-                                            child: Text(
-                                              '登録してはじめる',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                fontSize: 12.5,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          AppAsset(
-                                            AppIcons.next,
-                                            width: 24,
-                                            height: 24,
-                                            excludeFromSemantics: true,
-                                            colorFilter: const ColorFilter.mode(
-                                              AppColors.white,
-                                              BlendMode.srcIn,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 12),
-                                  FilledButton(
+                                  child: FilledButton(
                                     style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.secondary,
-                                      foregroundColor: AppColors.textPrimary,
-                                      minimumSize: const Size.fromHeight(48),
+                                      minimumSize: const Size.fromHeight(52),
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
+                                        horizontal: 24,
                                         vertical: 12,
                                       ),
                                       shape: const StadiumBorder(),
                                     ),
-                                    onPressed: () => _browse(context),
+                                    onPressed: () => _openAuth(context, '会員登録'),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Flexible(
+                                          child: Text(
+                                            '登録してはじめる',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        AppAsset(
+                                          AppIcons.next,
+                                          width: 24,
+                                          height: 24,
+                                          excludeFromSemantics: true,
+                                          colorFilter: const ColorFilter.mode(
+                                            AppColors.white,
+                                            BlendMode.srcIn,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.secondary,
+                                    foregroundColor: AppColors.textPrimary,
+                                    minimumSize: const Size.fromHeight(48),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    shape: const StadiumBorder(),
+                                  ),
+                                  onPressed: () => _browse(context),
+                                  child: const Text(
+                                    '登録せずに読む',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Center(
+                                  child: TextButton(
+                                    onPressed: () => _openAuth(context, 'ログイン'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.textPrimary,
+                                    ),
                                     child: const Text(
-                                      '登録せずに読む',
-                                      textAlign: TextAlign.center,
+                                      'ログイン',
                                       style: TextStyle(
                                         fontSize: 12.5,
                                         fontWeight: FontWeight.w700,
+                                        decoration: TextDecoration.underline,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Center(
-                                    child: TextButton(
-                                      onPressed: () =>
-                                          _openAuth(context, 'ログイン'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: AppColors.textPrimary,
-                                      ),
-                                      child: const Text(
-                                        'ログイン',
-                                        style: TextStyle(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w700,
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -201,8 +202,18 @@ class WelcomePage extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+    return Scaffold(
+      body: desktop
+          ? Row(
+              children: [
+                const Expanded(flex: 11, child: DesktopHeroPanel()),
+                Expanded(flex: 9, child: content),
+              ],
+            )
+          : content,
     );
   }
 }
