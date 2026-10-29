@@ -201,11 +201,13 @@ class _CommentThreadState extends ConsumerState<CommentThread> {
         children: [
           Row(
             children: [
-              AppAsset(
-                comment.authorAvatarAsset,
-                width: 32,
-                height: 32,
-                excludeFromSemantics: true,
+              ClipOval(
+                child: AppAsset(
+                  comment.authorAvatarAsset,
+                  width: 32,
+                  height: 32,
+                  excludeFromSemantics: true,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
