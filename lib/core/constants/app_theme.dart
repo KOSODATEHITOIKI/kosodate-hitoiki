@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../widgets/centered_page_transitions.dart';
@@ -26,27 +25,12 @@ class AppTheme {
       fontFamily: AppTypography.fontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
-      // 画面の切り替えの動きは、標準のまま。広い画面(パソコン)だけ、中央の列に収める。
-      pageTransitionsTheme: const PageTransitionsTheme(
+      // 画面の切り替えの動きは、標準のまま(Flutterの版で名前が変わるので、標準の一覧を取り出して包む)。
+      // 広い画面(パソコン)だけ、あとから開く画面を中央の列に収める。
+      pageTransitionsTheme: PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: CenteredPageTransitionsBuilder(
-            ZoomPageTransitionsBuilder(),
-          ),
-          TargetPlatform.iOS: CenteredPageTransitionsBuilder(
-            CupertinoPageTransitionsBuilder(),
-          ),
-          TargetPlatform.macOS: CenteredPageTransitionsBuilder(
-            CupertinoPageTransitionsBuilder(),
-          ),
-          TargetPlatform.windows: CenteredPageTransitionsBuilder(
-            ZoomPageTransitionsBuilder(),
-          ),
-          TargetPlatform.linux: CenteredPageTransitionsBuilder(
-            ZoomPageTransitionsBuilder(),
-          ),
-          TargetPlatform.fuchsia: CenteredPageTransitionsBuilder(
-            ZoomPageTransitionsBuilder(),
-          ),
+          for (final entry in const PageTransitionsTheme().builders.entries)
+            entry.key: CenteredPageTransitionsBuilder(entry.value),
         },
       ),
       textTheme: ThemeData.light().textTheme
