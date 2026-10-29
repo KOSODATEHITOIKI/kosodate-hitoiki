@@ -14,6 +14,21 @@
             "type": "dart",
             "program": "lib/main_prod.dart",
             "args": ["--flavor", "prod"]
+        },
+        {
+            "name": "web (dev) - Chromeで開く",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "deviceId": "chrome"
+        },
+        {
+            "name": "web (dev) - ブラウザは自分で開く(http://localhost:8099/)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "deviceId": "web-server",
+            "args": ["--web-port", "8099"]
         }
     ]
 }
