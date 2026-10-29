@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
@@ -72,6 +73,11 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   /// 再設定メールの送信先。登録の有無にかかわらず、送信後は同じ画面を出す。
   String? _resetSentTo;
+
+  /// 再設定の確認コード(メールに書かれた数字)の入力欄。コードは、ログに出さない。
+  final _resetCode = TextEditingController();
+  bool _verifyingCode = false;
+  String? _codeError;
 
   /// Googleの認証画面(ブラウザ)を開いて、アプリへ戻るのを待っている間。
   bool _googleWaiting = false;
@@ -172,6 +178,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     _password.dispose();
     _passwordConfirm.dispose();
     _nickname.dispose();
+    _resetCode.dispose();
     super.dispose();
   }
 
@@ -189,6 +196,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _error = null;
       _sentTo = null;
       _resetSentTo = null;
+      _resetCode.clear();
+      _codeError = null;
       _resendWait = 0;
       _touched.clear();
       _submitted = false;
@@ -315,7 +324,62 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (mounted) setState(() => _busy = false);
       _resetCaptcha();
     }
-    if (mounted) setState(() => _resetSentTo = email);
+    if (mounted) {
+      setState(() => _resetSentTo = email);
+      _startCooldown();
+    }
+  }
+
+  /// 再設定の確認コードを確認する。成功すると、再設定用のログイン状態になり、アプリ全体の
+  /// 仕組み(lib/app.dart)が、新しいパスワードの画面を開く。間違い・期限切れ・使用済みのときは、
+  /// 「もう一度、メールを送ってください」と案内する。
+  Future<void> _verifyCode() async {
+    final email = _resetSentTo;
+    final code = _resetCode.text.trim();
+    if (email == null || _verifyingCode) return;
+    if (!RegExp(r'^\d{6,8}$').hasMatch(code)) {
+      setState(() => _codeError = '確認コード(6〜8桁の数字)を入力してください。');
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _verifyingCode = true;
+      _codeError = null;
+    });
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .verifyRecoveryCode(email: email, code: code);
+      if (!mounted) return;
+      // 使ったコードは、画面に残さない。
+      _resetCode.clear();
+    } catch (error) {
+      if (mounted) setState(() => _codeError = authErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _verifyingCode = false);
+    }
+  }
+
+  /// 再設定のメールを、もう一度送る(コードの間違い・期限切れのとき)。
+  Future<void> _resendReset() async {
+    final email = _resetSentTo;
+    if (email == null || _resendWait > 0 || _resending) return;
+    setState(() {
+      _resending = true;
+      _codeError = null;
+    });
+    try {
+      await ref.read(authRepositoryProvider).sendPasswordReset(email);
+      if (!mounted) return;
+      _resetCode.clear();
+      _snack('確認コードを、もう一度送りました。');
+      _startCooldown();
+    } catch (error) {
+      if (mounted) _snack(authErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _resending = false);
+      _resetCaptcha();
+    }
   }
 
   Future<void> _register() async {
@@ -545,13 +609,68 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  '登録されている場合は、再設定のメールを送りました。'
+                  '登録されている場合は、確認コードを、メールで送りました。'
+                  'メールに書かれた数字を、下に入力してください。'
                   '届かない場合は、迷惑メールを確認するか、アドレスをご確認ください。',
                   key: ValueKey('auth-reset-sent'),
                   style: TextStyle(height: 1.7),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                TextField(
+                  key: const ValueKey('auth-reset-code'),
+                  controller: _resetCode,
+                  enabled: !_verifyingCode,
+                  // 貼り付けを許す。数字だけにして、前後の空白は、取り除く。
+                  keyboardType: TextInputType.number,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(8),
+                  ],
+                  onSubmitted: (_) => _verifyCode(),
+                  decoration: InputDecoration(
+                    labelText: '確認コード',
+                    hintText: 'メールに書かれた数字',
+                    prefixIcon: const Icon(Icons.pin_outlined),
+                    errorText: _codeError,
+                    errorMaxLines: 3,
+                  ),
+                ),
+                const SizedBox(height: 16),
                 FilledButton(
+                  key: const ValueKey('auth-reset-verify'),
+                  onPressed: _verifyingCode ? null : _verifyCode,
+                  child: Text(_verifyingCode ? '確認しています…' : '確認する'),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'コードが届かない・違う・期限が切れたときは、もう一度、メールを送ってください。',
+                  style: TextStyle(fontSize: 13, height: 1.7),
+                ),
+                const SizedBox(height: 8),
+                // ボット対策の確認(使う設定のときだけ)。再送にも、確認が要る。
+                if (ref.watch(captchaEnabledProvider)) ...[
+                  TurnstileField(key: _turnstileKey),
+                  const SizedBox(height: 12),
+                ],
+                OutlinedButton(
+                  key: const ValueKey('auth-reset-resend'),
+                  onPressed:
+                      _resendWait > 0 ||
+                          _resending ||
+                          (ref.watch(captchaEnabledProvider) &&
+                              ref.watch(captchaTokenProvider) == null)
+                      ? null
+                      : _resendReset,
+                  child: Text(
+                    _resendWait > 0
+                        ? 'もう一度、メールを送る(あと$_resendWait秒)'
+                        : 'もう一度、メールを送る',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
                   key: const ValueKey('auth-reset-to-login'),
                   onPressed: () => _changeMode(AuthMode.login),
                   child: const Text('ログインへ'),

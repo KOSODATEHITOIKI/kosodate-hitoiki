@@ -29,6 +29,9 @@ String authErrorMessage(Object error) {
       case 'over_email_send_rate_limit':
       case 'over_request_rate_limit':
         return 'しばらく時間をおいてから、もう一度お試しください。';
+      case 'otp_expired':
+      case 'otp_invalid':
+        return '確認コードが違うか、期限が切れています。もう一度、メールを送ってください。';
       case 'captcha_required':
       case 'captcha_failed':
         // 原因(サーバーが断ったのか、トークンが付いていないのか)を調べやすいよう、devは中身を足す。
