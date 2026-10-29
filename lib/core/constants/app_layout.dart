@@ -15,6 +15,9 @@ class AppLayout {
   /// 右の補足のカードの幅。
   static const rightPanelWidth = 320.0;
 
+  /// 中央と右の補足のカードの間の余白。
+  static const panelGap = 24.0;
+
   /// 右の補足のカードを出す、いちばん狭い幅(これ未満は、左メニュー+中央だけ)。
   static const rightPanelMinWidth = 1280.0;
 

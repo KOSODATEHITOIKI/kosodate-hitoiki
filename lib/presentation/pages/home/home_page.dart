@@ -5,9 +5,11 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/app_layout.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../../domain/models/post.dart';
 import '../../providers/post_providers.dart';
+import '../../widgets/desktop_home_panels.dart';
 import '../../widgets/load_more_button.dart';
 import '../../widgets/post_card.dart';
 import '../../widgets/topic_picker.dart';
@@ -35,43 +37,49 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     // 投稿が増えても画面外のカードは構築しないよう、遅延構築のListViewにする。
+    final desktop = AppLayout.isDesktop(MediaQuery.sizeOf(context).width);
     final items = <Widget>[
-      const _HomeHeader(),
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton.icon(
-          onPressed: () => Navigator.of(context).push<void>(
-            MaterialPageRoute(builder: (_) => const SupportResourcesPage()),
+      if (desktop) ...[
+        const DesktopHomeBanner(),
+        const SizedBox(height: 16),
+      ] else ...[
+        const _HomeHeader(),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => const SupportResourcesPage()),
+            ),
+            icon: const Icon(Icons.support_agent, size: 18),
+            label: const Text('困ったときの相談先', style: TextStyle(fontSize: 12)),
           ),
-          icon: const Icon(Icons.support_agent, size: 18),
-          label: const Text('困ったときの相談先', style: TextStyle(fontSize: 12)),
         ),
-      ),
-      const SizedBox(height: 24),
-      Center(
-        child: FilledButton.icon(
-          onPressed: widget.onCompose,
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: const StadiumBorder(),
-          ),
-          icon: AppAsset(
-            AppIcons.navCompose,
-            width: 24,
-            height: 24,
-            excludeFromSemantics: true,
-            colorFilter: const ColorFilter.mode(
-              AppColors.white,
-              BlendMode.srcIn,
+        const SizedBox(height: 24),
+        Center(
+          child: FilledButton.icon(
+            onPressed: widget.onCompose,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: const StadiumBorder(),
+            ),
+            icon: AppAsset(
+              AppIcons.navCompose,
+              width: 24,
+              height: 24,
+              excludeFromSemantics: true,
+              colorFilter: const ColorFilter.mode(
+                AppColors.white,
+                BlendMode.srcIn,
+              ),
+            ),
+            label: const Text(
+              '気持ちを書く  ›',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
             ),
           ),
-          label: const Text(
-            '気持ちを書く  ›',
-            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
-          ),
         ),
-      ),
-      const SizedBox(height: 24),
+        const SizedBox(height: 24),
+      ],
       TopicFilterRow(
         selected: ref.watch(feedTopicProvider),
         onChanged: (topic) =>
@@ -117,7 +125,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
+          // 広い画面は、外側(メインのシェル)が幅を決める。
+          constraints: BoxConstraints(
+            maxWidth: desktop ? double.infinity : 600,
+          ),
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             itemCount: items.length,
