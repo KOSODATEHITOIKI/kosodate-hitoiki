@@ -863,7 +863,8 @@ void main() {
         verify(() => auth.sendPasswordReset('a@example.com')).called(1);
         expect(
           find.text(
-            '登録されている場合は、再設定のメールを送りました。'
+            '登録されている場合は、確認コードを、メールで送りました。'
+            'メールに書かれた数字を、下に入力してください。'
             '届かない場合は、迷惑メールを確認するか、アドレスをご確認ください。',
           ),
           findsOneWidget,

@@ -76,7 +76,21 @@ class AuthRepository {
     );
   }
 
-  /// 新しいパスワードにする(メールのリンクから戻った状態で呼ぶ)。
+  /// パスワード再設定の確認コード(メールに書かれた数字)を確認する。成功すると、再設定用の
+  /// ログイン状態になり、続けて[updatePassword]で新しいパスワードを決められる。
+  /// コードは、1回限り。ログには出さない(エラーにも、含めない)。
+  Future<AuthResponse> verifyRecoveryCode({
+    required String email,
+    required String code,
+  }) {
+    return _client.auth.verifyOTP(
+      email: email,
+      token: code,
+      type: OtpType.recovery,
+    );
+  }
+
+  /// 新しいパスワードにする(確認コードの確認のあと、または、メールのリンクから戻った状態で呼ぶ)。
   Future<UserResponse> updatePassword(String newPassword) {
     return _client.auth.updateUser(UserAttributes(password: newPassword));
   }
