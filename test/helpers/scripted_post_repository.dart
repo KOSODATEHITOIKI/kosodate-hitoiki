@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:kosodate_hitoiki/domain/models/blocked_user.dart';
 import 'package:kosodate_hitoiki/domain/models/post.dart';
 import 'package:kosodate_hitoiki/domain/models/reaction_type.dart';
@@ -75,13 +77,20 @@ class ScriptedPostRepository implements PostRepository {
   /// 共感の取得の記録(取得した投稿IDの組ごと)。
   final reactionFetches = <List<String>>[];
 
+  /// 設定すると、共感の取得は、これが完了するまで返らない(取得中の操作を試すため)。
+  /// 返す内容は、取得を始めた時点のもの。
+  Completer<void>? reactionFetchGate;
+
   @override
   Future<Map<String, int>> fetchMyReactions(List<String> postIds) async {
     reactionFetches.add(List.of(postIds));
-    return {
+    final result = {
       for (final id in postIds)
         if (myReactions.containsKey(id)) id: myReactions[id]!,
     };
+    final gate = reactionFetchGate;
+    if (gate != null) await gate.future;
+    return result;
   }
 
   @override

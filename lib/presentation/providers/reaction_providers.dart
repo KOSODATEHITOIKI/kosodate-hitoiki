@@ -39,6 +39,10 @@ class MyReactionsNotifier extends StateNotifier<Map<String, int>> {
   /// 送信中の投稿(同じ投稿への操作を、続けて送らない)。
   final _pending = <String>{};
 
+  /// 取得を待っている間に、操作した投稿。遅れて届いた取得結果は、この投稿には反映しない
+  /// (取り消した共感が、取消前の取得結果で、元に戻らないようにする)。
+  final _changedWhileLoading = <String>{};
+
   /// 表示する投稿への、自分の共感を取得する。同じ画面で表示する投稿の分は、1回にまとめて
   /// 取得し、一度取得した投稿は取得し直さない(共感の操作は、状態へ直接反映される)。
   void request(String postId) {
@@ -54,10 +58,21 @@ class MyReactionsNotifier extends StateNotifier<Map<String, int>> {
     final ids = _queue.toList();
     _queue.clear();
     if (ids.isEmpty) return;
+    // この取得を始めてから、操作した投稿だけを、数える。
+    _changedWhileLoading.removeAll(ids);
     try {
       final loaded = await _repository.fetchMyReactions(ids);
-      // 読み込み中に操作した分は、操作を優先する。
-      if (mounted) state = {...loaded, ...state};
+      // 読み込み中に操作した分は、操作を優先する。取り消した投稿(状態にキーがない)も、
+      // 取得結果から復活させない。
+      final changed = _changedWhileLoading.intersection(ids.toSet());
+      _changedWhileLoading.removeAll(ids);
+      if (mounted) {
+        state = {
+          for (final entry in loaded.entries)
+            if (!changed.contains(entry.key)) entry.key: entry.value,
+          ...state,
+        };
+      }
     } catch (_) {
       // 読めなくても、操作はできる(選択の表示だけが出ない)。次に表示したとき、取得し直す。
       _requested.removeAll(ids);
@@ -74,6 +89,7 @@ class MyReactionsNotifier extends StateNotifier<Map<String, int>> {
   Future<String?> _change(String postId, int? reactionTypeId) async {
     if (!_pending.add(postId)) return null;
     final previous = state[postId];
+    _changedWhileLoading.add(postId);
     _apply(postId, reactionTypeId);
     try {
       if (reactionTypeId == null) {
