@@ -146,4 +146,43 @@ void main() {
     await tester.pumpAndSettle();
     expect(submitEnabled(tester), isTrue);
   });
+
+  testWidgets('再設定で確認(ボット対策)に失敗したら、「送りました」とは見せず、失敗を伝える', (tester) async {
+    when(() => auth.sendPasswordReset(any())).thenAnswer((_) async {
+      throw const AuthException('captcha', code: 'captcha_failed');
+    });
+    await pumpAuth(tester, captcha: true, mode: AuthMode.reset);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email')),
+      'a@example.com',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    fake.onToken!('tok-1');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('auth-submit')));
+    await tester.pumpAndSettle();
+
+    verify(() => auth.sendPasswordReset('a@example.com')).called(1);
+    expect(find.byKey(const ValueKey('auth-reset-sent')), findsNothing);
+    expect(find.byKey(const ValueKey('auth-error')), findsOneWidget);
+    expect(find.textContaining('確認ができませんでした'), findsOneWidget);
+  });
+
+  testWidgets('再設定で、未登録などのエラーは、これまでどおり、成功と同じに見せる', (tester) async {
+    when(() => auth.sendPasswordReset(any())).thenAnswer((_) async {
+      throw const AuthException('not found', code: 'user_not_found');
+    });
+    await pumpAuth(tester, captcha: false, mode: AuthMode.reset);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email')),
+      'a@example.com',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('auth-submit')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('auth-reset-sent')), findsOneWidget);
+  });
 }

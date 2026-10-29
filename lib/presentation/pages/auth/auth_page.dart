@@ -276,7 +276,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   /// パスワード再設定のメール。登録の有無を明かさないよう、送信後は常に同じ画面を出す。
-  /// 通信できなかったときと、送信回数の制限のときだけ、そのことを伝える。
+  /// 通信できなかったとき、送信回数の制限のとき、確認(ボット対策)に失敗したときだけ、
+  /// そのことを伝える(確認の失敗は、メールが送られていないので、「送りました」とは見せない)。
   Future<void> _sendReset() async {
     final email = _email.text.trim();
     setState(() {
@@ -290,7 +291,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       return;
     } on AuthException catch (error) {
       if (error.code == 'over_email_send_rate_limit' ||
-          error.code == 'over_request_rate_limit') {
+          error.code == 'over_request_rate_limit' ||
+          error.code == 'captcha_failed' ||
+          error.code == 'captcha_required') {
         if (mounted) setState(() => _error = authErrorMessage(error));
         return;
       }
