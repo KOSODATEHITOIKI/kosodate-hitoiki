@@ -46,6 +46,14 @@
         <meta-data
             android:name="flutter_deeplinking_enabled"
             android:value="false" />
+        <!-- プッシュ通知の見た目。小さなアイコン(白一色の太陽)と、その色。指定しないと、
+             Flutterの初期のアイコン(白い丸)になる。 -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_hitoiki" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/ic_notification_color" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
