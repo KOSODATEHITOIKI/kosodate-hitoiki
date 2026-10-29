@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/centered_page_transitions.dart';
 import 'app_colors.dart';
 import 'app_typography.dart';
 
@@ -24,6 +25,29 @@ class AppTheme {
       fontFamily: AppTypography.fontFamily,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
+      // 画面の切り替えの動きは、標準のまま。広い画面(パソコン)だけ、中央の列に収める。
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CenteredPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+          TargetPlatform.iOS: CenteredPageTransitionsBuilder(
+            CupertinoPageTransitionsBuilder(),
+          ),
+          TargetPlatform.macOS: CenteredPageTransitionsBuilder(
+            CupertinoPageTransitionsBuilder(),
+          ),
+          TargetPlatform.windows: CenteredPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+          TargetPlatform.linux: CenteredPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+          TargetPlatform.fuchsia: CenteredPageTransitionsBuilder(
+            ZoomPageTransitionsBuilder(),
+          ),
+        },
+      ),
       textTheme: ThemeData.light().textTheme
           .copyWith(
             headlineSmall: AppTypography.title,

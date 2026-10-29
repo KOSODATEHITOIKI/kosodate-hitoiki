@@ -5,6 +5,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../providers/my_page_providers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
 import '../../providers/profile_providers.dart';
@@ -24,7 +25,8 @@ class MyPagePage extends ConsumerStatefulWidget {
 }
 
 class _MyPagePageState extends ConsumerState<MyPagePage> {
-  bool _savedPosts = false;
+  /// 保存した投稿を見ているか。左メニューからも切り替わるので、providerで持つ。
+  bool get _savedPosts => ref.watch(myPageSavedPostsProvider);
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +59,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
             selected: {_savedPosts},
             showSelectedIcon: false,
             onSelectionChanged: (selection) =>
-                setState(() => _savedPosts = selection.single),
+                ref.read(myPageSavedPostsProvider.notifier).state =
+                    selection.single,
             style: SegmentedButton.styleFrom(
               backgroundColor: AppColors.white,
               selectedBackgroundColor: AppColors.secondary,

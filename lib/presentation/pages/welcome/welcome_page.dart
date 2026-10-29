@@ -5,6 +5,7 @@ import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/accessibility.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import '../../widgets/main_navigation_shell.dart';
 import '../auth/auth_page.dart';
 
@@ -14,7 +15,10 @@ class WelcomePage extends StatelessWidget {
 
   void _browse(BuildContext context) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const MainNavigationShell()),
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: mainShellRouteName),
+        builder: (_) => const MainNavigationShell(),
+      ),
     );
   }
 
