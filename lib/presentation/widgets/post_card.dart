@@ -22,9 +22,7 @@ Future<void> togglePostSaved(
   Post post,
 ) async {
   if (!ref.read(isLoggedInProvider)) {
-    Navigator.of(
-      context,
-    ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage()));
+    pushFullWidth<void>(context, builder: (_) => const AuthPage());
     return;
   }
   try {
@@ -251,10 +249,9 @@ class PostCard extends ConsumerWidget {
                         selected: reactionId != null && !reacted,
                         onTap: () {
                           if (!ref.read(isLoggedInProvider)) {
-                            Navigator.of(context).push<void>(
-                              fullWidthRoute<void>(
-                                builder: (_) => const AuthPage(),
-                              ),
+                            pushFullWidth<void>(
+                              context,
+                              builder: (_) => const AuthPage(),
                             );
                             return;
                           }

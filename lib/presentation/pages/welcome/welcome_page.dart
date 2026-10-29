@@ -25,11 +25,10 @@ class WelcomePage extends StatelessWidget {
   }
 
   void _openAuth(BuildContext context, String title) {
-    Navigator.of(context).push(
-      fullWidthRoute<void>(
-        builder: (_) => AuthPage(
-          initialMode: title == '会員登録' ? AuthMode.register : AuthMode.login,
-        ),
+    pushFullWidth<void>(
+      context,
+      builder: (_) => AuthPage(
+        initialMode: title == '会員登録' ? AuthMode.register : AuthMode.login,
       ),
     );
   }

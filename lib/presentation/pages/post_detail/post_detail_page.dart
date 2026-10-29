@@ -576,8 +576,6 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
       false;
 
   void _openAuth(BuildContext context, AuthMode mode) {
-    Navigator.of(context).push<void>(
-      fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
-    );
+    pushFullWidth<void>(context, builder: (_) => AuthPage(initialMode: mode));
   }
 }

@@ -83,7 +83,10 @@ class DesktopHomeBanner extends StatelessWidget {
 /// パソコン向けの広い画面の、ホームの右の補足のカード(3枚)。
 /// 「話題から探す」は、人気順ではなく、運営が用意した話題を決まった順で並べる。
 class DesktopHomeSidePanel extends ConsumerWidget {
-  const DesktopHomeSidePanel({super.key});
+  const DesktopHomeSidePanel({super.key, required this.openPage});
+
+  /// 利用ガイド・相談先の画面を開く(中央の枠の中で開くため、呼び出し側が決める)。
+  final void Function(Widget page) openPage;
 
   /// 右のカードに並べる話題の最大の数。
   static const maxTopics = 6;
@@ -104,12 +107,8 @@ class DesktopHomeSidePanel extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         _SafetyCard(
-          onGuide: () => Navigator.of(context).push<void>(
-            MaterialPageRoute(builder: (_) => const UsageGuidePage()),
-          ),
-          onSupport: () => Navigator.of(context).push<void>(
-            MaterialPageRoute(builder: (_) => const SupportResourcesPage()),
-          ),
+          onGuide: () => openPage(const UsageGuidePage()),
+          onSupport: () => openPage(const SupportResourcesPage()),
         ),
       ],
     ),

@@ -15,9 +15,7 @@ Future<void> changeReaction(
   int? reactionTypeId,
 }) async {
   if (!ref.read(isLoggedInProvider)) {
-    Navigator.of(
-      context,
-    ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage()));
+    pushFullWidth<void>(context, builder: (_) => const AuthPage());
     return;
   }
   final messenger = ScaffoldMessenger.of(context);

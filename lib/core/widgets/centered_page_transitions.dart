@@ -41,6 +41,17 @@ PageRoute<T> fullWidthRoute<T>({required WidgetBuilder builder}) =>
       builder: builder,
     );
 
+/// 広い画面でも、画面いっぱいに使う画面(ログインなど)を、いちばん外の画面の切り替えで開く。
+/// 広い画面では、投稿の詳細・設定などは、中央の枠の中の切り替えで開くので、
+/// ログインなどは、枠の外(窓いっぱい)で開くために、こちらを使う。
+Future<T?> pushFullWidth<T>(
+  BuildContext context, {
+  required WidgetBuilder builder,
+}) => Navigator.of(
+  context,
+  rootNavigator: true,
+).push<T>(fullWidthRoute<T>(builder: builder));
+
 /// あとから開く画面(投稿の詳細・設定など)を、広い画面では中央の列に収める[DesktopCentered]を、
 /// 画面の切り替えの動き[inner]に重ねる。最初の画面(メインのシェル)は、自分で幅を決めるので除く。
 class CenteredPageTransitionsBuilder extends PageTransitionsBuilder {

@@ -67,9 +67,7 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     // 書く画面は未ログインでも開けて入力できる。投稿を押した時点で、登録・ログインを
     // 案内する。入力した文章は残る(要件定義書6.2.4)。
     if (!ref.read(isLoggedInProvider)) {
-      await Navigator.of(
-        context,
-      ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage()));
+      await pushFullWidth<void>(context, builder: (_) => const AuthPage());
       return;
     }
     if (!_guideSeen && widget.initialPost == null) {

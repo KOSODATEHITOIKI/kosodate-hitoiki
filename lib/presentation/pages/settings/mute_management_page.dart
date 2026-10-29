@@ -346,7 +346,6 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
     ],
   );
 
-  void _auth(AuthMode mode) => Navigator.of(context).push<void>(
-    fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
-  );
+  void _auth(AuthMode mode) =>
+      pushFullWidth<void>(context, builder: (_) => AuthPage(initialMode: mode));
 }

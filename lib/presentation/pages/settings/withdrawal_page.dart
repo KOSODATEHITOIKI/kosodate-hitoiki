@@ -145,6 +145,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
     if (relogin != true || !mounted) return;
     _leaving = true;
     final navigator = Navigator.of(context);
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
     try {
       await ref.read(authRepositoryProvider).signOut();
     } catch (_) {
@@ -153,7 +154,8 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
       return;
     }
     navigator.popUntil((route) => route.isFirst);
-    navigator.push<void>(
+    // ログインは、広い画面でも、枠の外(窓いっぱい)で開く。
+    rootNavigator.push<void>(
       fullWidthRoute<void>(builder: (_) => const AuthPage()),
     );
   }
@@ -191,9 +193,8 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
     message: '退会の確認には、\nログインが必要です。',
     children: [
       OutlinedButton(
-        onPressed: () => Navigator.of(
-          context,
-        ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage())),
+        onPressed: () =>
+            pushFullWidth<void>(context, builder: (_) => const AuthPage()),
         child: const Text('ログイン'),
       ),
     ],
