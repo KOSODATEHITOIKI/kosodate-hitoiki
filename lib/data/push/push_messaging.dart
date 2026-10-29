@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 /// 通知をタップしてアプリを開いたときの内容。プッシュには、種類と通知IDだけが入る
@@ -70,6 +71,8 @@ class FirebasePushMessaging implements PushMessaging {
   /// Firebaseを初期化し、使えれば[FirebasePushMessaging]、使えなければ[NoopPushMessaging]。
   /// 設定ファイル(google-services.json)がないと失敗する。そのときも、アプリは動かす。
   static Future<PushMessaging> initialize() async {
+    // Web版は、プッシュ通知を付けない(最初のリリースでは)。
+    if (kIsWeb) return const NoopPushMessaging();
     try {
       await Firebase.initializeApp();
       return FirebasePushMessaging();

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/flavor.dart';
+import 'core/widgets/wide_screen_frame.dart';
 import 'data/push/push_messaging.dart';
 import 'core/constants/app_theme.dart';
 import 'core/utils/accessibility.dart';
@@ -210,7 +211,7 @@ class _AppState extends ConsumerState<App> {
         data: MediaQuery.of(
           context,
         ).copyWith(textScaler: responsiveTextScaler(context)),
-        child: child!,
+        child: WideScreenFrame(child: child!),
       ),
       // ログイン状態が保持されていれば、案内画面を飛ばしてホームから始める(要件定義書6.2.4)。
       home: ref.watch(isLoggedInProvider)
