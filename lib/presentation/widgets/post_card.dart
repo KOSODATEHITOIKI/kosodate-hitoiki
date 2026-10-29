@@ -27,7 +27,10 @@ Future<void> togglePostSaved(
     return;
   }
   try {
-    await ref.read(postRepositoryProvider).toggleSaved(post.id);
+    // いまの表示(保存済みか)の、逆にする。サーバーの状態を、先に調べない。
+    await ref
+        .read(postRepositoryProvider)
+        .setSaved(post.id, saved: !post.isSaved);
     // await中に画面が閉じられている可能性があるため、refを使う前に確認する。
     if (!context.mounted) return;
     ref.invalidate(postDetailProvider);

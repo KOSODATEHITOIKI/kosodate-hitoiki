@@ -296,11 +296,11 @@ class MockPostRepository implements PostRepository {
   }
 
   @override
-  Future<void> toggleSaved(String postId) async {
+  Future<void> setSaved(String postId, {required bool saved}) async {
     final index = _posts.indexWhere((post) => post.id == postId);
     if (index == -1) {
       return;
     }
-    _posts[index] = _posts[index].copyWith(isSaved: !_posts[index].isSaved);
+    _posts[index] = _posts[index].copyWith(isSaved: saved);
   }
 }
