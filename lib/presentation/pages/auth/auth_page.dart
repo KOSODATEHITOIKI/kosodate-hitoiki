@@ -13,7 +13,9 @@ import '../../../core/utils/accessibility.dart';
 import '../../../core/constants/app_layout.dart';
 import '../../widgets/desktop_hero_panel.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/captcha_provider.dart';
 import '../../providers/profile_providers.dart';
+import '../../widgets/turnstile/turnstile_field.dart';
 import 'auth_messages.dart';
 import 'auth_validators.dart';
 import 'legal_consent.dart';
@@ -57,6 +59,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   /// 登録・ログインを押したことがあるか。空欄を赤くするのは、押したあとだけ。
   bool _submitted = false;
   final _nicknameFocus = FocusNode();
+
+  /// 確認の部品(Turnstile)。使う設定のときだけ、画面に出す。トークンは1回限りなので、
+  /// 登録・ログインなどを試すたびに、やり直す([_resetCaptcha])。
+  final _turnstileKey = GlobalKey<TurnstileFieldState>();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
   final _passwordConfirmFocus = FocusNode();
@@ -128,6 +134,11 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     _startCooldown();
   }
 
+  /// 使い終わった確認のトークンを消して、新しい確認をやり直す。
+  void _resetCaptcha() {
+    if (ref.read(captchaEnabledProvider)) _turnstileKey.currentState?.reset();
+  }
+
   void _snack(String message) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
@@ -145,6 +156,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (mounted) _snack(authErrorMessage(error));
     } finally {
       if (mounted) setState(() => _resending = false);
+      _resetCaptcha();
     }
   }
 
@@ -259,6 +271,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (mounted) setState(() => _error = authErrorMessage(error));
     } finally {
       if (mounted) setState(() => _busy = false);
+      _resetCaptcha();
     }
   }
 
@@ -287,6 +300,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       return;
     } finally {
       if (mounted) setState(() => _busy = false);
+      _resetCaptcha();
     }
     if (mounted) setState(() => _resetSentTo = email);
   }
@@ -466,9 +480,19 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   child: const Text('パスワードを再設定する'),
                 ),
                 const SizedBox(height: 12),
+                if (ref.watch(captchaEnabledProvider)) ...[
+                  TurnstileField(key: _turnstileKey),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton(
                   key: const ValueKey('auth-resend'),
-                  onPressed: _resendWait > 0 || _resending ? null : _resend,
+                  onPressed:
+                      _resendWait > 0 ||
+                          _resending ||
+                          (ref.watch(captchaEnabledProvider) &&
+                              ref.watch(captchaTokenProvider) == null)
+                      ? null
+                      : _resend,
                   child: Text(
                     _resendWait > 0
                         ? '確認メールをもう一度送る(あと$_resendWait秒)'
@@ -749,12 +773,19 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       ),
                     ),
                   const SizedBox(height: 16),
+                  // ボット対策の確認(使う設定のときだけ)。済むまで、先へは進めない。
+                  if (ref.watch(captchaEnabledProvider)) ...[
+                    TurnstileField(key: _turnstileKey),
+                    const SizedBox(height: 12),
+                  ],
                   FilledButton(
                     key: const ValueKey('auth-submit'),
                     // 登録は、利用規約とプライバシーポリシーの両方を読み、18歳以上の
                     // 確認にもチェックがついてから押せる。
                     onPressed:
                         _busy ||
+                            (ref.watch(captchaEnabledProvider) &&
+                                ref.watch(captchaTokenProvider) == null) ||
                             (_mode == AuthMode.register &&
                                 !(_agreeTerms &&
                                     _agreePrivacy &&
