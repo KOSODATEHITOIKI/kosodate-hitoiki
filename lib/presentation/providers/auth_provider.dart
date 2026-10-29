@@ -4,9 +4,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/datasources/supabase_client_provider.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/profile_registration_repository.dart';
+import 'captcha_provider.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(ref.watch(supabaseClientProvider));
+  return AuthRepository(
+    ref.watch(supabaseClientProvider),
+    captchaRequired: ref.watch(captchaEnabledProvider),
+    // 確認の部品のトークンは1回限り。取り出したら、すぐ消す。
+    takeCaptchaToken: () {
+      final token = ref.read(captchaTokenProvider);
+      ref.read(captchaTokenProvider.notifier).state = null;
+      return token;
+    },
+  );
 });
 
 final profileRegistrationRepositoryProvider =

@@ -4,9 +4,29 @@ import '../../core/config/auth_config.dart';
 
 /// メール/Google/Appleログインを扱う認証リポジトリ(決定: docs/全体設計書.md 2章 F-02)。
 class AuthRepository {
-  AuthRepository(this._client);
+  /// [captchaRequired]がtrueのとき、登録・ログイン・パスワード再設定(メール)に、確認の部品
+  /// (Turnstile)のトークンを付ける。トークンは、呼ぶ瞬間に[takeCaptchaToken]で取り出す
+  /// (1回限りなので、取り出したら、呼び出し側が消す)。
+  /// トークンがないときは、通信せずに、失敗にする(トークンなしでは進めない)。
+  AuthRepository(
+    this._client, {
+    this.captchaRequired = false,
+    String? Function()? takeCaptchaToken,
+  }) : _takeCaptchaToken = takeCaptchaToken;
 
   final SupabaseClient _client;
+  final bool captchaRequired;
+  final String? Function()? _takeCaptchaToken;
+
+  /// 確認の部品のトークン。使わない設定のときは、null(何も付けない)。
+  String? _captcha() {
+    if (!captchaRequired) return null;
+    final token = _takeCaptchaToken?.call();
+    if (token == null || token.isEmpty) {
+      throw const AuthException('確認が済んでいません。', code: 'captcha_required');
+    }
+    return token;
+  }
 
   /// ログイン状態の変化(ログイン・ログアウト・トークン更新)。
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
@@ -18,19 +38,32 @@ class AuthRepository {
     required String password,
     Map<String, dynamic>? data,
   }) {
-    return _client.auth.signUp(email: email, password: password, data: data);
+    return _client.auth.signUp(
+      email: email,
+      password: password,
+      data: data,
+      captchaToken: _captcha(),
+    );
   }
 
   Future<AuthResponse> signInWithEmail({
     required String email,
     required String password,
   }) {
-    return _client.auth.signInWithPassword(email: email, password: password);
+    return _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+      captchaToken: _captcha(),
+    );
   }
 
   /// 登録の確認メールを、もう一度送る。
   Future<ResendResponse> resendSignupEmail(String email) {
-    return _client.auth.resend(type: OtpType.signup, email: email);
+    return _client.auth.resend(
+      type: OtpType.signup,
+      email: email,
+      captchaToken: _captcha(),
+    );
   }
 
   /// パスワード再設定のメールを送る。登録の有無は、応答からも分からない(Supabaseの仕様)。
@@ -39,6 +72,7 @@ class AuthRepository {
     return _client.auth.resetPasswordForEmail(
       email,
       redirectTo: authCallbackUrl,
+      captchaToken: _captcha(),
     );
   }
 

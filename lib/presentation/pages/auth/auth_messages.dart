@@ -29,6 +29,9 @@ String authErrorMessage(Object error) {
       case 'over_email_send_rate_limit':
       case 'over_request_rate_limit':
         return 'しばらく時間をおいてから、もう一度お試しください。';
+      case 'captcha_required':
+      case 'captcha_failed':
+        return '確認ができませんでした。もう一度、確認を済ませてから、お試しください。';
     }
     // 新規登録の一時停止(Authのフックが拒否)。サーバーの文言をそのまま見せる。
     if (error.message.contains('お休み')) return error.message;
