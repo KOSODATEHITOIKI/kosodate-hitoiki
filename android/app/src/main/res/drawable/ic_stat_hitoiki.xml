@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知の小さなアイコン(状態バー・通知の左上)。白一色の、太陽(アプリのアイコンと同じ意匠)。
+     Androidは、この絵の形だけを使い、色は、通知の色(ic_notification_color)で塗る。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 太陽の丸 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,12m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+    <!-- 光(8本) -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M12,2.5L12,4.5 M12,19.5L12,21.5 M2.5,12L4.5,12 M19.5,12L21.5,12 M5.3,5.3L6.7,6.7 M17.3,17.3L18.7,18.7 M5.3,18.7L6.7,17.3 M17.3,6.7L18.7,5.3" />
+</vector>
