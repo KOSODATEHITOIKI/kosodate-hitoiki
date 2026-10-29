@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/constants/app_layout.dart';
 import '../../domain/models/post.dart';
 import '../pages/post_detail/post_detail_page.dart';
 import '../pages/profile/other_profile_page.dart';
@@ -62,6 +63,10 @@ class PostCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 広い画面(パソコン)では、文字と余白を少し大きくし、一覧のカードにも「定型文を送る」を出す
+    // (「わかる」と定型文の扱いは、詳細の画面と同じ)。
+    final desktop = AppLayout.isDesktop(MediaQuery.sizeOf(context).width);
+    final preset = showPresetReactions || desktop;
     // この投稿への自分の共感を取得する(表示している投稿の分を、まとめて取得する)。
     ref.read(myReactionsProvider.notifier).request(post.id);
     // この投稿への自分の共感だけを監視し、他の投稿への操作で再構築しない。
@@ -83,10 +88,10 @@ class PostCard extends ConsumerWidget {
               post.empathyCount
         : null;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(desktop ? 24 : 16),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(desktop ? 24 : 20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,8 +102,8 @@ class PostCard extends ConsumerWidget {
               ClipOval(
                 child: AppAsset(
                   post.authorAvatarAsset,
-                  width: 36,
-                  height: 36,
+                  width: desktop ? 44 : 36,
+                  height: desktop ? 44 : 36,
                   excludeFromSemantics: true,
                 ),
               ),
@@ -118,8 +123,8 @@ class PostCard extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           post.authorName,
-                          style: const TextStyle(
-                            fontSize: 12.5,
+                          style: TextStyle(
+                            fontSize: desktop ? 14 : 12.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -127,8 +132,8 @@ class PostCard extends ConsumerWidget {
                     ),
                     Text(
                       _relativeTime(post.createdAt),
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: desktop ? 12 : 11,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -154,10 +159,15 @@ class PostCard extends ConsumerWidget {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _Tag(label: post.type.label, background: _typeColor(post.type)),
+              _Tag(
+                label: post.type.label,
+                background: _typeColor(post.type),
+                large: desktop,
+              ),
               _Tag(
                 label: post.responseMode.label,
                 background: AppColors.accentPink,
+                large: desktop,
               ),
               if (post.underReview)
                 const _Tag(
@@ -176,7 +186,10 @@ class PostCard extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 12),
-          Text(post.body, style: const TextStyle(fontSize: 13.5, height: 1.6)),
+          Text(
+            post.body,
+            style: TextStyle(fontSize: desktop ? 15 : 13.5, height: 1.7),
+          ),
           if (showOpenButton)
             TextButton(
               onPressed: () => Navigator.of(context).push<void>(
@@ -194,21 +207,17 @@ class PostCard extends ConsumerWidget {
                   children: [
                     _FooterChip(
                       icon: AppIcons.heart,
-                      label: !showPresetReactions && otherLabel != null
+                      label: !preset && otherLabel != null
                           ? '$otherLabel ✓'
                           : '${ownCount != null ? 'わかる $ownCount' : 'わかる'}${reacted ? ' ✓' : ''}',
-                      selected: showPresetReactions
-                          ? reacted
-                          : reactionId != null,
+                      selected: preset ? reacted : reactionId != null,
                       // 自分の投稿は、押せない。
                       onTap: post.isMine
                           ? null
                           : () {
                               // 一覧では、何か選んでいれば取り消す。詳細では、「わかる」だけを
                               // 切り替える(ほかの定型文からは、「わかる」に選び直す)。
-                              if (reacted ||
-                                  (!showPresetReactions &&
-                                      reactionId != null)) {
+                              if (reacted || (!preset && reactionId != null)) {
                                 changeReaction(context, ref, postId: post.id);
                               } else if (empathy != null) {
                                 changeReaction(
@@ -243,7 +252,7 @@ class PostCard extends ConsumerWidget {
                             : 'コメントする',
                         background: AppColors.accentLeaf.withValues(alpha: 0.3),
                       ),
-                    if (showPresetReactions && !post.isMine)
+                    if (preset && !post.isMine)
                       _FooterChip(
                         icon: AppIcons.send,
                         selected: reactionId != null && !reacted,
@@ -301,20 +310,28 @@ class PostCard extends ConsumerWidget {
 }
 
 class _Tag extends StatelessWidget {
-  const _Tag({super.key, required this.label, required this.background});
+  const _Tag({
+    super.key,
+    required this.label,
+    required this.background,
+    this.large = false,
+  });
   final String label;
   final Color background;
 
+  /// 広い画面(パソコン)向けに、少し大きくする。
+  final bool large;
+
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    padding: EdgeInsets.symmetric(horizontal: large ? 12 : 10, vertical: 4),
     decoration: BoxDecoration(
       color: background,
       borderRadius: BorderRadius.circular(999),
     ),
     child: Text(
       label,
-      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+      style: TextStyle(fontSize: large ? 12 : 11, fontWeight: FontWeight.w700),
     ),
   );
 }
