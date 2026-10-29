@@ -101,7 +101,7 @@ class _RealLikeRepository implements PostRepository {
   Future<void> blockUser(String userId) => throw UnimplementedError();
 
   @override
-  Future<void> toggleSaved(String postId) async {}
+  Future<void> setSaved(String postId, {required bool saved}) async {}
 }
 
 Future<void> pumpHome(WidgetTester tester, List<Post> posts) async {

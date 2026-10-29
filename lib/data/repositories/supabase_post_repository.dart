@@ -305,23 +305,19 @@ class SupabasePostRepository implements PostRepository {
     ];
   }
 
-  /// 保存の切り替え。いまの保存の有無を調べて、あれば解除、なければ保存する。
-  /// 見えない投稿・存在しない投稿は保存できない(どちらも`42501`)。
+  /// 保存・保存解除。いまの状態を調べず、書き込み1回で済ませる(複数のタブや端末からでも、
+  /// 操作した結果が、そのまま反映される)。保存済みの投稿を保存、未保存の投稿を解除しても、
+  /// エラーにならない。見えない投稿・存在しない投稿は保存できない(どちらも`42501`)。
   @override
-  Future<void> toggleSaved(String postId) async {
-    final existing = await _client
-        .from('saved_posts')
-        .select('post_id')
-        .eq('post_id', postId)
-        .limit(1);
-    if (existing.isNotEmpty) {
-      await _client.from('saved_posts').delete().eq('post_id', postId);
+  Future<void> setSaved(String postId, {required bool saved}) async {
+    if (saved) {
+      await _insertIgnoringDuplicate(
+        'saved_posts',
+        savedRow(_requireUserId(), postId),
+      );
       return;
     }
-    await _insertIgnoringDuplicate(
-      'saved_posts',
-      savedRow(_requireUserId(), postId),
-    );
+    await _client.from('saved_posts').delete().eq('post_id', postId);
   }
 
   @override

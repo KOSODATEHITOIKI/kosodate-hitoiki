@@ -10,7 +10,11 @@ import 'package:kosodate_hitoiki/presentation/providers/post_providers.dart';
 
 import 'helpers/scripted_post_repository.dart';
 
-Post _post({bool isMine = false, String authorId = 'author-1'}) => Post(
+Post _post({
+  bool isMine = false,
+  String authorId = 'author-1',
+  bool isSaved = false,
+}) => Post(
   id: 'p-1',
   authorId: authorId,
   authorName: 'はな',
@@ -22,6 +26,7 @@ Post _post({bool isMine = false, String authorId = 'author-1'}) => Post(
   empathyCount: 0,
   commentCount: 0,
   isMine: isMine,
+  isSaved: isSaved,
 );
 
 Future<void> pumpDetail(
@@ -161,6 +166,17 @@ void main() {
     await tester.tap(find.byTooltip('保存する'));
     await tester.pumpAndSettle();
     expect(repository.saveCalls, ['p-1']);
+    // 未保存の投稿は、「保存する」を求める(サーバーの状態は、調べない)。
+    expect(repository.savedStates, [true]);
+  });
+
+  testWidgets('保存済みの投稿は、保存アイコンで、「解除する」を求める', (tester) async {
+    final repository = ScriptedPostRepository([]);
+    await pumpDetail(tester, repository, _post(isSaved: true));
+    await tester.tap(find.byTooltip('保存を解除'));
+    await tester.pumpAndSettle();
+    expect(repository.saveCalls, ['p-1']);
+    expect(repository.savedStates, [false]);
   });
 
   testWidgets('保存の失敗は案内する', (tester) async {

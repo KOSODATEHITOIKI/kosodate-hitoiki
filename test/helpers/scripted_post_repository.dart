@@ -56,6 +56,9 @@ class ScriptedPostRepository implements PostRepository {
   final blockCalls = <String>[];
   final saveCalls = <String>[];
 
+  /// 保存・解除の呼び出しごとの、求めた状態(保存=true、解除=false)。`saveCalls`と同じ順。
+  final savedStates = <bool>[];
+
   /// 反応モード・受付状態の変更で投げるエラー(nullなら成功)。
   final Object? modeError;
   final modeCalls =
@@ -284,8 +287,9 @@ class ScriptedPostRepository implements PostRepository {
   }
 
   @override
-  Future<void> toggleSaved(String postId) async {
+  Future<void> setSaved(String postId, {required bool saved}) async {
     saveCalls.add(postId);
+    savedStates.add(saved);
     if (actionError != null) throw actionError!;
   }
 }

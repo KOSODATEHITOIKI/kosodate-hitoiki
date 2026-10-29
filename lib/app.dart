@@ -9,6 +9,7 @@ import 'core/widgets/wide_screen_frame.dart';
 import 'data/push/push_messaging.dart';
 import 'core/constants/app_theme.dart';
 import 'core/utils/accessibility.dart';
+import 'presentation/pages/auth/auth_messages.dart';
 import 'presentation/pages/auth/auth_page.dart';
 import 'presentation/pages/auth/ensure_profile.dart';
 import 'presentation/pages/auth/new_password_page.dart';
@@ -118,13 +119,19 @@ class _AppState extends ConsumerState<App> {
   }
 
   /// メールのリンクが使えなかったことを知らせ、やり直し方を伝える。
-  void _showLinkError() {
+  void _showLinkError(Object error) {
     _messengerKey.currentState
       ?..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('リンクの期限が切れているか、すでに使われています。お手数ですが、もう一度、メールを送ってください。'),
-          duration: Duration(seconds: 10),
+        SnackBar(
+          // 原因を調べやすいよう、dev環境だけ、エラーの種類と内容を足す。
+          content: Text(
+            withDevDetail(
+              'リンクの期限が切れているか、すでに使われています。お手数ですが、もう一度、メールを送ってください。',
+              error,
+            ),
+          ),
+          duration: const Duration(seconds: 10),
         ),
       );
   }
@@ -187,8 +194,9 @@ class _AppState extends ConsumerState<App> {
       }
       // メールのリンク(確認・パスワード再設定)が、期限切れ・使用済みなどで使えなかったとき。
       // 何も出さないと、押したのに何も起きなかったように見える。
-      if (next.hasError && next.error is AuthException) {
-        _showLinkError();
+      final error = next.error;
+      if (next.hasError && error is AuthException) {
+        _showLinkError(error);
       }
     });
     // 利用者ID(A→B切替も含む)が変わるたびに投稿リポジトリを作り直し、前の利用者のモックデータを引き継がない。

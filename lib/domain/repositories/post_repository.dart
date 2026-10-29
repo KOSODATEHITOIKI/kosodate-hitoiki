@@ -107,6 +107,7 @@ abstract class PostRepository {
   /// ブロックを解除する。相手には知らせない。ブロックしていない相手でも、エラーにならない。
   Future<void> unblockUser(String userId);
 
-  /// 投稿の保存/保存解除を切り替える。
-  Future<void> toggleSaved(String postId);
+  /// 投稿を保存する([saved]がtrue)、または保存を解除する(false)。
+  /// 同じ操作を繰り返しても、エラーにならない(保存済みの投稿を保存、未保存の投稿を解除)。
+  Future<void> setSaved(String postId, {required bool saved});
 }
