@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
@@ -333,9 +334,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     );
   }
 
-  void _auth(AuthMode mode) => Navigator.of(
-    context,
-  ).push<void>(MaterialPageRoute(builder: (_) => AuthPage(initialMode: mode)));
+  void _auth(AuthMode mode) => Navigator.of(context).push<void>(
+    fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
+  );
 
   /// お知らせの投稿を、ID指定で取得して開く。見えない投稿(削除・ブロックなど)は、
   /// 「見つかりません」と案内する。

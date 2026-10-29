@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_icons.dart';
@@ -261,7 +262,7 @@ class _NotificationSettingsPageState
     );
   }
 
-  void _auth(AuthMode mode) => Navigator.of(
-    context,
-  ).push<void>(MaterialPageRoute(builder: (_) => AuthPage(initialMode: mode)));
+  void _auth(AuthMode mode) => Navigator.of(context).push<void>(
+    fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
+  );
 }

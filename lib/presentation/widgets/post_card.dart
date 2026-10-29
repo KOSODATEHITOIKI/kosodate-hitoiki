@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/centered_page_transitions.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,7 +24,7 @@ Future<void> togglePostSaved(
   if (!ref.read(isLoggedInProvider)) {
     Navigator.of(
       context,
-    ).push<void>(MaterialPageRoute(builder: (_) => const AuthPage()));
+    ).push<void>(fullWidthRoute<void>(builder: (_) => const AuthPage()));
     return;
   }
   try {
@@ -251,7 +252,7 @@ class PostCard extends ConsumerWidget {
                         onTap: () {
                           if (!ref.read(isLoggedInProvider)) {
                             Navigator.of(context).push<void>(
-                              MaterialPageRoute(
+                              fullWidthRoute<void>(
                                 builder: (_) => const AuthPage(),
                               ),
                             );

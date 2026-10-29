@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -345,7 +346,7 @@ class _MuteManagementPageState extends ConsumerState<MuteManagementPage> {
     ],
   );
 
-  void _auth(AuthMode mode) => Navigator.of(
-    context,
-  ).push<void>(MaterialPageRoute(builder: (_) => AuthPage(initialMode: mode)));
+  void _auth(AuthMode mode) => Navigator.of(context).push<void>(
+    fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
+  );
 }

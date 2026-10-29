@@ -31,6 +31,16 @@ class DesktopCentered extends StatelessWidget {
 /// メインのシェルを開く画面の名前。これは、自分で幅を決めるので、中央の列には収めない。
 const mainShellRouteName = 'main-shell';
 
+/// 広い画面でも、画面いっぱいに使う画面(ログインなど)の経路の名前。
+const fullWidthRouteName = 'full-width';
+
+/// 広い画面でも、画面いっぱいに使う画面(ログインなど)を開く経路。
+PageRoute<T> fullWidthRoute<T>({required WidgetBuilder builder}) =>
+    MaterialPageRoute<T>(
+      settings: const RouteSettings(name: fullWidthRouteName),
+      builder: builder,
+    );
+
 /// あとから開く画面(投稿の詳細・設定など)を、広い画面では中央の列に収める[DesktopCentered]を、
 /// 画面の切り替えの動き[inner]に重ねる。最初の画面(メインのシェル)は、自分で幅を決めるので除く。
 class CenteredPageTransitionsBuilder extends PageTransitionsBuilder {
@@ -51,7 +61,9 @@ class CenteredPageTransitionsBuilder extends PageTransitionsBuilder {
       context,
       animation,
       secondaryAnimation,
-      route.isFirst || route.settings.name == mainShellRouteName
+      route.isFirst ||
+              route.settings.name == mainShellRouteName ||
+              route.settings.name == fullWidthRouteName
           ? child
           : DesktopCentered(child: child),
     );
