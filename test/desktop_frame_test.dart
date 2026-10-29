@@ -6,6 +6,7 @@ import 'package:kosodate_hitoiki/core/constants/app_layout.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
 import 'package:kosodate_hitoiki/presentation/pages/support/support_resources_page.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
+import 'package:kosodate_hitoiki/presentation/widgets/comfort_page.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/desktop_sidebar.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/main_navigation_shell.dart';
 
@@ -28,6 +29,12 @@ Future<ProviderContainer> pumpShell(WidgetTester tester, Size size) async {
   await tester.pumpAndSettle();
   return container;
 }
+
+/// タブ画面の、幅を絞られる中身(スクロールするリスト)。
+final _comfortList = find.descendant(
+  of: find.byType(ComfortPage),
+  matching: find.byType(ListView),
+);
 
 Future<void> openSupport(WidgetTester tester) async {
   await tester.ensureVisible(find.byKey(const ValueKey('side-support')));
@@ -81,6 +88,21 @@ void main() {
         notificationsTabIndex;
     await tester.pumpAndSettle();
     expect(find.byType(SupportResourcesPage), findsNothing);
+  });
+
+  testWidgets('広い画面では、検索などのタブも、中央の枠いっぱいの幅を使う(600pxに絞らない)', (tester) async {
+    await pumpShell(tester, const Size(1500, 900));
+    await tester.tap(find.byKey(const ValueKey('sidebar-search')));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(_comfortList).width, AppLayout.centerMaxWidth);
+  });
+
+  testWidgets('スマホ幅では、タブの中身は、従来どおり600pxまで', (tester) async {
+    await pumpShell(tester, const Size(800, 900));
+    // 800px(1024未満)は、パソコン向けにならない。細い列(560px)に収まる。
+    await tester.tap(find.text('検索'));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(_comfortList).width, lessThanOrEqualTo(600));
   });
 
   testWidgets('ログインは、枠の外(窓いっぱい)で開く。左メニューは隠れる', (tester) async {

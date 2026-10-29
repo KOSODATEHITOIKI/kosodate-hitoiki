@@ -3,6 +3,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_brand.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/constants/app_layout.dart';
 import '../../core/utils/accessibility.dart';
 
 /// タブ画面共通の装飾とスクロール領域。
@@ -35,7 +36,12 @@ class ComfortPage extends StatelessWidget {
     child: Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
+        // 広い画面は、外側(メインのシェルの中央の枠)が幅を決める(ホームと同じ幅にそろえる)。
+        constraints: BoxConstraints(
+          maxWidth: AppLayout.isDesktop(MediaQuery.sizeOf(context).width)
+              ? double.infinity
+              : 600,
+        ),
         child: ListView(
           padding: EdgeInsets.fromLTRB(
             horizontalPadding,
