@@ -129,10 +129,16 @@ class _HomePageState extends ConsumerState<HomePage> {
           constraints: BoxConstraints(
             maxWidth: desktop ? double.infinity : 600,
           ),
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            itemCount: items.length,
-            itemBuilder: (context, index) => items[index],
+          // 引っ張って、最新の投稿を読み直す(他の人の新しい投稿を見るため)。
+          child: RefreshIndicator(
+            onRefresh: () => ref.refresh(feedPostsProvider.future),
+            child: ListView.builder(
+              // 投稿が少なく画面に収まるときも、引っ張れるようにする。
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              itemCount: items.length,
+              itemBuilder: (context, index) => items[index],
+            ),
           ),
         ),
       ),
