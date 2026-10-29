@@ -34,6 +34,10 @@ String authErrorMessage(Object error) {
         // 原因(サーバーが断ったのか、トークンが付いていないのか)を調べやすいよう、devは中身を足す。
         return withDevDetail('確認ができませんでした。もう一度、確認を済ませてから、お試しください。', error);
     }
+    // サーバー側の失敗(メールを送れなかった、など)。
+    if (error.code == 'unexpected_failure') {
+      return withDevDetail('メールを送れませんでした。しばらくしてから、もう一度お試しください。', error);
+    }
     // 新規登録の一時停止(Authのフックが拒否)。サーバーの文言をそのまま見せる。
     if (error.message.contains('お休み')) return error.message;
   }

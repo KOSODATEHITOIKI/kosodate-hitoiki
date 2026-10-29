@@ -185,4 +185,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('auth-reset-sent')), findsOneWidget);
   });
+
+  testWidgets('再設定で、サーバー側の送信エラー(500)は、「送りました」とは見せない', (tester) async {
+    when(() => auth.sendPasswordReset(any())).thenAnswer((_) async {
+      throw const AuthException(
+        'Error sending recovery email',
+        statusCode: '500',
+        code: 'unexpected_failure',
+      );
+    });
+    await pumpAuth(tester, captcha: false, mode: AuthMode.reset);
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email')),
+      'a@example.com',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('auth-submit')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('auth-reset-sent')), findsNothing);
+    expect(find.textContaining('メールを送れませんでした'), findsOneWidget);
+  });
 }

@@ -275,9 +275,18 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
+  /// サーバー側の失敗(メールを送れなかった、など。500番台)。登録の有無とは関係がなく、
+  /// メールが送られていないので、「送りました」とは見せない。
+  static bool _isServerError(AuthException error) {
+    final status = int.tryParse(error.statusCode ?? '');
+    return error.code == 'unexpected_failure' ||
+        (status != null && status >= 500);
+  }
+
   /// パスワード再設定のメール。登録の有無を明かさないよう、送信後は常に同じ画面を出す。
-  /// 通信できなかったとき、送信回数の制限のとき、確認(ボット対策)に失敗したときだけ、
-  /// そのことを伝える(確認の失敗は、メールが送られていないので、「送りました」とは見せない)。
+  /// 通信できなかったとき、送信回数の制限のとき、確認(ボット対策)に失敗したとき、
+  /// サーバー側で失敗したときだけ、そのことを伝える(どれも、メールが送られていないので、
+  /// 「送りました」とは見せない)。
   Future<void> _sendReset() async {
     final email = _email.text.trim();
     setState(() {
@@ -293,7 +302,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (error.code == 'over_email_send_rate_limit' ||
           error.code == 'over_request_rate_limit' ||
           error.code == 'captcha_failed' ||
-          error.code == 'captcha_required') {
+          error.code == 'captcha_required' ||
+          _isServerError(error)) {
         if (mounted) setState(() => _error = authErrorMessage(error));
         return;
       }
