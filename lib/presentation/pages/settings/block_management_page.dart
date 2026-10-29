@@ -181,9 +181,8 @@ class _BlockManagementPageState extends ConsumerState<BlockManagementPage> {
     );
   }
 
-  void _auth(AuthMode mode) => Navigator.of(context).push<void>(
-    fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
-  );
+  void _auth(AuthMode mode) =>
+      pushFullWidth<void>(context, builder: (_) => AuthPage(initialMode: mode));
 }
 
 /// 一覧の1行。狭い画面・大きな文字では、名前と「解除」を縦に並べる。

@@ -181,9 +181,10 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
             )
           else
             FilledButton(
-              onPressed: () => Navigator.of(
+              onPressed: () => pushFullWidth<void>(
                 context,
-              ).push(fullWidthRoute<void>(builder: (_) => const AuthPage())),
+                builder: (_) => const AuthPage(),
+              ),
               child: const Text('登録・ログイン'),
             ),
         ],

@@ -148,9 +148,7 @@ class OtherProfilePage extends ConsumerWidget {
   );
 
   void _auth(BuildContext context, AuthMode mode) =>
-      Navigator.of(context).push<void>(
-        fullWidthRoute<void>(builder: (_) => AuthPage(initialMode: mode)),
-      );
+      pushFullWidth<void>(context, builder: (_) => AuthPage(initialMode: mode));
 
   void _notice(BuildContext context, String action) => showDialog<void>(
     context: context,
