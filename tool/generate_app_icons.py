@@ -9,6 +9,7 @@
   dev(別の端末に両方入れたとき見分けるため)は、下の中央に「DEV」の札をつけた別のアイコン
   (android/app/src/dev/res/)。
 - iOS: AppIcon.appiconset の各サイズ(角は丸めない。端末側で丸くなる。透過なし)。
+- Web: favicon と、ホーム画面用のアイコン(web/)。
 - 起動画面: アイコンと同じ絵を、同じ地の色の上に、中央に出す(Android 12以上はシステムの
   起動画面、11以下は launch_background.xml、iOSは LaunchImage と LaunchScreen.storyboard)。
 """
@@ -25,6 +26,7 @@ ANDROID_RES = ROOT / "android" / "app" / "src" / "main" / "res"
 ANDROID_DEV_RES = ROOT / "android" / "app" / "src" / "dev" / "res"
 IOS_SET = ROOT / "ios" / "Runner" / "Assets.xcassets" / "AppIcon.appiconset"
 IOS_LAUNCH = ROOT / "ios" / "Runner" / "Assets.xcassets" / "LaunchImage.imageset"
+WEB_DIR = ROOT / "web"
 IOS_STORYBOARD = ROOT / "ios" / "Runner" / "Base.lproj" / "LaunchScreen.storyboard"
 
 # 従来のアイコン(dp 48)と、適応アイコンの前景(dp 108)の、密度ごとの倍率。
@@ -95,6 +97,17 @@ def write_ios(image: Image.Image) -> None:
         )
 
 
+def write_web(image: Image.Image, color) -> None:
+    """Web版: ブラウザのタブのアイコンと、ホーム画面に追加したときのアイコン。"""
+    icons = WEB_DIR / "icons"
+    icons.mkdir(parents=True, exist_ok=True)
+    image.resize((32, 32), Image.LANCZOS).save(WEB_DIR / "favicon.png", optimize=True)
+    for size in (192, 512):
+        image.resize((size, size), Image.LANCZOS).save(icons / f"Icon-{size}.png", optimize=True)
+        # maskable(端末の形に切り抜かれる)は、絵を縮めて、地の色の余白をとる。
+        foreground(image, size, color).save(icons / f"Icon-maskable-{size}.png", optimize=True)
+
+
 LAUNCH_BACKGROUND = """<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/ic_launcher_background" />
@@ -158,6 +171,7 @@ def main() -> None:
     write_android(source, ANDROID_RES, color)
     write_android(with_dev_badge(source), ANDROID_DEV_RES, color)
     write_ios(source)
+    write_web(source, color)
     write_launch(source, color)
 
     (ANDROID_RES / "mipmap-anydpi-v26").mkdir(parents=True, exist_ok=True)

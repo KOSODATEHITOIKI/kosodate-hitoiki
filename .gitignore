@@ -180,8 +180,7 @@ vite.config.ts.timestamp-*
 **/google-services.json
 **/GoogleService-Info.plist
 
-# モバイル(Android・iOS)だけを出す。Flutterが自動生成するデスクトップ用のファイルは、入れない
+# デスクトップ用(Flutterが自動生成する)のファイルは、入れない。Web版は、web/を使う
 /linux/
 /macos/
 /windows/
-/web/
