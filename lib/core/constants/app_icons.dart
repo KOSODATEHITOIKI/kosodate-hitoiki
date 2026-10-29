@@ -1,4 +1,4 @@
-/// SVGアセットのパス定数(docs/design/svg-assets/README.md参照、2026-09-29確定)。
+/// SVGアセットのパス定数(2026-09-29確定)。
 /// 表示には`AppAsset`を使う(.svgは`flutter_svg`、重い画像は.png)。
 library;
 

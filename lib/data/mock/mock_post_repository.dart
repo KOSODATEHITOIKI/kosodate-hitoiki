@@ -5,7 +5,7 @@ import '../../domain/models/reaction_type.dart';
 import '../../domain/models/topic.dart';
 import '../../domain/repositories/post_repository.dart';
 
-/// 画面確認・結合用のモック実装。docs/design/S-02・S-05のサンプル文言を使用。
+/// 画面確認・結合用のモック実装。確定デザイン(S-02・S-05)のサンプル文言を使用。
 /// バックエンド(Issue #7等)が用意でき次第、Supabase実装に差し替える。
 class MockPostRepository implements PostRepository {
   MockPostRepository() : _posts = List.of(_seed);
