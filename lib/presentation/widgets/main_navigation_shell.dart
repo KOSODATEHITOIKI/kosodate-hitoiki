@@ -12,6 +12,7 @@ import '../pages/mypage/mypage_page.dart';
 import '../pages/notifications/notifications_page.dart';
 import '../pages/search/search_page.dart';
 import '../providers/my_page_providers.dart';
+import 'desktop_home_panels.dart';
 import 'desktop_sidebar.dart';
 
 /// 画面下部タブ(ホーム/検索/書く/お知らせ/マイページ)の選択状態。
@@ -44,6 +45,10 @@ class MainNavigationShell extends ConsumerWidget {
 
     if (AppLayout.isDesktop(MediaQuery.sizeOf(context).width)) {
       final savedPosts = ref.watch(myPageSavedPostsProvider);
+      // ホームで、幅が足りるときだけ、右に補足のカードを出す。
+      final showSidePanel =
+          currentIndex == 0 &&
+          MediaQuery.sizeOf(context).width >= AppLayout.rightPanelMinWidth;
       return Scaffold(
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,10 +73,26 @@ class MainNavigationShell extends ConsumerWidget {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppLayout.centerMaxWidth,
+                  constraints: BoxConstraints(
+                    maxWidth: showSidePanel
+                        ? AppLayout.centerMaxWidth +
+                              AppLayout.panelGap +
+                              AppLayout.rightPanelWidth
+                        : AppLayout.centerMaxWidth,
                   ),
-                  child: pages,
+                  child: showSidePanel
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: pages),
+                            const SizedBox(width: AppLayout.panelGap),
+                            const SizedBox(
+                              width: AppLayout.rightPanelWidth,
+                              child: DesktopHomeSidePanel(),
+                            ),
+                          ],
+                        )
+                      : pages,
                 ),
               ),
             ),
