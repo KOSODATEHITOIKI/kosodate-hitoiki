@@ -50,3 +50,7 @@ jobs:
       # 6. 単体テスト
       - name: Run unit tests
         run: flutter test --reporter expanded
+
+      # 7. Web版のビルド(Web用の分岐や、Webで使えない部品の混入に気づくため。成果物は使わない)
+      - name: Build web
+        run: flutter build web --release -t lib/main_dev.dart
