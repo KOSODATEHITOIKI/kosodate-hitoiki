@@ -26,13 +26,17 @@ void main() {
     );
   });
 
-  testWidgets('広い画面(パソコン)では、中央の細い列に収める。高さは変えない', (tester) async {
+  testWidgets('少し広い画面(タブレット縦など)では、中央の細い列に収める。高さは変えない', (tester) async {
     expect(
-      await pumpAt(tester, const Size(1280, 900)),
+      await pumpAt(tester, const Size(800, 900)),
       const Size(WideScreenFrame.maxWidth, 900),
     );
     final left = tester.getTopLeft(find.byKey(const ValueKey('content'))).dx;
-    expect(left, (1280 - WideScreenFrame.maxWidth) / 2);
+    expect(left, (800 - WideScreenFrame.maxWidth) / 2);
+  });
+
+  testWidgets('パソコン向けの広い画面(1024px以上)では、列に収めない(画面側が幅を決める)', (tester) async {
+    expect(await pumpAt(tester, const Size(1280, 900)), const Size(1280, 900));
   });
 
   test('認証メールの戻り先は、アプリ(Android・iOS)では独自スキーム', () {
