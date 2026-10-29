@@ -163,4 +163,32 @@ void main() {
     expect(find.byType(NewPasswordPage), findsNothing);
     expect(find.byType(WelcomePage), findsOneWidget);
   });
+
+  testWidgets('メールのリンクが使えなかったとき(期限切れなど)、案内を出す', (tester) async {
+    final controller = StreamController<AuthState>();
+    addTearDown(controller.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          isLoggedInProvider.overrideWithValue(false),
+          authStateChangesProvider.overrideWith((ref) => controller.stream),
+        ],
+        child: const App(),
+      ),
+    );
+    expect(find.textContaining('リンクの期限が切れている'), findsNothing);
+
+    // ほかのイベントでは出さない。
+    controller.add(const AuthState(AuthChangeEvent.signedOut, null));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('リンクの期限が切れている'), findsNothing);
+
+    controller.addError(
+      const AuthException('Email link is invalid or has expired'),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.textContaining('リンクの期限が切れている'), findsOneWidget);
+    expect(find.byType(NewPasswordPage), findsNothing);
+  });
 }

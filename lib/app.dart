@@ -116,6 +116,18 @@ class _AppState extends ConsumerState<App> {
     super.dispose();
   }
 
+  /// メールのリンクが使えなかったことを知らせ、やり直し方を伝える。
+  void _showLinkError() {
+    _messengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('リンクの期限が切れているか、すでに使われています。お手数ですが、もう一度、メールを送ってください。'),
+          duration: Duration(seconds: 10),
+        ),
+      );
+  }
+
   /// アプリを開いているときに通知が届いたら、お知らせを取り直し、短く知らせる
   /// (端末の通知欄には出ないため)。ログインしていなければ、何もしない。
   void _onForegroundPush(PushTap tap) {
@@ -171,6 +183,11 @@ class _AppState extends ConsumerState<App> {
     ref.listen<AsyncValue<AuthState>>(authStateChangesProvider, (_, next) {
       if (next.valueOrNull?.event == AuthChangeEvent.passwordRecovery) {
         _openNewPassword();
+      }
+      // メールのリンク(確認・パスワード再設定)が、期限切れ・使用済みなどで使えなかったとき。
+      // 何も出さないと、押したのに何も起きなかったように見える。
+      if (next.hasError && next.error is AuthException) {
+        _showLinkError();
       }
     });
     // 利用者ID(A→B切替も含む)が変わるたびに投稿リポジトリを作り直し、前の利用者のモックデータを引き継がない。
