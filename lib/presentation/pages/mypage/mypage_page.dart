@@ -122,6 +122,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
               Container(
                 width: 72,
                 height: 72,
+                // 自分の写真(四角)も、丸くする。
+                clipBehavior: Clip.antiAlias,
                 decoration: const BoxDecoration(
                   color: AppColors.surface,
                   shape: BoxShape.circle,

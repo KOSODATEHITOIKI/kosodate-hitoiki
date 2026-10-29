@@ -316,11 +316,14 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       ),
                     )
                   else
-                    AppAsset(
-                      _avatar,
-                      width: 96,
-                      height: 96,
-                      semanticsLabel: '選択中のアイコン',
+                    // 自分の写真(四角)も、丸くする。
+                    ClipOval(
+                      child: AppAsset(
+                        _avatar,
+                        width: 96,
+                        height: 96,
+                        semanticsLabel: '選択中のアイコン',
+                      ),
                     ),
                   const SizedBox(height: 16),
                   Wrap(
