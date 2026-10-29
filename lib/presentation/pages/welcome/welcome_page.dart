@@ -205,16 +205,7 @@ class WelcomePage extends StatelessWidget {
         ),
       ],
     );
-    return Scaffold(
-      body: desktop
-          ? Row(
-              children: [
-                const Expanded(flex: 11, child: DesktopHeroPanel()),
-                Expanded(flex: 9, child: content),
-              ],
-            )
-          : content,
-    );
+    return Scaffold(body: desktop ? DesktopHeroSplit(right: content) : content);
   }
 }
 

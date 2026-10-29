@@ -104,3 +104,47 @@ class DesktopHeroPanel extends StatelessWidget {
     ),
   );
 }
+
+/// 広い画面の案内・ログイン画面の、左に絵の面、右に[right]の2分割。
+/// 窓をどれだけ広げても、分割の全体は、最大の幅[maxWidth]で止めて、中央に置く
+/// (幅が足りるときは、上下左右に余白をとって、角の丸いカードにする)。
+class DesktopHeroSplit extends StatelessWidget {
+  const DesktopHeroSplit({super.key, required this.right});
+
+  /// 右側(約束・ボタンや、フォーム)。
+  final Widget right;
+
+  /// 2分割の全体の最大の幅。
+  static const maxWidth = 1200.0;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final split = Row(
+        children: [
+          const Expanded(flex: 11, child: DesktopHeroPanel()),
+          Expanded(flex: 9, child: right),
+        ],
+      );
+      // 窓が最大の幅を超えるときだけ、余白のあるカードにする。
+      final floating = constraints.maxWidth > maxWidth;
+      return ColoredBox(
+        color: AppColors.background,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxWidth),
+            child: floating
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: split,
+                    ),
+                  )
+                : split,
+          ),
+        ),
+      );
+    },
+  );
+}

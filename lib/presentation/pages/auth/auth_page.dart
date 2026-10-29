@@ -387,14 +387,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
     // パソコン向けの広い画面は、左に絵の面、右にフォーム。
     if (!AppLayout.isDesktop(MediaQuery.sizeOf(context).width)) return page;
-    return Scaffold(
-      body: Row(
-        children: [
-          const Expanded(flex: 11, child: DesktopHeroPanel()),
-          Expanded(flex: 9, child: page),
-        ],
-      ),
-    );
+    return Scaffold(body: DesktopHeroSplit(right: page));
   }
 
   /// 登録後の「確認メールを送りました」。メール確認が必要な設定のときだけ表示する。
