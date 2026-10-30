@@ -7,7 +7,7 @@ import 'flavor.dart';
 class TurnstileConfig {
   TurnstileConfig._();
 
-  /// 開発用のSite Key。許可しているホスト名は、localhost・127.0.0.1。
+  /// 開発用のSite Key。許可しているホスト名は、localhost(127.0.0.1は不可)。
   static const devSiteKey = '0x4AAAAAAFrELPuF-3fdSzUq';
 
   /// 本番用のSite Key。許可しているホスト名は、app.kosodate-hitoiki.com だけ。
