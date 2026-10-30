@@ -557,7 +557,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   child: const Text('パスワードを再設定する'),
                 ),
                 const SizedBox(height: 12),
-                if (ref.watch(captchaEnabledProvider)) ...[
+                // 再送が押せるようになってから(待ち時間のあと)、はじめて、確認を出す
+                // (確認は1回限りで、数分で期限が切れる。再送しない人には、出さない)。
+                if (ref.watch(captchaEnabledProvider) && _resendWait == 0) ...[
                   TurnstileField(key: _turnstileKey),
                   const SizedBox(height: 12),
                 ],
@@ -650,7 +652,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                 ),
                 const SizedBox(height: 8),
                 // ボット対策の確認(使う設定のときだけ)。再送にも、確認が要る。
-                if (ref.watch(captchaEnabledProvider)) ...[
+                // 再送が押せるようになってから(待ち時間のあと)、はじめて出す
+                // (確認は1回限りで、数分で期限が切れる。再送しない人には、出さない)。
+                if (ref.watch(captchaEnabledProvider) && _resendWait == 0) ...[
                   TurnstileField(key: _turnstileKey),
                   const SizedBox(height: 12),
                 ],
