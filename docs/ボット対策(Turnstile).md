@@ -23,7 +23,7 @@
 
 ## 鍵
 
-- Site Key（公開してよい）は、`lib/core/config/turnstile_config.dart`に書く。開発用は`localhost`・`127.0.0.1`、本番用は`app.kosodate-hitoiki.com`だけで使える。
+- Site Key（公開してよい）は、`lib/core/config/turnstile_config.dart`に書く。開発用は`localhost`、本番用は`app.kosodate-hitoiki.com`だけで使える。**開発のWebは、`http://localhost:ポート/`で開く**（`127.0.0.1`では、Cloudflareに断られ、確認の部品が出ない。エラー`110200`。2026-10-30に確認）。
 - **Secret Keyは、このリポジトリに置かない。** 運営がSupabaseの画面に直接入れる。
 - アプリ（WebView）は、部品を、Site Keyが許可しているホスト名の「ページの出どころ」で開く（開発: `http://localhost/`、本番: `https://app.kosodate-hitoiki.com/`）。
 
