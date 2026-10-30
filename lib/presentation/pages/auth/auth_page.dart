@@ -9,6 +9,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/config/flavor.dart';
 import '../../../core/config/password_policy.dart';
 import '../../../core/utils/accessibility.dart';
 import '../../../core/constants/app_layout.dart';
@@ -317,6 +318,12 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         return;
       }
       // それ以外(未登録など)は、成功と同じに見せる。
+      // 原因を調べやすいよう、dev環境だけ、成功と同じに見せたエラーの中身を、短く知らせる。
+      if (AppConfig.flavor == Flavor.dev && mounted) {
+        _snack(
+          '(開発用) サーバーの返事: ${error.statusCode} ${error.code} ${error.message}',
+        );
+      }
     } catch (error) {
       if (mounted) setState(() => _error = authErrorMessage(error));
       return;
