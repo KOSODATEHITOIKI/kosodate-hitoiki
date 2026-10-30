@@ -181,6 +181,38 @@ void main() {
     expect(find.textContaining('もう一度送りました'), findsOneWidget);
   });
 
+  testWidgets('dev: 成功と同じに見せたエラーは、サーバーの返事を短く知らせる(画面は、送った後のまま)', (tester) async {
+    when(() => auth.sendPasswordReset(any())).thenThrow(
+      AuthApiException(
+        'User not found',
+        code: 'user_not_found',
+        statusCode: '400',
+      ),
+    );
+    await pumpReset(tester);
+    expect(
+      find.textContaining('(開発用) サーバーの返事: 400 user_not_found'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('auth-reset-code')), findsOneWidget);
+  });
+
+  testWidgets('prod: 成功と同じに見せたエラーの中身は、画面に出さない', (tester) async {
+    AppConfig.setFlavor(Flavor.prod);
+    addTearDown(() => AppConfig.setFlavor(Flavor.dev));
+    when(() => auth.sendPasswordReset(any())).thenThrow(
+      AuthApiException(
+        'User not found',
+        code: 'user_not_found',
+        statusCode: '400',
+      ),
+    );
+    await pumpReset(tester);
+    expect(find.textContaining('(開発用)'), findsNothing);
+    expect(find.textContaining('user_not_found'), findsNothing);
+    expect(find.byKey(const ValueKey('auth-reset-code')), findsOneWidget);
+  });
+
   testWidgets('ボット対策が有効のとき、再送の待ち時間のあいだは、確認を出さない(1回で済む)', (tester) async {
     await pumpReset(tester, captcha: true);
     // 送った直後(待ち時間のあいだ)は、確認の部品を出さない。
