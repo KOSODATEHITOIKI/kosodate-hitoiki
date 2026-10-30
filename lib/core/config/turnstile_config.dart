@@ -15,10 +15,15 @@ class TurnstileConfig {
 
   /// 登録・ログイン・パスワード再設定で、確認の部品(Turnstile)を出して、トークンを送るか。
   ///
-  /// バックエンドで、SupabaseのCAPTCHA保護を有効にするのと同時に、trueにする(運営と合わせる)。
-  /// 有効にする前に出しても、利用者の手間が増えるだけなので、それまでは出さない。
-  /// 手元の確認は、`--dart-define=TURNSTILE=true`で、出せる。
-  static const enabled = bool.fromEnvironment('TURNSTILE');
+  /// 既定は`true`(普通にビルドすれば、確認の部品が出る)。サーバーのCAPTCHA保護が有効な環境では、
+  /// トークンが無いと、メールの登録・ログイン・再設定が失敗するため。
+  /// 保護が無効な環境(本番を有効にする前など)で出したくないときだけ、
+  /// `--dart-define=TURNSTILE=false`でビルドする。
+  static const enabled = bool.fromEnvironment('TURNSTILE', defaultValue: true);
+
+  /// `enabled`の代わりに使う値(nullなら`enabled`)。実際のビルドでは、設定しない。
+  /// テストが、本物の確認の部品(WebView)を出さないために、`false`にする(test/flutter_test_config.dart)。
+  static bool? enabledOverride;
 
   static String get siteKey => switch (AppConfig.flavor) {
     Flavor.dev => devSiteKey,

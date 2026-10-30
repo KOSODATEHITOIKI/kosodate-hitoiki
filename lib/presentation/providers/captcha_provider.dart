@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/turnstile_config.dart';
 
 /// 確認の部品(Turnstile)を出すか。通常は[TurnstileConfig.enabled]。テストでは差し替える。
-final captchaEnabledProvider = Provider<bool>((ref) => TurnstileConfig.enabled);
+final captchaEnabledProvider = Provider<bool>(
+  (ref) => TurnstileConfig.enabledOverride ?? TurnstileConfig.enabled,
+);
 
 /// 確認の部品が出した、いま使えるトークン(なければnull)。
 ///
