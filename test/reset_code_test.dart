@@ -181,10 +181,30 @@ void main() {
     expect(find.textContaining('もう一度送りました'), findsOneWidget);
   });
 
+  testWidgets('ボット対策が有効のとき、再送の待ち時間のあいだは、確認を出さない(1回で済む)', (tester) async {
+    await pumpReset(tester, captcha: true);
+    // 送った直後(待ち時間のあいだ)は、確認の部品を出さない。
+    expect(find.byKey(const ValueKey('turnstile-field')), findsNothing);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const ValueKey('auth-reset-resend')),
+          )
+          .enabled,
+      isFalse,
+    );
+    // 待ち時間が終わると、はじめて出す。
+    await tester.pump(const Duration(seconds: 61));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('turnstile-field')), findsOneWidget);
+  });
+
   testWidgets('ボット対策が有効のとき、再送にも確認が要る', (tester) async {
     await pumpReset(tester, captcha: true);
     await tester.pump(const Duration(seconds: 61));
-    // 送信で、使ったトークンは消えて、確認がやり直しになっている。
+    await tester.pumpAndSettle();
+    // 待ち時間のあと、確認が、新しく出る。済むまで、再送は押せない。
+    expect(find.byKey(const ValueKey('turnstile-field')), findsOneWidget);
     expect(
       tester
           .widget<OutlinedButton>(
