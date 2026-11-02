@@ -5,6 +5,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/storage/posting_guide_store.dart';
 import '../../../domain/models/post.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
@@ -29,7 +30,6 @@ class _ComposePageState extends ConsumerState<ComposePage> {
   String _postType = 'ぐち';
   _ResponseMode _mode = _ResponseMode.listening;
   Topic? _topic;
-  bool _guideSeen = false;
 
   @override
   void initState() {
@@ -50,7 +50,6 @@ class _ComposePageState extends ConsumerState<ComposePage> {
     _postType = 'ぐち';
     _mode = _ResponseMode.listening;
     _topic = null;
-    _guideSeen = false;
   }
 
   @override
@@ -70,7 +69,9 @@ class _ComposePageState extends ConsumerState<ComposePage> {
       await pushFullWidth<void>(context, builder: (_) => const AuthPage());
       return;
     }
-    if (!_guideSeen && widget.initialPost == null) {
+    final store = ref.read(postingGuideStoreProvider);
+    if (widget.initialPost == null && !await store.isSeen()) {
+      if (!mounted) return;
       final accepted = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -105,7 +106,8 @@ class _ComposePageState extends ConsumerState<ComposePage> {
         ),
       );
       FocusManager.instance.primaryFocus?.unfocus();
-      if (mounted && accepted == true) setState(() => _guideSeen = true);
+      // 確認したら、以後は出さない。「あとにする」のときは、次も出す。
+      if (accepted == true) await store.markSeen();
       return;
     }
     if (!mounted) return;

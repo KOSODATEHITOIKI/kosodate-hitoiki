@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kosodate_hitoiki/core/constants/app_theme.dart';
 import 'package:kosodate_hitoiki/domain/models/topic.dart';
 import 'package:kosodate_hitoiki/presentation/pages/auth/auth_page.dart';
@@ -15,6 +16,8 @@ import 'helpers/scripted_post_repository.dart';
 final _loggedIn = isLoggedInProvider.overrideWithValue(true);
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('初回案内は320px文字2倍でも延期でき、本文を失わない', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
@@ -452,6 +455,51 @@ void main() {
     await tester.tap(find.text('話を聞きたい'), warnIfMissed: true);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('最初の案内を確認したら、書く画面を開き直しても、もう出さない', (tester) async {
+    Future<void> openCompose() async {
+      await tester.pumpWidget(
+        ProviderScope(
+          key: UniqueKey(),
+          overrides: [_loggedIn],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: const Scaffold(body: ComposePage()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await openCompose();
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    expect(find.text('はじめて投稿する前に'), findsOneWidget);
+    await tester.tap(find.text('確認して書く'));
+    await tester.pumpAndSettle();
+
+    await openCompose();
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    expect(find.text('はじめて投稿する前に'), findsNothing);
+    expect(find.text('投稿の確認'), findsOneWidget);
+  });
+
+  testWidgets('「あとにする」では確認済みにならず、次も案内を出す', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [_loggedIn],
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: const Scaffold(body: ComposePage()),
+        ),
+      ),
+    );
+    await typeAndPressPost(tester, '今日は少し疲れた。');
+    await tester.tap(find.text('あとにする'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('compose-submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('はじめて投稿する前に'), findsOneWidget);
   });
 }
 
