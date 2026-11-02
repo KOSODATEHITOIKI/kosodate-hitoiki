@@ -38,7 +38,7 @@
 
 ## Web版の公開先で必要な設定（CSP）
 
-公開先（Cloudflare Pages）の、安全のヘッダー（Content-Security-Policy）に、次を足す。
+公開先（Cloudflare Pages）の、安全のヘッダー（Content-Security-Policy）に、次を足す。**ひな形（`deploy/web/_headers.template`）に、入れてある**（[Web版の公開.md](Web版の公開.md)参照）。
 
 - `script-src`: `https://challenges.cloudflare.com`
 - `frame-src`: `https://challenges.cloudflare.com`
