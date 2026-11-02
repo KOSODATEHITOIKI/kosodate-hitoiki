@@ -42,4 +42,27 @@ flutter build web -t lib/main_prod.dart --release --no-web-resources-cdn
 
 ## 公開用のワークフロー
 
-Cloudflareへの公開は、GitHub Actionsで行う（別PR）。Cloudflareの鍵（APIトークンなど）は、運営がGitHubのSecretsに入れる。ワークフローには、名前だけを書き、値は、どこにも書かない。
+Cloudflare Pagesへの公開は、GitHub Actionsで行う。開発用と本番用を分ける。
+
+| ワークフロー | 向け先 | 動かし方 | 出せるブランチ | GitHubのEnvironment |
+| --- | --- | --- | --- | --- |
+| `deploy-web-dev.yml` | 開発のSupabase（`pages.dev`の確認用） | 手動（`workflow_dispatch`） | `develop` | `web-dev` |
+| `deploy-web-prod.yml` | 本番のSupabase（`app.kosodate-hitoiki.com`） | 手動（`workflow_dispatch`） | `main` | `web-prod` |
+
+どちらも、ビルド（`--no-web-resources-cdn`）→ `scripts/web/make_headers.sh`で`_headers`を作る → `wrangler pages deploy`の順に動く。
+
+### 運営が用意するもの（値は、ここにも、Issueにも書かない）
+
+GitHubのEnvironment（`web-dev`・`web-prod`）ごとに、同じ名前で入れる。
+
+| 種類 | 名前 | 中身 |
+| --- | --- | --- |
+| Secret | `CLOUDFLARE_API_TOKEN` | Pagesの配備だけの権限のAPIトークン |
+| Secret | `CLOUDFLARE_ACCOUNT_ID` | CloudflareのアカウントID |
+| Variable | `CLOUDFLARE_PAGES_PROJECT` | Pagesのプロジェクト名（開発用と本番用で別） |
+
+- 設定が足りないときは、公開の前に、足りない**名前だけ**を知らせて止まる（値は出さない）。
+- `web-prod`には、運営の承認（Required reviewers）を付ける。
+- フォークや外部のPRからは、Secretsは使えない。ワークフローは、PRでは動かさず、手動だけにしている。
+- 公開先の準備が済んで、動くことを確かめたら、開発用を、`develop`へのpushでも動かすかを、運営と決める。
+- 使うアクションは、コミットを固定して指定している（`wrangler-action` v4.1.3、`flutter-action` v2.23.0、`checkout` v4.2.2）。更新するときは、コミットも更新する。
