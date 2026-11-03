@@ -5,6 +5,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/app_typography.dart';
 import '../../../domain/models/app_notification.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_providers.dart';
@@ -300,6 +301,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
             minimumSize: const Size(48, 52),
             side: const BorderSide(color: AppColors.divider),
             textStyle: const TextStyle(
+              fontFamily: AppTypography.fontFamily,
+              fontFamilyFallback: AppTypography.fontFamilyFallback,
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
             ),

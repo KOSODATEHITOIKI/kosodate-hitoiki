@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_brand.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_icons.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_layout.dart';
 import 'app_asset.dart';
 
@@ -117,6 +118,8 @@ class DesktopSidebar extends StatelessWidget {
                       minimumSize: const Size.fromHeight(52),
                       shape: const StadiumBorder(),
                       textStyle: const TextStyle(
+                        fontFamily: AppTypography.fontFamily,
+                        fontFamilyFallback: AppTypography.fontFamilyFallback,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),

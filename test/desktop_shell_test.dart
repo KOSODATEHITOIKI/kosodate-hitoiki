@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosodate_hitoiki/app.dart';
 import 'package:kosodate_hitoiki/core/constants/app_layout.dart';
+import 'package:kosodate_hitoiki/core/constants/app_typography.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:kosodate_hitoiki/presentation/providers/my_page_providers.dart';
 import 'package:kosodate_hitoiki/presentation/widgets/desktop_sidebar.dart';
@@ -90,5 +91,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(tab(), 0);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('左メニューの「気持ちを書く」は、同梱の日本語フォントで描く(Webで豆腐にならない)', (tester) async {
+    await pumpShell(tester, const Size(1280, 900));
+    final label = find.descendant(
+      of: find.byKey(const ValueKey('sidebar-compose')),
+      matching: find.text('気持ちを書く'),
+    );
+    final style =
+        tester.widget<Text>(label).style ??
+        DefaultTextStyle.of(tester.element(label)).style;
+    final resolved = DefaultTextStyle.of(
+      tester.element(label),
+    ).style.merge(style);
+    expect(resolved.fontFamily, AppTypography.fontFamily);
   });
 }
