@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'core/config/flavor.dart';
 import 'core/config/supabase_config.dart';
+import 'core/web/web_emoji_font.dart';
 import 'core/widgets/startup_error_app.dart';
 import 'data/datasources/supabase_client_provider.dart';
 import 'data/push/push_messaging.dart';
@@ -28,6 +31,10 @@ import 'presentation/providers/post_providers.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppConfig.setFlavor(Flavor.prod);
+
+  // Webだけ。絵文字のフォントを、同じサイトから読み込む(外部のフォントは使わない)。
+  // 起動は待たせない。読み込めたら、エンジンが表示を更新する。
+  unawaited(loadWebEmojiFont());
 
   try {
     await SupabaseConfig.initialize();

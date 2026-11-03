@@ -23,6 +23,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: AppTypography.fontFamily,
+      fontFamilyFallback: AppTypography.fontFamilyFallback,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       // 画面の切り替えの動きは、標準のまま(Flutterの版で名前が変わるので、標準の一覧を取り出して包む)。
@@ -45,6 +46,7 @@ class AppTheme {
           )
           .apply(
             fontFamily: AppTypography.fontFamily,
+            fontFamilyFallback: AppTypography.fontFamilyFallback,
             bodyColor: AppColors.textPrimary,
             displayColor: AppColors.textPrimary,
           ),

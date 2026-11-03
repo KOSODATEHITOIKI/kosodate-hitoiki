@@ -5,6 +5,11 @@ class AppTypography {
   AppTypography._();
 
   static const fontFamily = 'M PLUS Rounded 1c';
+
+  /// Webだけ、起動時に読み込む絵文字のフォント(web_emoji_font.dart)。同梱のフォントに無い文字の予備。
+  /// アプリでは登録されないので、端末の絵文字が使われる。
+  static const emojiFontFamily = 'Noto Color Emoji (Web)';
+  static const fontFamilyFallback = [emojiFontFamily];
   static const appName = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w800,
