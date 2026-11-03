@@ -6,6 +6,7 @@ import 'package:kosodate_hitoiki/presentation/widgets/app_asset.dart';
 import '../../../core/constants/app_brand.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_icons.dart';
+import '../../../core/constants/app_typography.dart';
 import '../../providers/my_page_providers.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/post_providers.dart';
@@ -70,6 +71,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
               minimumSize: const Size(48, 52),
               side: const BorderSide(color: AppColors.divider),
               textStyle: const TextStyle(
+                fontFamily: AppTypography.fontFamily,
+                fontFamilyFallback: AppTypography.fontFamilyFallback,
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
               ),
