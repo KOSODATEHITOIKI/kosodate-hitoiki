@@ -90,6 +90,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           textStyle: AppTypography.button.copyWith(
             fontFamily: AppTypography.fontFamily,
+            fontFamilyFallback: AppTypography.fontFamilyFallback,
           ),
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -101,6 +102,7 @@ class AppTheme {
           foregroundColor: AppColors.textPrimary,
           textStyle: AppTypography.button.copyWith(
             fontFamily: AppTypography.fontFamily,
+            fontFamilyFallback: AppTypography.fontFamilyFallback,
           ),
         ),
       ),
@@ -114,6 +116,7 @@ class AppTheme {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontFamily: AppTypography.fontFamily,
+            fontFamilyFallback: AppTypography.fontFamilyFallback,
             fontSize: 11,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             color: selected ? AppColors.primary : AppColors.textSecondary,
@@ -126,6 +129,7 @@ class AppTheme {
         elevation: 0,
         titleTextStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
+          fontFamilyFallback: AppTypography.fontFamilyFallback,
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
