@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,8 +8,29 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Firebase(プッシュ通知)。設定ファイル(src/<flavor>/google-services.json。リポジトリには入れない)が
+// あるときだけ、有効にする。ないと、アプリは動くが、プッシュ通知だけが使えない。
+val buildTasks = gradle.startParameter.taskNames.joinToString(" ").lowercase()
+val firebaseFlavor =
+    when {
+        buildTasks.contains("prod") -> "prod"
+        buildTasks.contains("dev") -> "dev"
+        else -> null
+    }
+if (firebaseFlavor != null && file("src/$firebaseFlavor/google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
+// 本番署名鍵はコミットせず、android/key.properties(.gitignore対象)があれば使う。
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+val hasReleaseSigning = keystorePropertiesFile.exists()
+if (hasReleaseSigning) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.kosodatehitoiki.kosodate_hitoiki"
+    namespace = "com.kosodatehitoiki"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +45,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.kosodatehitoiki.kosodate_hitoiki"
+        applicationId = "com.kosodatehitoiki"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -30,12 +54,58 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+            resValue("string", "app_name", "ひと息(dev)")
+        }
+        create("prod") {
+            dimension = "environment"
+            resValue("string", "app_name", "ひと息")
+        }
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // key.properties未設定時はdebug鍵へフォールバック(prod releaseは下で別途失敗させる)。
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
+    }
+}
+
+// prod releaseのdebug鍵フォールバック配布を防ぐ。assemble等の集約タスクも拾えるよう解決済みタスクグラフで判定する。
+val prodReleaseOutputTasks = setOf(
+    "assembleProdRelease",
+    "bundleProdRelease",
+    "packageProdRelease",
+    "validateSigningProdRelease",
+)
+gradle.taskGraph.whenReady {
+    val buildsProdRelease = allTasks.any {
+        it.path.substringAfterLast(":") in prodReleaseOutputTasks
+    }
+    if (buildsProdRelease && !hasReleaseSigning) {
+        throw GradleException(
+            "本番配布(prod release)には android/key.properties による署名設定が必須です。" +
+                "keyAlias・keyPassword・storeFile・storePasswordを用意してください。"
+        )
     }
 }
 

@@ -1,0 +1,81 @@
+name: Deploy Web (dev)
+
+# 何をする？
+#   開発のSupabaseに向けた、確認用のWeb(pages.dev)を、Cloudflare Pagesへ公開する。
+#   本番(app.kosodate-hitoiki.com)の公開は、deploy-web-prod.yml(別)。
+#
+# 秘密の扱い
+#   Cloudflareの鍵は、GitHubの「Environment: web-dev」のSecretsに、運営が入れる(値は、ここには書かない)。
+#     - Secret   CLOUDFLARE_API_TOKEN   (Pagesの配備だけの権限)
+#     - Secret   CLOUDFLARE_ACCOUNT_ID
+#     - Variable CLOUDFLARE_PAGES_PROJECT (Pagesのプロジェクト名)
+#   フォークや外部のPRからは、Secretsは使えない。このワークフローは、PRでは動かさない。
+#
+# 実行
+#   最初は、手動(workflow_dispatch)だけ。公開先の準備が済んで、動くことを確かめたら、
+#   developへのpushでも動かすかを、運営と決める。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-web-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy (dev)
+    runs-on: ubuntu-latest
+    environment: web-dev
+    # 開発用は、developから出す。
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # CanvasKitを同梱する(CSPで、外部のCDNを許可しないため)。
+      # 開発のSupabaseと、開発用のTurnstile Site Keyは、lib/main_dev.dart(環境: dev)が決める。
+      - name: Build web (dev)
+        run: flutter build web -t lib/main_dev.dart --release --no-web-resources-cdn
+
+      # 開発のSupabaseだけを許可する安全のヘッダー。取り違えると、ここで止まる。
+      - name: Make _headers (dev)
+        run: scripts/web/make_headers.sh dev
+
+      - name: Check deploy settings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: |
+          # 値は出さない。空のものがあれば、名前だけを知らせて止める。
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_PAGES_PROJECT; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name が、Environment「web-dev」に設定されていません"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy build/web --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main

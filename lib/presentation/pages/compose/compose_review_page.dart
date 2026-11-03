@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/constants/app_colors.dart';
+import '../../../data/api/api_exception.dart';
+import '../../../data/api/idempotency_key.dart';
+import '../../../domain/models/post.dart';
+import '../../../domain/models/topic.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/post_providers.dart';
+import '../../widgets/comfort_page.dart';
+import '../support/support_resources_page.dart';
+import 'post_messages.dart';
+
+/// 送信前チェックの段階。
+/// - review: 送る前の確認(まだ送っていない)
+/// - confirm: サーバーが「確認が必要」と返した(確認後に再送する)
+/// - rejected: サーバーが「送信不可」と返した(書き直す)
+/// - success: 投稿できた
+enum _Stage { review, confirm, rejected, success }
+
+/// S-04の確認画面。送信前チェックは、投稿作成API(サーバー側)が行い、その結果を表示する
+/// (kosodate-hitoiki-backend docs/API契約.md 3節)。投稿できたら`true`を返して閉じる。
+class ComposeReviewPage extends ConsumerStatefulWidget {
+  const ComposeReviewPage({
+    super.key,
+    required this.body,
+    required this.postType,
+    required this.responseMode,
+    this.topic,
+    this.editing = false,
+    this.postId,
+  });
+  final String body;
+  final PostType postType;
+  final ResponseMode responseMode;
+  final Topic? topic;
+  final bool editing;
+
+  /// 編集のとき、編集する投稿のID。
+  final String? postId;
+  @override
+  ConsumerState<ComposeReviewPage> createState() => _ComposeReviewPageState();
+}
+
+class _ComposeReviewPageState extends ConsumerState<ComposeReviewPage> {
+  _Stage _stage = _Stage.review;
+  bool _busy = false;
+  bool _confirmed = false;
+  bool _supportNotice = false;
+  String? _message;
+  String? _error;
+
+  /// 1回の「投稿する」操作につき、キーを1つだけ作り、確認後の再送や通信失敗の再送でも
+  /// 使い回す。409・422・503のときは保存もキーの消費もされないので、同じキーで再送してよい
+  /// (バックエンド確認済み)。キーを変えると、結果が不明なときに二重投稿になるおそれがある。
+  final String _key = newIdempotencyKey();
+
+  Future<void> _submit() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final repository = ref.read(postRepositoryProvider);
+      final bool support;
+      if (widget.editing) {
+        // 編集できるのは本文だけ。送信前チェックは作成と同じ。
+        final edited = await repository.editPost(
+          postId: widget.postId!,
+          body: widget.body,
+          confirmed: _confirmed,
+        );
+        support = edited.supportNotice;
+      } else {
+        final created = await repository.createPost(
+          type: widget.postType,
+          responseMode: widget.responseMode,
+          body: widget.body,
+          idempotencyKey: _key,
+          topicId: widget.topic?.id,
+          confirmed: _confirmed,
+        );
+        support = created.supportNotice;
+      }
+      if (!mounted) return;
+      // 一覧・検索・マイページを、新しい投稿を含めて取り直す。
+      ref
+        ..invalidate(postDetailProvider)
+        ..invalidate(feedPostsProvider)
+        ..invalidate(searchResultsProvider)
+        ..invalidate(myPostsProvider);
+      setState(() {
+        _stage = _Stage.success;
+        _supportNotice = support;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      if (error.isConfirmRequired && !_confirmed) {
+        setState(() {
+          _stage = _Stage.confirm;
+          _message = confirmMessage(error);
+        });
+      } else if (error.isRejected) {
+        setState(() {
+          _stage = _Stage.rejected;
+          _message = rejectionMessage(error);
+        });
+      } else {
+        setState(() => _error = postFailureMessage(error));
+      }
+    } catch (error) {
+      if (mounted) setState(() => _error = postFailureMessage(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// 確認表示のあと、「そのまま投稿する」。確認済みとして、同じキーで再送する。
+  void _confirmAndSubmit() {
+    _confirmed = true;
+    _submit();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 利用者切り替え時、上に乗ったダイアログ/相談先画面ごとこの画面を閉じる(pop1回だと取り残される)。
+    ref.listen<String?>(currentUserIdProvider, (previous, next) {
+      if (previous == next) return;
+      final navigator = Navigator.of(context);
+      final myRoute = ModalRoute.of(context);
+      if (myRoute != null) {
+        navigator.popUntil((route) => route == myRoute);
+      }
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    });
+    return PopScope<bool>(
+      // 送信中は戻れない(閉じると結果を受け取れず、下書きが残って、重複投稿に
+      // つながる)。投稿できたあとは、戻る操作でも「投稿できた」を返して閉じる。
+      canPop: _stage != _Stage.success && !_busy,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _stage == _Stage.success) {
+          Navigator.of(context).pop(true);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _stage == _Stage.success
+                ? (widget.editing ? '変更しました' : '投稿しました')
+                : (widget.editing ? '変更の確認' : '投稿の確認'),
+          ),
+        ),
+        body: _stage == _Stage.success ? _success() : _content(),
+      ),
+    );
+  }
+
+  Widget _success() => ComfortPage(
+    title: widget.editing ? '変更しました。' : '投稿しました。',
+    message: widget.editing ? '内容を直しました。' : 'ここに書いてくれて、ありがとう。\nあなたのペースで大丈夫です。',
+    children: [
+      if (_supportNotice) ...[
+        const Text(
+          'つらい気持ちを、ひとりで抱えなくて大丈夫です。',
+          key: ValueKey('support-notice'),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          '必要なときは相談先を頼ってください。この案内は、あなたにだけ表示しています。',
+          style: TextStyle(fontSize: 14, height: 1.7),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(builder: (_) => const SupportResourcesPage()),
+          ),
+          child: const Text('困ったときの相談先'),
+        ),
+        const SizedBox(height: 8),
+      ],
+      FilledButton(
+        key: const ValueKey('compose-done'),
+        onPressed: () => Navigator.of(context).pop(true),
+        child: Text(widget.editing ? '戻る' : 'ホームへ'),
+      ),
+    ],
+  );
+
+  Widget _content() => ComfortPage(
+    // 句点だけが次の行に残らないよう、意味の切れ目で改行する。
+    title: _stage == _Stage.rejected ? '内容を見直して\nみましょう' : '送信する前に、\nひと確認。',
+    message: '名前や個人情報、\n誰かを傷つける表現はありませんか？',
+    children: [
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                '投稿の内容',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Chip(label: Text(widget.postType.label)),
+                  Chip(label: Text(widget.responseMode.label)),
+                  if (widget.topic != null)
+                    Chip(label: Text(widget.topic!.label)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.body,
+                style: const TextStyle(fontSize: 14, height: 1.7),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      if (_stage == _Stage.confirm)
+        Text(
+          _message!,
+          key: const ValueKey('compose-confirm'),
+          style: const TextStyle(fontSize: 14, height: 1.7),
+        ),
+      if (_stage == _Stage.rejected) ...[
+        const Text(
+          'この内容では送信できません。',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _message!,
+          key: const ValueKey('compose-rejected'),
+          style: const TextStyle(fontSize: 14, height: 1.7),
+        ),
+      ],
+      if (_error != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            _error!,
+            key: const ValueKey('compose-error'),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 13,
+              height: 1.6,
+            ),
+          ),
+        ),
+      const SizedBox(height: 16),
+      if (_stage != _Stage.rejected)
+        FilledButton(
+          key: const ValueKey('compose-send'),
+          onPressed: _busy
+              ? null
+              : (_stage == _Stage.confirm ? _confirmAndSubmit : _submit),
+          child: Text(
+            _busy
+                ? '送信しています…'
+                : (_stage == _Stage.confirm
+                      ? 'そのまま投稿する'
+                      : (widget.editing ? 'この内容で変更する' : 'この内容で投稿する')),
+          ),
+        ),
+      OutlinedButton(
+        key: const ValueKey('compose-rewrite'),
+        onPressed: _busy ? null : () => Navigator.of(context).pop(),
+        child: const Text('書き直す'),
+      ),
+      const SizedBox(height: 4),
+      const Text(
+        '入力した文章は残っています。',
+        style: TextStyle(
+          fontSize: 12,
+          height: 1.7,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    ],
+  );
+}

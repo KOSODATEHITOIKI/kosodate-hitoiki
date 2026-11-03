@@ -175,3 +175,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Firebaseの設定ファイル(環境ごとに、ローカルに置く。リポジトリには入れない)
+**/google-services.json
+**/GoogleService-Info.plist
+
+# デスクトップ用(Flutterが自動生成する)のファイルは、入れない。Web版は、web/を使う
+/linux/
+/macos/
+/windows/

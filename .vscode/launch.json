@@ -1,0 +1,49 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "dev",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "args": ["--flavor", "dev"]
+        },
+        {
+            "name": "prod",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_prod.dart",
+            "args": ["--flavor", "prod"]
+        },
+        {
+            "name": "web (dev) - Chromeで開く",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "deviceId": "chrome"
+        },
+        {
+            "name": "web (dev) - ブラウザは自分で開く(http://localhost:8099/)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "deviceId": "web-server",
+            "args": ["--web-port", "8099"]
+        },
+        {
+            "name": "dev (ボット対策あり)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "args": ["--flavor", "dev", "--dart-define=TURNSTILE=true"]
+        },
+        {
+            "name": "web (dev・ボット対策あり) - Chromeで開く(http://localhost:8099/)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_dev.dart",
+            "deviceId": "chrome",
+            "args": ["--web-port", "8099", "--dart-define=TURNSTILE=true"]
+        }
+    ]
+}

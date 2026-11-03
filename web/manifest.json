@@ -1,12 +1,12 @@
 {
-    "name": "kosodate_hitoiki",
-    "short_name": "kosodate_hitoiki",
+    "name": "ひと息",
+    "short_name": "ひと息",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FFFCF6",
+    "theme_color": "#FFFCF6",
+    "description": "子育ての気持ちを、安心して書ける場所です。",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
