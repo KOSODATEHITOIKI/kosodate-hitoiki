@@ -32,6 +32,7 @@ flutter build web -t lib/main_prod.dart --release --no-web-resources-cdn
 | 変更 | 理由 |
 | --- | --- |
 | `base-uri 'none'` → `base-uri 'self'` | Flutter Webの`index.html`に`<base href>`があるため。`'none'`だと、ブラウザーが`<base>`を認めない。 |
+| `connect-src`に`blob:`を足す（2026-11-05） | アイコン画像を選ぶと、Flutter Webが、選んだ画像を`blob:`のアドレスから読み出す（`fetch`／`XMLHttpRequest`）。`connect-src`に無いと、止められて、アイコンを変えられない。`blob:`は、そのページ自身が作った、一時的なアドレスだけを指す（外部へは出ない）。`img-src`・`worker-src`には、もとからある。 |
 
 **`fonts.gstatic.com`は、`connect-src`に足さない**（運営の決定、2026-11-03）。外部のサーバーへ、フォントを取りに行かない。次の「フォント」の節のとおり、必要なフォントは、同じサイトに置く。
 
