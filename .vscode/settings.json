@@ -1,0 +1,6 @@
+{
+  // Flutterのプロジェクトなので、VS CodeのJava・Gradleの拡張機能に、android/を読み込ませない。
+  // 読み込ませると、拡張機能が持つ古いGradle(8.4)とJava 21の組み合わせで、エラーが出る。
+  // Androidのビルドは、Flutterが android/gradle/wrapper のGradle(8.14)で行うので、影響しない。
+  "java.import.gradle.enabled": false
+}
