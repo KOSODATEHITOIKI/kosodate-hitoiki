@@ -151,6 +151,12 @@ void main() {
     );
     await snap(tester, '02_home');
 
+    // 2b. ホームの一覧を、少し下へ送った状態(投稿が並ぶところ)。
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -1100));
+    await snap(tester, '08_feed');
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await wait(tester, const Duration(seconds: 1));
+
     // 3. 投稿の詳細(コメント・返信)。
     final post = (await _StorePosts().fetchFeed()).firstWhere(
       (p) => p.id == 'p2',
@@ -169,6 +175,12 @@ void main() {
     // 5. 検索。
     await tapText(tester, '検索');
     await snap(tester, '05_search');
+
+    // 5b. お知らせ・マイページ(下のタブ)。
+    await tapText(tester, 'お知らせ');
+    await snap(tester, '09_notifications');
+    await tapText(tester, 'マイページ');
+    await snap(tester, '10_mypage');
 
     // 6. ミュート(見たくない話題・言葉)。
     await push(tester, navigator, const MuteManagementPage());
