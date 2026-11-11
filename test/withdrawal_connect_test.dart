@@ -29,13 +29,20 @@ class _ScriptedAccount implements AccountRepository {
   /// 呼び出しごとに受け取った、Appleの認可コード。
   final codes = <String?>[];
 
+  /// 呼び出しごとに受け取った、Appleに名乗ったID。
+  final clientIds = <String?>[];
+
   @override
   bool get isSample => false;
 
   @override
-  Future<void> deleteAccount({String? appleAuthorizationCode}) async {
+  Future<void> deleteAccount({
+    String? appleAuthorizationCode,
+    String? appleClientId,
+  }) async {
     calls++;
     codes.add(appleAuthorizationCode);
+    clientIds.add(appleClientId);
     final next = script.removeAt(0);
     if (next == null) return;
     if (next is Future<void> Function()) return next();
@@ -294,6 +301,8 @@ void main() {
 
     setUp(() {
       when(() => _auth.currentUser).thenReturn(appleUser);
+      // テストは、devのiOSアプリとして動く(test/flutter_test_config.dart)。
+      when(() => _auth.appleClientId).thenReturn('com.kosodatehitoiki.dev');
     });
     tearDown(() => debugDefaultTargetPlatformOverride = null);
 
@@ -314,6 +323,7 @@ void main() {
 
       verify(() => _auth.appleAuthorizationCode()).called(1);
       expect(account.codes, ['code-1']);
+      expect(account.clientIds, ['com.kosodatehitoiki.dev']);
       expect(find.text('退会しました。'), findsOneWidget);
       debugDefaultTargetPlatformOverride = null;
     });
@@ -340,13 +350,15 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('iOS以外では、iPhoneのアプリから退会するよう案内し、退会しない', (tester) async {
+    testWidgets('Android(Appleを出さない端末)では、iPhoneのアプリかWebから退会するよう案内し、退会しない', (
+      tester,
+    ) async {
       final account = _ScriptedAccount([null]);
       await confirm(tester, account);
 
       verifyNever(() => _auth.appleAuthorizationCode());
       expect(account.calls, 0);
-      expect(find.textContaining('iPhoneのアプリから退会してください'), findsOneWidget);
+      expect(find.textContaining('iPhoneのアプリか、Webから退会してください'), findsOneWidget);
     });
 
     testWidgets('サーバーが連携の解除に失敗したら(apple_revoke_failed)、案内する', (tester) async {
@@ -381,6 +393,7 @@ void main() {
 
     verifyNever(() => _auth.appleAuthorizationCode());
     expect(account.codes, [null]);
+    expect(account.clientIds, [null]);
     debugDefaultTargetPlatformOverride = null;
   });
 }

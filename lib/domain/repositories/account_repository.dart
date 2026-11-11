@@ -14,7 +14,11 @@ abstract class AccountRepository {
   /// - `502 apple_revoke_failed`: Appleとの連携の解除に失敗した(削除していない)
   ///
   /// [appleAuthorizationCode]は、Appleで登録したアカウントのとき、退会の直前に、もう一度
-  /// Appleで確認して受け取ったコード。サーバーが、Appleとの連携を解除する
-  /// (審査ガイドライン5.1.1(v))。
-  Future<void> deleteAccount({String? appleAuthorizationCode});
+  /// Appleで確認して受け取ったコード。[appleClientId]は、そのときAppleに名乗ったID
+  /// (iOSはBundle ID、WebはサービスID。コードは、このIDに対して発行される)。
+  /// サーバーが、この2つで、Appleとの連携を解除する(審査ガイドライン5.1.1(v))。
+  Future<void> deleteAccount({
+    String? appleAuthorizationCode,
+    String? appleClientId,
+  });
 }
