@@ -11,8 +11,8 @@ Google Playは[リリース手順(Android)](リリース手順.md)を参照。
 |---|---|
 | Team ID | `4N5F9L6BC2`(`ios/Runner.xcodeproj`の`DEVELOPMENT_TEAM`。姉妹アプリと同じ) |
 | Bundle ID | prod `com.kosodatehitoiki` / dev `com.kosodatehitoiki.dev`(**App Store Connectでアプリを作ると、変えられない**) |
-| App Store ID | (アプリを作ったら書く) |
-| SKU | `kosodate-hitoiki-ios`(案) |
+| App Store ID | `6833332588`(公開後のURL: `https://apps.apple.com/jp/app/id6833332588`) |
+| SKU | `kosodate-hitoiki-ios` |
 | 対応端末 | iPhone専用・iOS 15.0以上(iPadのスクリーンショット・審査が不要)。画面の向きは固定しない |
 | Firebase のiOSアプリ | (プッシュ通知を入れるときに登録する。プロジェクトは`kosodate-hitoiki-f0036`) |
 
