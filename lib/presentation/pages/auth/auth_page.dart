@@ -12,6 +12,7 @@ import '../../../core/constants/app_icons.dart';
 import '../../../core/config/flavor.dart';
 import '../../../core/config/password_policy.dart';
 import '../../../core/utils/accessibility.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../../core/constants/app_layout.dart';
 import '../../widgets/desktop_hero_panel.dart';
 import '../../providers/auth_provider.dart';
@@ -25,7 +26,8 @@ import 'ensure_profile.dart';
 
 /// S-10。メール+パスワードの登録・ログインはSupabase Authに接続済み。
 /// Googleは、認証画面(ブラウザ)からリンクでアプリへ戻って続ける(Supabase側のプロバイダ
-/// 設定が必要)。Appleは、フェーズ2で追加する。パスワード再設定は、メールのリンクから
+/// 設定が必要)。Appleは、iOSだけ、iOS標準の画面でそのままログインする(Supabaseの
+/// プロバイダ設定が必要)。パスワード再設定は、メールのリンクから
 /// 戻って新しいパスワードを決める(new_password_page.dart)。
 enum AuthMode { login, register, reset }
 
@@ -224,6 +226,37 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       });
     } catch (error) {
       if (mounted) setState(() => _error = authErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Appleで続ける(iOSのみ)。iOS標準のAppleの画面で確認し、そのままログインする
+  /// (ブラウザは開かない)。初めての利用者は、ログイン後のプロフィール作成の画面で、
+  /// 同意・ニックネームを決める。Appleの画面を閉じたときは、何もしない。
+  Future<void> _apple() async {
+    if (_busy) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _busy = true;
+      _error = null;
+      _googleWaiting = false;
+    });
+    try {
+      final response = await ref.read(authRepositoryProvider).signInWithApple();
+      if (!mounted || response == null) return;
+      await _afterSignedInSafely(response.user);
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _error = authErrorMessage(error));
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = withDevDetail(
+            'Appleでのログインを完了できませんでした。もう一度お試しください。',
+            error,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -717,7 +750,22 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   _AuthHeader(title: _title, mode: _mode),
                   const SizedBox(height: 24),
                   if (_mode != AuthMode.reset) ...[
-                    // Appleでのログインは、フェーズ2で追加する(それまでは出さない)。
+                    // Appleでサインインは、iOSだけ。Googleと同じ大きさで、上に出す
+                    // (審査ガイドライン4.8。Appleのデザインの決まりで、黒地に白)。
+                    if (appleSignInSupported) ...[
+                      FilledButton.icon(
+                        key: const ValueKey('auth-apple'),
+                        onPressed: _busy ? null : _apple,
+                        style: FilledButton.styleFrom(
+                          foregroundColor: AppColors.white,
+                          backgroundColor: Colors.black,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        icon: const Icon(Icons.apple, size: 22),
+                        label: const Text('Appleで続ける'),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     for (final provider in ['Google']) ...[
                       OutlinedButton.icon(
                         key: const ValueKey('auth-google'),

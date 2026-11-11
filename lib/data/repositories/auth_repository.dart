@@ -1,6 +1,32 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/auth_config.dart';
+
+/// Appleの画面を出して、認証情報を受け取る処理(`SignInWithApple.getAppleIDCredential`)。
+typedef AppleCredentialGetter =
+    Future<AuthorizationCredentialAppleID> Function({
+      required List<AppleIDAuthorizationScopes> scopes,
+      String? nonce,
+    });
+
+/// この端末で、Appleでサインインを出すか。iOSのアプリだけ(審査ガイドライン4.8)。
+/// AndroidとWebは、Appleのサービス IDの設定がないため、出さない。
+bool get appleSignInSupported =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+/// Appleで登録した(Appleの認証が紐づいた)アカウントか。退会のときに、Appleとの連携の
+/// 解除が要るかを決める。
+bool usesAppleSignIn(User? user) {
+  if (user == null) return false;
+  if (user.identities?.any((i) => i.provider == 'apple') ?? false) return true;
+  final providers = user.appMetadata['providers'];
+  return providers is List && providers.contains('apple');
+}
 
 /// メール/Google/Appleログインを扱う認証リポジトリ(決定: docs/全体設計書.md 2章 F-02)。
 class AuthRepository {
@@ -8,15 +34,25 @@ class AuthRepository {
   /// (Turnstile)のトークンを付ける。トークンは、呼ぶ瞬間に[takeCaptchaToken]で取り出す
   /// (1回限りなので、取り出したら、呼び出し側が消す)。
   /// トークンがないときは、通信せずに、失敗にする(トークンなしでは進めない)。
+  ///
+  /// [getAppleCredential]は、Appleの画面を出す処理(テストで差し替える)。
   AuthRepository(
     this._client, {
     this.captchaRequired = false,
     String? Function()? takeCaptchaToken,
-  }) : _takeCaptchaToken = takeCaptchaToken;
+    AppleCredentialGetter? getAppleCredential,
+  }) : _takeCaptchaToken = takeCaptchaToken,
+       _getAppleCredential = getAppleCredential ?? _defaultGetAppleCredential;
 
   final SupabaseClient _client;
   final bool captchaRequired;
   final String? Function()? _takeCaptchaToken;
+  final AppleCredentialGetter _getAppleCredential;
+
+  static Future<AuthorizationCredentialAppleID> _defaultGetAppleCredential({
+    required List<AppleIDAuthorizationScopes> scopes,
+    String? nonce,
+  }) => SignInWithApple.getAppleIDCredential(scopes: scopes, nonce: nonce);
 
   /// 確認の部品のトークン。使わない設定のときは、null(何も付けない)。
   String? _captcha() {
@@ -104,12 +140,48 @@ class AuthRepository {
     );
   }
 
-  /// フェーズ2で、画面に出して使う。
-  Future<bool> signInWithApple() {
-    return _client.auth.signInWithOAuth(
-      OAuthProvider.apple,
-      redirectTo: authCallbackUrl,
+  /// Appleでサインインする(iOSのみ)。iOS標準のAppleの画面で受け取ったIDトークンを、
+  /// Supabaseに渡してログインする(ブラウザは開かない)。利用者が画面を閉じたら、`null`。
+  ///
+  /// IDトークンの使い回しを防ぐため、毎回ランダムな値(nonce)を作り、Appleには
+  /// そのハッシュを、Supabaseには元の値を渡す(Supabaseが、2つが合うかを確かめる)。
+  Future<AuthResponse?> signInWithApple() async {
+    final rawNonce = _client.auth.generateRawNonce();
+    final credential = await _appleCredential(
+      scopes: const [AppleIDAuthorizationScopes.email],
+      nonce: sha256.convert(utf8.encode(rawNonce)).toString(),
     );
+    if (credential == null) return null;
+    final idToken = credential.identityToken;
+    if (idToken == null) {
+      throw const AuthException('Appleの確認ができませんでした。', code: 'apple_no_token');
+    }
+    return _client.auth.signInWithIdToken(
+      provider: OAuthProvider.apple,
+      idToken: idToken,
+      nonce: rawNonce,
+    );
+  }
+
+  /// 退会の直前に、もう一度Appleで確認して、新しい「認可コード」を受け取る(iOSのみ)。
+  /// サーバー(`account-delete`)が、このコードで、Appleとの連携を解除する
+  /// (審査ガイドライン5.1.1(v))。利用者が画面を閉じたら、`null`。コードは、ログに出さない。
+  Future<String?> appleAuthorizationCode() async {
+    final credential = await _appleCredential(scopes: const []);
+    return credential?.authorizationCode;
+  }
+
+  /// Appleの画面を出す。利用者が閉じたときは、`null`(失敗ではない)。
+  Future<AuthorizationCredentialAppleID?> _appleCredential({
+    required List<AppleIDAuthorizationScopes> scopes,
+    String? nonce,
+  }) async {
+    try {
+      return await _getAppleCredential(scopes: scopes, nonce: nonce);
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code == AuthorizationErrorCode.canceled) return null;
+      rethrow;
+    }
   }
 
   Future<void> signOut() => _client.auth.signOut();
