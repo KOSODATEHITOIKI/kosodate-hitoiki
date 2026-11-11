@@ -6,5 +6,5 @@ class MockAccountRepository implements AccountRepository {
   bool get isSample => true;
 
   @override
-  Future<void> deleteAccount() async {}
+  Future<void> deleteAccount({String? appleAuthorizationCode}) async {}
 }
