@@ -212,6 +212,12 @@ void main() {
       await tapApple(tester);
 
       expect(find.byType(ProfileSetupPage), findsOneWidget);
+      // 使い始める前に、同意と、不適切な投稿・迷惑行為を一切認めないことを出す。
+      expect(find.byKey(const ValueKey('consent-terms')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('consent-zero-tolerance')),
+        findsOneWidget,
+      );
       debugDefaultTargetPlatformOverride = null;
     });
 
@@ -522,6 +528,13 @@ void main() {
         tester.widget<FilledButton>(find.byKey(const ValueKey('auth-submit')));
     bool checked(String key) =>
         tester.widget<CheckboxListTile>(find.byKey(ValueKey(key))).value!;
+
+    // 同意の前に、不適切な投稿・迷惑行為を一切認めないことを出す(審査ガイドライン1.2)。
+    expect(
+      find.byKey(const ValueKey('consent-zero-tolerance')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('一切認めません'), findsOneWidget);
 
     // 最初は登録できず、すべて未チェック。
     await tester.ensureVisible(find.byKey(const ValueKey('auth-submit')));
