@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,8 +27,8 @@ import 'ensure_profile.dart';
 
 /// S-10。メール+パスワードの登録・ログインはSupabase Authに接続済み。
 /// Googleは、認証画面(ブラウザ)からリンクでアプリへ戻って続ける(Supabase側のプロバイダ
-/// 設定が必要)。Appleは、iOSだけ、iOS標準の画面でそのままログインする(Supabaseの
-/// プロバイダ設定が必要)。パスワード再設定は、メールのリンクから
+/// 設定が必要)。Appleは、iOS(標準の画面)とWeb(Apple JSのポップアップ)で、そのまま
+/// ログインする(Supabaseのプロバイダ設定が必要。Androidは出さない)。パスワード再設定は、メールのリンクから
 /// 戻って新しいパスワードを決める(new_password_page.dart)。
 enum AuthMode { login, register, reset }
 
@@ -101,6 +102,11 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   void initState() {
     super.initState();
     AuthPage.openCount++;
+    // Webで、Appleの部品を先に読み込んでおく(押してから読み込むと、ブラウザが
+    // ポップアップを止めることがある)。ほかの画面では、読み込まない。
+    if (kIsWeb) {
+      unawaited(ref.read(authRepositoryProvider).prepareAppleSignIn());
+    }
     for (final entry in {
       'nickname': _nicknameFocus,
       'email': _emailFocus,
@@ -750,7 +756,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   _AuthHeader(title: _title, mode: _mode),
                   const SizedBox(height: 24),
                   if (_mode != AuthMode.reset) ...[
-                    // Appleでサインインは、iOSだけ。Googleと同じ大きさで、上に出す
+                    // Appleでサインインは、iOSとWeb。Googleと同じ大きさで、上に出す
                     // (審査ガイドライン4.8。Appleのデザインの決まりで、黒地に白)。
                     if (appleSignInSupported) ...[
                       FilledButton.icon(

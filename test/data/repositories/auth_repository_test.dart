@@ -163,6 +163,32 @@ void main() {
     });
   });
 
+  group('Web(Apple JS)で閉じたとき', () {
+    AuthRepository throwing(String message) => AuthRepository(
+      client,
+      getAppleCredential: ({required scopes, nonce}) async =>
+          throw SignInWithAppleCredentialsException(message: message),
+    );
+
+    test('ポップアップを閉じた・やめたなら、nullを返す', () async {
+      for (final error in [
+        'popup_closed_by_user',
+        'user_cancelled_authorize',
+      ]) {
+        repository = throwing('Authentication failed with $error');
+        expect(await repository.appleAuthorizationCode(), isNull);
+      }
+    });
+
+    test('それ以外の失敗は、そのまま失敗にする', () async {
+      repository = throwing('Authentication failed with invalid_client');
+      await expectLater(
+        repository.appleAuthorizationCode(),
+        throwsA(isA<SignInWithAppleCredentialsException>()),
+      );
+    });
+  });
+
   group('usesAppleSignIn', () {
     User user(Map<String, dynamic> appMetadata) => User(
       id: 'u',

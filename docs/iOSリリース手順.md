@@ -21,7 +21,8 @@ Google Playは[リリース手順(Android)](リリース手順.md)を参照。
 - [ ] App Store Connectでアプリを作る(名前「ひと息」、プライマリ言語は日本語、Bundle ID `com.kosodatehitoiki`。EUのDSAは「トレーダーではない(EUで配信しない)」)
 - [ ] Appleでサインイン(Issue #182・バックエンドのIssue)
   - Apple Developer → Identifiers で、`com.kosodatehitoiki`(と`.dev`)の「Sign in with Apple」がオンか確かめる(Xcodeの自動署名で、App IDと一緒に作られていることがある)
-  - Supabase(dev・本番)→ Authentication → Providers → Apple を有効にし、Client IDsに`com.kosodatehitoiki`・`com.kosodatehitoiki.dev`を入れる
+  - Web用のサービスID(`com.kosodatehitoiki.web`・`com.kosodatehitoiki.dev.web`)を作り、ドメインと戻り先を登録する(Issue #185、`docs/Web版の公開.md`)
+  - Supabase(dev・本番)→ Authentication → Providers → Apple を有効にし、Client IDsに、Bundle IDとサービスIDを入れる(本番: `com.kosodatehitoiki,com.kosodatehitoiki.web`、dev: `com.kosodatehitoiki.dev,com.kosodatehitoiki.dev.web`)。秘密鍵(Secret Key)は空欄でよい
   - 退会のときの連携の解除のため、Apple Developer → Keys で「Sign in with Apple」のキーを作り、Edge Functionsのシークレットに入れる(バックエンドのIssue)
 - [ ] プッシュ通知(任意。なくてもアプリは動き、通知だけが使えない。Androidの初回と同じ)
   - Firebaseの`kosodate-hitoiki-f0036`に、iOSアプリ(`com.kosodatehitoiki`)を足し、`GoogleService-Info.plist`を置く

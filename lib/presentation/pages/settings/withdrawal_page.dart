@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +31,19 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
 
   /// 再ログインへ進む途中。ログアウトで利用者IDが変わるが、閉じる操作は自分で行う。
   bool _leaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Webで、Appleで登録したアカウントなら、Appleの部品を先に読み込んでおく
+    // (退会を押してから読み込むと、ブラウザがポップアップを止めることがある)。
+    if (kIsWeb) {
+      final auth = ref.read(authRepositoryProvider);
+      if (usesAppleSignIn(auth.currentUser)) {
+        unawaited(auth.prepareAppleSignIn());
+      }
+    }
+  }
 
   /// 最後の確認。「元に戻せません」と伝え、「退会する」を押したときだけ実行する。
   Future<void> _confirm() async {
@@ -111,7 +127,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
   }
 
   static const _appleDeviceMessage =
-      'Appleで登録したアカウントは、Appleとの連携を解除するため、iPhoneのアプリから退会してください。';
+      'Appleで登録したアカウントは、Appleとの連携を解除するため、iPhoneのアプリか、Webから退会してください。';
   static const _appleFailedMessage =
       'Appleとの連携を解除できなかったため、退会していません。時間をおいて、もう一度お試しください。';
 
@@ -125,7 +141,12 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
     try {
       await ref
           .read(accountRepositoryProvider)
-          .deleteAccount(appleAuthorizationCode: appleCode);
+          .deleteAccount(
+            appleAuthorizationCode: appleCode,
+            appleClientId: appleCode == null
+                ? null
+                : ref.read(authRepositoryProvider).appleClientId,
+          );
     } on ApiException catch (error) {
       if (!mounted) return;
       final reason = error.details['reason'];
