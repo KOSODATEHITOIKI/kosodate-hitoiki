@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +13,7 @@ import 'package:kosodate_hitoiki/presentation/pages/settings/withdrawal_page.dar
 import 'package:kosodate_hitoiki/presentation/providers/account_providers.dart';
 import 'package:kosodate_hitoiki/presentation/providers/auth_provider.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockAuth extends Mock implements AuthRepository {}
 
@@ -24,12 +26,23 @@ class _ScriptedAccount implements AccountRepository {
   final List<Object?> script;
   var calls = 0;
 
+  /// 呼び出しごとに受け取った、Appleの認可コード。
+  final codes = <String?>[];
+
+  /// 呼び出しごとに受け取った、Appleに名乗ったID。
+  final clientIds = <String?>[];
+
   @override
   bool get isSample => false;
 
   @override
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({
+    String? appleAuthorizationCode,
+    String? appleClientId,
+  }) async {
     calls++;
+    codes.add(appleAuthorizationCode);
+    clientIds.add(appleClientId);
     final next = script.removeAt(0);
     if (next == null) return;
     if (next is Future<void> Function()) return next();
@@ -273,5 +286,114 @@ void main() {
     expect(find.byType(WithdrawalPage), findsNothing);
     expect(find.text('本当に退会しますか？'), findsNothing);
     expect(account.calls, 0);
+  });
+
+  group('Appleで登録したアカウント', () {
+    final appleUser = User(
+      id: 'user-a',
+      appMetadata: const {
+        'providers': ['apple'],
+      },
+      userMetadata: const {},
+      aud: 'authenticated',
+      createdAt: '2026-11-10T00:00:00Z',
+    );
+
+    setUp(() {
+      when(() => _auth.currentUser).thenReturn(appleUser);
+      // テストは、devのiOSアプリとして動く(test/flutter_test_config.dart)。
+      when(() => _auth.appleClientId).thenReturn('com.kosodatehitoiki.dev');
+    });
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    Future<void> confirm(WidgetTester tester, _ScriptedAccount account) async {
+      await _pumpWithdrawal(tester, account);
+      await _startWithdrawal(tester);
+      await tester.tap(find.byKey(const ValueKey('withdraw-confirm')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('iOSでは、もう一度Appleで確認し、認可コードを付けて退会する', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(
+        () => _auth.appleAuthorizationCode(),
+      ).thenAnswer((_) async => 'code-1');
+      final account = _ScriptedAccount([null]);
+      await confirm(tester, account);
+
+      verify(() => _auth.appleAuthorizationCode()).called(1);
+      expect(account.codes, ['code-1']);
+      expect(account.clientIds, ['com.kosodatehitoiki.dev']);
+      expect(find.text('退会しました。'), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('Appleの画面を閉じたら、退会しない', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => _auth.appleAuthorizationCode()).thenAnswer((_) async => null);
+      final account = _ScriptedAccount([null]);
+      await confirm(tester, account);
+
+      expect(account.calls, 0);
+      expect(find.text('Appleでの確認が済んでいないため、退会していません。'), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('Appleでの確認に失敗したら、退会しない', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => _auth.appleAuthorizationCode()).thenThrow(Exception('x'));
+      final account = _ScriptedAccount([null]);
+      await confirm(tester, account);
+
+      expect(account.calls, 0);
+      expect(find.byKey(const ValueKey('withdraw-error')), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('Android(Appleを出さない端末)では、iPhoneのアプリかWebから退会するよう案内し、退会しない', (
+      tester,
+    ) async {
+      final account = _ScriptedAccount([null]);
+      await confirm(tester, account);
+
+      verifyNever(() => _auth.appleAuthorizationCode());
+      expect(account.calls, 0);
+      expect(find.textContaining('iPhoneのアプリか、Webから退会してください'), findsOneWidget);
+    });
+
+    testWidgets('サーバーが連携の解除に失敗したら(apple_revoke_failed)、案内する', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(
+        () => _auth.appleAuthorizationCode(),
+      ).thenAnswer((_) async => 'code-1');
+      final account = _ScriptedAccount([
+        const ApiException(
+          code: 'BAD_GATEWAY',
+          message: '',
+          status: 502,
+          details: {'reason': 'apple_revoke_failed'},
+        ),
+      ]);
+      await confirm(tester, account);
+
+      expect(find.textContaining('Appleとの連携を解除できなかった'), findsOneWidget);
+      expect(find.text('退会しました。'), findsNothing);
+      debugDefaultTargetPlatformOverride = null;
+    });
+  });
+
+  testWidgets('Appleで登録していなければ、Appleの確認をしない', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final account = _ScriptedAccount([null]);
+    await _pumpWithdrawal(tester, account);
+    await _startWithdrawal(tester);
+    await tester.tap(find.byKey(const ValueKey('withdraw-confirm')));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => _auth.appleAuthorizationCode());
+    expect(account.codes, [null]);
+    expect(account.clientIds, [null]);
+    debugDefaultTargetPlatformOverride = null;
   });
 }

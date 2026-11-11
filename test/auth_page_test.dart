@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -164,10 +165,78 @@ void main() {
     await agreeBoth(tester);
   }
 
-  testWidgets('Appleでのログインは、フェーズ2まで出さない', (tester) async {
-    await pumpAuth(tester);
-    expect(find.text('Appleで続ける'), findsNothing);
-    expect(find.text('Googleで続ける'), findsOneWidget);
+  group('Appleで続ける', () {
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    Future<void> tapApple(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(const ValueKey('auth-apple')));
+      await tester.tap(find.byKey(const ValueKey('auth-apple')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('iOS以外では、出さない', (tester) async {
+      await pumpAuth(tester);
+      expect(find.byKey(const ValueKey('auth-apple')), findsNothing);
+      expect(find.text('Googleで続ける'), findsOneWidget);
+    });
+
+    testWidgets('iOSでは、Googleより上に出す(登録の画面にも出す)', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      await pumpAuth(tester, mode: AuthMode.register);
+      final apple = tester.getTopLeft(find.byKey(const ValueKey('auth-apple')));
+      final google = tester.getTopLeft(
+        find.byKey(const ValueKey('auth-google')),
+      );
+      expect(apple.dy, lessThan(google.dy));
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('ログインできたら、プロフィールがあれば画面を閉じる', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => auth.signInWithApple()).thenAnswer((_) async => _signedIn());
+      when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => true);
+      await pumpAuth(tester);
+      await tapApple(tester);
+
+      verify(() => auth.signInWithApple()).called(1);
+      verify(() => profiles.hasProfile('user-1')).called(1);
+      expect(find.byType(AuthPage), findsNothing);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('初めての利用者は、ニックネームと同意の画面へ進む', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => auth.signInWithApple()).thenAnswer((_) async => _signedIn());
+      when(() => profiles.hasProfile('user-1')).thenAnswer((_) async => false);
+      await pumpAuth(tester);
+      await tapApple(tester);
+
+      expect(find.byType(ProfileSetupPage), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('Appleの画面を閉じたら、何もしない(エラーも出さない)', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => auth.signInWithApple()).thenAnswer((_) async => null);
+      await pumpAuth(tester);
+      await tapApple(tester);
+
+      verifyNever(() => profiles.hasProfile(any()));
+      expect(find.byType(AuthPage), findsOneWidget);
+      expect(find.textContaining('Appleでのログイン'), findsNothing);
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets('失敗したら、案内する', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => auth.signInWithApple()).thenThrow(Exception('x'));
+      await pumpAuth(tester);
+      await tapApple(tester);
+
+      expect(find.textContaining('Appleでのログインを完了できませんでした'), findsOneWidget);
+      expect(find.byType(AuthPage), findsOneWidget);
+      debugDefaultTargetPlatformOverride = null;
+    });
   });
 
   group('Googleで続ける', () {

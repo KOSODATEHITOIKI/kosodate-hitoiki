@@ -33,6 +33,7 @@ flutter build web -t lib/main_prod.dart --release --no-web-resources-cdn
 | --- | --- |
 | `base-uri 'none'` → `base-uri 'self'` | Flutter Webの`index.html`に`<base href>`があるため。`'none'`だと、ブラウザーが`<base>`を認めない。 |
 | `connect-src`に`blob:`を足す（2026-11-05） | アイコン画像を選ぶと、Flutter Webが、選んだ画像を`blob:`のアドレスから読み出す（`fetch`／`XMLHttpRequest`）。`connect-src`に無いと、止められて、アイコンを変えられない。`blob:`は、そのページ自身が作った、一時的なアドレスだけを指す（外部へは出ない）。`img-src`・`worker-src`には、もとからある。 |
+| `script-src`に`https://appleid.cdn-apple.com`を足す（2026-11-10、Issue #185） | Appleでサインイン（Apple JS）を読み込むため。読み込むのは、ログインの画面と、Appleで登録した人の退会の画面を開いたときだけ（`lib/core/web/apple_js.dart`）。ほかの画面では、Appleへ通信しない。**確認用のWebで、ポップアップ・CSP違反を確かめるまでは、仮。** |
 
 **`fonts.gstatic.com`は、`connect-src`に足さない**（運営の決定、2026-11-03）。外部のサーバーへ、フォントを取りに行かない。次の「フォント」の節のとおり、必要なフォントは、同じサイトに置く。
 
@@ -42,6 +43,13 @@ flutter build web -t lib/main_prod.dart --release --no-web-resources-cdn
 - Networkに、外部のドメインが出ない（出るのは、同じサイトと、開発のSupabaseだけ）。`fonts.gstatic.com`は、許可していない（2026-11-03）。
 - ログインの画面で、確認の部品（Turnstile）が、スクリプトの読み込みも含めて、止められずに出る。
 - 公開先（`pages.dev`、開発用）で、運営と一緒に確認した（2026-11-02）: 登録・ログイン・再設定・Googleログイン・画像の表示。フォントを同梱したあと（2026-11-03）も、公開先で確認した（外部のドメインへの通信なし、CSP違反なし、絵文字が色つきで出る）。
+
+## Appleでサインイン（Issue #185）
+
+- iOSと同じく、受け取ったIDトークンを`signInWithIdToken`に渡す。Webは、Appleの公式の部品（Apple JS）の**ポップアップ**で、Appleの画面を出す（Supabaseのページへは移らない）。
+- Appleには、Web用の**サービスID**で名乗る（`lib/core/config/apple_sign_in_config.dart`）。サービスIDに、公開するドメインと戻り先（`https://app.kosodate-hitoiki.com/`、開発は確認用の`pages.dev`のURL）を登録する。Appleは`localhost`を受け付けないので、手元では試せない。
+- SupabaseのAppleの「Client IDs」に、サービスIDも入れる。この形では、Supabaseに、Appleの秘密鍵（半年で切れる）を入れなくてよい。
+- 退会では、iOSと同じく、もう一度Appleで確認して、認可コードとサービスIDを`account-delete`へ送る。
 
 ## フォント（外部へ取りに行かない）
 

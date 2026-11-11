@@ -1,7 +1,11 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/centered_page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/api/api_exception.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../providers/account_providers.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/comfort_page.dart';
@@ -27,6 +31,19 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
 
   /// 再ログインへ進む途中。ログアウトで利用者IDが変わるが、閉じる操作は自分で行う。
   bool _leaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Webで、Appleで登録したアカウントなら、Appleの部品を先に読み込んでおく
+    // (退会を押してから読み込むと、ブラウザがポップアップを止めることがある)。
+    if (kIsWeb) {
+      final auth = ref.read(authRepositoryProvider);
+      if (usesAppleSignIn(auth.currentUser)) {
+        unawaited(auth.prepareAppleSignIn());
+      }
+    }
+  }
 
   /// 最後の確認。「元に戻せません」と伝え、「退会する」を押したときだけ実行する。
   Future<void> _confirm() async {
@@ -76,13 +93,60 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
     await _withdraw();
   }
 
+  /// 削除を止めて、理由を伝える。
+  void _stop(String message) {
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _error = message;
+    });
+  }
+
+  /// Appleで登録したアカウントなら、もう一度Appleで確認して、認可コードを受け取る
+  /// (サーバーが、Appleとの連携を解除する。審査ガイドライン5.1.1(v))。
+  /// Appleで登録していなければ、`(true, null)`。確認できなかったら、`(false, null)`。
+  Future<(bool, String?)> _appleCodeIfNeeded() async {
+    final auth = ref.read(authRepositoryProvider);
+    if (!usesAppleSignIn(auth.currentUser)) return (true, null);
+    if (!appleSignInSupported) {
+      _stop(_appleDeviceMessage);
+      return (false, null);
+    }
+    final String? code;
+    try {
+      code = await auth.appleAuthorizationCode();
+    } catch (_) {
+      _stop(_appleFailedMessage);
+      return (false, null);
+    }
+    if (code == null) {
+      _stop('Appleでの確認が済んでいないため、退会していません。');
+      return (false, null);
+    }
+    return (true, code);
+  }
+
+  static const _appleDeviceMessage =
+      'Appleで登録したアカウントは、Appleとの連携を解除するため、iPhoneのアプリか、Webから退会してください。';
+  static const _appleFailedMessage =
+      'Appleとの連携を解除できなかったため、退会していません。時間をおいて、もう一度お試しください。';
+
   Future<void> _withdraw() async {
     setState(() {
       _busy = true;
       _error = null;
     });
+    final (ok, appleCode) = await _appleCodeIfNeeded();
+    if (!ok || !mounted) return;
     try {
-      await ref.read(accountRepositoryProvider).deleteAccount();
+      await ref
+          .read(accountRepositoryProvider)
+          .deleteAccount(
+            appleAuthorizationCode: appleCode,
+            appleClientId: appleCode == null
+                ? null
+                : ref.read(authRepositoryProvider).appleClientId,
+          );
     } on ApiException catch (error) {
       if (!mounted) return;
       final reason = error.details['reason'];
@@ -93,9 +157,12 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
       }
       setState(() {
         _busy = false;
-        _error = reason == 'operator_registered'
-            ? '運営者として登録されているため、退会できません。先に、運営者の登録を外してください。'
-            : postFailureMessage(error);
+        _error = switch (reason) {
+          'operator_registered' => '運営者として登録されているため、退会できません。先に、運営者の登録を外してください。',
+          'apple_code_required' => _appleDeviceMessage,
+          'apple_revoke_failed' => _appleFailedMessage,
+          _ => postFailureMessage(error),
+        };
       });
       return;
     } catch (error) {

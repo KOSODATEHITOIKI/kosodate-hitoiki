@@ -50,9 +50,14 @@ dependencies:
   webview_flutter: ^4.14.1
   web: ^1.1.1
   shared_preferences: ^2.5.6
+  sign_in_with_apple: ^8.2.0
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  # ストアのスクリーンショットを、シミュレーターで撮るための操作(integration_test/)
+  integration_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to

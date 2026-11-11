@@ -14,11 +14,18 @@ class SupabaseAccountRepository implements AccountRepository {
   bool get isSample => false;
 
   @override
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({
+    String? appleAuthorizationCode,
+    String? appleClientId,
+  }) async {
     try {
       await _client.functions.invoke(
         'account-delete',
-        body: const {'confirm': true},
+        body: {
+          'confirm': true,
+          'apple_authorization_code': ?appleAuthorizationCode,
+          'apple_client_id': ?appleClientId,
+        },
       );
     } on FunctionException catch (error) {
       throw ApiException.fromFunction(error);

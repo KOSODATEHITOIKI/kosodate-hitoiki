@@ -1,0 +1,6 @@
+// prod環境のiOS固有の設定(Androidのproductフレーバーprodに対応する)。
+// Debug-prod / Profile-prod / Release-prod.xcconfig から include される。
+// Flutter標準のGenerated.xcconfigは、Debug/Release.xcconfig経由で読み込まれる。
+
+BUNDLE_ID_SUFFIX =
+BUNDLE_DISPLAY_NAME = ひと息

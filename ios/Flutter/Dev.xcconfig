@@ -1,0 +1,6 @@
+// dev環境のiOS固有の設定(Androidのproductフレーバーdevに対応する)。
+// Debug-dev / Profile-dev / Release-dev.xcconfig から include される。
+// Flutter標準のGenerated.xcconfigは、Debug/Release.xcconfig経由で読み込まれる。
+
+BUNDLE_ID_SUFFIX = .dev
+BUNDLE_DISPLAY_NAME = ひと息(dev)

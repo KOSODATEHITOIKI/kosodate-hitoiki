@@ -1,1 +1,5 @@
 #include "Generated.xcconfig"
+
+// Flavorを指定しないとき(Runnerスキーム)の値。Flavorごとの値は Dev/Prod.xcconfig で上書きする
+BUNDLE_ID_SUFFIX =
+BUNDLE_DISPLAY_NAME = ひと息
