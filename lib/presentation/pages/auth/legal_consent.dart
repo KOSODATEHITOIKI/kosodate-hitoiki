@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/legal_links.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../widgets/external_link.dart';
 
 /// 利用規約・プライバシーポリシーへの同意と、18歳以上であることの確認(自己申告)。
@@ -10,6 +11,9 @@ import '../../widgets/external_link.dart';
 /// ブラウザで開き、アプリに戻ってくると、チェックがつく(ページを開いて戻ったことを、
 /// 読んだものとする。実際に読んだかまでは、確かめられない)。チェックは、押して、外せる。
 /// 3つすべてにチェックがつくと登録できる(呼び出し側で判定する)。
+///
+/// チェックの上に、不適切な投稿・迷惑行為を一切認めないことを出す(利用規約 第5条。
+/// App Storeの審査ガイドライン1.2で、同意の前に、はっきり示すよう求められた)。
 class LegalConsent extends ConsumerStatefulWidget {
   const LegalConsent({
     super.key,
@@ -92,6 +96,8 @@ class _LegalConsentState extends ConsumerState<LegalConsent>
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      const _ZeroToleranceNotice(),
+      const SizedBox(height: 8),
       _DocRow(
         fieldKey: const ValueKey('consent-terms'),
         label: '利用規約に同意する',
@@ -156,5 +162,45 @@ class _DocRow extends StatelessWidget {
             '押すと、内容のページが開きます。読んで戻ると、チェックがつきます。',
             style: TextStyle(fontSize: 12, height: 1.5),
           ),
+  );
+}
+
+/// 不適切な投稿・迷惑行為を一切認めない、というお知らせ(利用規約 第5条と同じ趣旨)。
+class _ZeroToleranceNotice extends StatelessWidget {
+  const _ZeroToleranceNotice();
+
+  /// 画面に出す文。テストからも使う。
+  static const text =
+      'ひと息は、不適切な投稿や、ほかの人への嫌がらせを一切認めません。'
+      '見つけた場合は、投稿の削除や利用停止をします。';
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('consent-zero-tolerance'),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 2),
+          child: Icon(Icons.info_outline, size: 18),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 }
