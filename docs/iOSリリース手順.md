@@ -100,7 +100,16 @@ Google Playは[リリース手順(Android)](リリース手順.md)を参照。
 
 - 「Dynamic Island搭載iPhone(中型ディスプレイ)」に **1206×2622px**(iPhone 18 Proのシミュレーター)を最大10枚。iPadは不要(iPhone専用)
 - Google Play用の画像は、Androidの画面が写っているので**そのまま使えない**(ガイドライン2.3.10)。同じ見出し・デザインで、中の画面だけiPhoneに差し替える
-- 本番のSupabaseにつないで撮ると、実際のデータになる。撮影用の投稿は、撮ったあとに消す(Web版の公開のときと同じ)
+- 撮り方: 本物のサーバーにはつながず、画面の確認用のデータ(`lib/data/mock/`)を、「サンプル」の注記を出さずに差し込んで撮る(`integration_test/store_screenshots_test.dart`)。本物の利用者の投稿は写らず、サーバーにも撮影用のデータが残らない
+
+```bash
+# iPhone 18 Proのシミュレーターで、7枚を撮る(案内・ホーム・投稿の詳細・書く・検索・ミュート・相談先)
+tool/ios_screenshots/shoot.sh <iPhone 18 ProのUDID> <出力先>
+```
+
+- ステータスバーは9:41・電池満タンにそろえる。Dynamic Islandと角は、黒で写す(`--mask=black`)
+- 1.0.0の元の画面(見出しなし): `~/Downloads/hitoiki_appstore_iphone_1206x2622_raw/`(リポジトリの外)
+- 見出しを付けて仕上げるときは、Google Play用の画像と、見出し・デザインをそろえる
 
 ### App Review に関する情報
 
