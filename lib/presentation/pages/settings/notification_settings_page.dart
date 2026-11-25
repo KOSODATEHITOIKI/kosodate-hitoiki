@@ -182,48 +182,6 @@ class _NotificationSettingsPageState
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          '端末の通知設定',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '通知を受け取るには、端末側でも通知の許可が必要です。',
-                          style: TextStyle(fontSize: 12, height: 1.6),
-                        ),
-                        const SizedBox(height: 8),
-                        OutlinedButton(
-                          onPressed: () => showDialog<void>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('端末設定への移動は準備中です'),
-                              content: const Text(
-                                '現在は端末の設定を開きません。端末連携の実装を準備しています。',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('閉じる'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          child: const Text('設定を開く'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 const Text(
                   '運営からの連絡は、この切り替えの対象には含みません。',
                   style: TextStyle(fontSize: 12, height: 1.7),
